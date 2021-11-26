@@ -1,0 +1,13 @@
+extend = "../../Makefile.toml"
+
+[tasks.rongprime_build]
+alias = "build"
+
+[tasks.rongprime_build_release]
+alias = "build_release"
+
+[tasks.rongprime_run]
+alias = "run"
+
+[tasks.rongprime_run_release]
+alias = "run_release"
