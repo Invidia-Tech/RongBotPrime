@@ -4,6 +4,10 @@ version = "0.0.1"
 authors = ["ForeverAnApple"]
 edition = "2021"
 
-[dependencies]
-serenity = { version = "0.10.9", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "framework", "standard_framework"] }
-tokio = { version = "1.14", features = ["macros", "rt-multi-thread"] }
+[dependencies.serenity]
+version = "0.10.9"
+features = ["framework", "standard_framework", "client", "gateway", "rustls_backend", "model"]
+
+[dependencies.tokio]
+version = "1.15"
+features = ["macros", "rt-multi-thread"]
