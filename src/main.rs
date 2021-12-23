@@ -4,6 +4,7 @@ use serenity::{
     async_trait,
     model::{channel::Message, gateway::Ready},
     prelude::*,
+    utils::MessageBuilder,
 };
 
 struct Handler;
@@ -16,12 +17,41 @@ impl EventHandler for Handler {
     // Event handlers are dispatched through a threadpool, and so multiple
     // events can be dispatched simultaneously.
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content == "!ping" {
+        if msg.content == ">ping" {
             // Sending a message can fail, due to a network error, an
             // authentication error, or lack of permissions to post in the
             // channel, so log to stdout when some error happens, with a
             // description of it.
-            if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
+            if let Err(why) = msg.channel_id.say(&ctx.http, "I ain't rolling any gachas!").await {
+                println!("Error sending message: {:?}", why);
+            }
+        }
+    }
+
+    async fn message(&self, context: Context, msg: Message) {
+        if msg.content == ">flight status" {
+            let channel = match msg.channel_id.to_channel(&context).await {
+                Ok(channel) => channel,
+                Err(why) => {
+                    println!("Error getting channel: {:?}", why);
+
+                    return;
+                },
+            };
+
+            // The message builder allows for creating a message by
+            // mentioning users dynamically, pushing "safe" versions of
+            // content (such as bolding normalized content), displaying
+            // emojis, and more.
+            let response = MessageBuilder::new()
+                .push("User ")
+                .push_bold_safe(&msg.author.name)
+                .push(" is requesting flight status from Rong ATC in ")
+                .mention(&channel)
+                .push(" channel")
+                .build();
+
+            if let Err(why) = msg.channel_id.say(&context.http, &response).await {
                 println!("Error sending message: {:?}", why);
             }
         }
