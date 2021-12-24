@@ -244,11 +244,11 @@ async fn main() {
         .configure(|c| c
             .with_whitespace(true)
             .on_mention(Some(bot_id))
-            .prefix("~")
+            .prefix(">")
             // In this case, if "," would be first, a message would never
             // be delimited at ", ", forcing you to trim your arguments if you
             // want to avoid whitespaces at the start of each.
-            .delimiters(vec![", ", ","])
+            .delimiters(vec![" ", ", ", ","])
             // Sets the bot's owners. These will be used for commands that
             // are owners only.
             .owners(owners))
@@ -439,6 +439,7 @@ async fn about_role(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 // Lets us also call `~math *` instead of just `~math multiply`.
 #[aliases("*")]
 async fn multiply(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    println!("{:?}", args.current());
     let first = args.single::<f64>()?;
     let second = args.single::<f64>()?;
 
