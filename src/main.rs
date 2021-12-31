@@ -65,7 +65,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(about, am_i_admin, say, commands, ping, latency, some_long_command, upper_command)]
+#[commands(about, am_i_admin, say, commands, ping, latency, debug_args, upper_command)]
 struct General;
 
 #[group]
@@ -106,8 +106,7 @@ struct Owner;
 #[help]
 // This replaces the information that a user can pass
 // a command-name as argument to gain specific information about it.
-#[individual_command_tip = "Hello! こんにちは！Hola! Bonjour! 您好! 안녕하세요~\n\n\
-If you want more information about a specific command, just pass the command as argument."]
+#[individual_command_tip = "Welcome to Rong Prime!\n\nTo learn more about a command, run help with the command's name."]
 // Some arguments require a `{}` in order to replace it with contextual information.
 // In this case our `{}` refers to a command's name.
 #[command_not_found_text = "Could not find: `{}`."]
@@ -244,7 +243,7 @@ async fn main() {
         .configure(|c| c
             .with_whitespace(true)
             .on_mention(Some(bot_id))
-            .prefix(">")
+            .prefix("~")
             // In this case, if "," would be first, a message would never
             // be delimited at ", ", forcing you to trim your arguments if you
             // want to avoid whitespaces at the start of each.
@@ -395,7 +394,7 @@ async fn owner_check(
     //
     // 4. If you want log for your system and for the user, use:
     // `Reason::UserAndLog { user, log }`
-    if msg.author.id != 7 {
+    if msg.author.id != 162034086066520064 {
         return Err(Reason::User("Lacked owner permission".to_string()));
     }
 
@@ -403,7 +402,8 @@ async fn owner_check(
 }
 
 #[command]
-async fn some_long_command(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+#[checks(Owner)]
+async fn debug_args(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     msg.channel_id.say(&ctx.http, &format!("Arguments: {:?}", args.rest())).await?;
 
     Ok(())
@@ -495,7 +495,7 @@ async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 // Limit command usage to guilds.
 #[only_in(guilds)]
-#[checks(Owner)]
+// #[checks(Owner)]
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     msg.channel_id.say(&ctx.http, "Pong! : )").await?;
 
