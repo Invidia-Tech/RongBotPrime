@@ -497,8 +497,14 @@ async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
             return Ok(());
         },
     };
-
-    msg.reply(ctx, &format!("The shard latency is {:?}", runner.latency)).await?;
+    
+    println!("Latency is: {:?}", runner.latency);
+    match runner.latency {
+        Some(dur) => {
+            msg.reply(ctx, &format!("This shard's latency is {:?}", dur)).await?;
+        },
+        None => {msg.reply(ctx, "Error retriving latency for this shard. Or it's not ready yet.").await?;},
+    };
 
     Ok(())
 }
