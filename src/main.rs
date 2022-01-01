@@ -100,6 +100,16 @@ struct Math;
 #[commands(slow_mode)]
 struct Owner;
 
+// Rong ATC (Air Traffic Control)
+#[group]
+#[only_in(guilds)]
+#[prefixes("atc", "flight")]
+#[description = "These commands helps us to know the status of pilots, current flights, and logins."]
+#[summary = "Rong ATC (Air Traffic Control)"]
+#[commands(flight_status)]
+#[default_command(flight_status)]
+struct ATC;
+
 // The framework provides two built-in help commands for you to use.
 // But you can also make your own customized help command that forwards
 // to the behaviour of either of them.
@@ -173,7 +183,7 @@ async fn unknown_command(_ctx: &Context, _msg: &Message, unknown_command_name: &
 
 #[hook]
 async fn normal_message(_ctx: &Context, msg: &Message) {
-    println!("Message is not a command '{}'", msg.content);
+    println!("Normal message '{}#{}: {}'", msg.author.name, msg.author.discriminator, msg.content);
 }
 
 #[hook]
@@ -297,6 +307,7 @@ async fn main() {
         .group(&GENERAL_GROUP)
         .group(&EMOJI_GROUP)
         .group(&MATH_GROUP)
+        .group(&ATC_GROUP)
         .group(&OWNER_GROUP);
         
     let mut client = Client::builder(&token)
@@ -582,6 +593,14 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
     };
 
     msg.channel_id.say(&ctx.http, say_content).await?;
+
+    Ok(())
+}
+
+#[command("status")]
+#[description("This shows the status of current flights.")]
+async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+    msg.channel_id.say(&ctx.http, "Current flights: None").await?;
 
     Ok(())
 }
