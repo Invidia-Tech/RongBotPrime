@@ -31,7 +31,7 @@ use serenity::{
     model::{
         channel::{Channel, Message},
         gateway::Ready,
-        id::UserId,
+        id::{ChannelId, UserId},
         permissions::Permissions,
     },
     utils::{content_safe, ContentSafeOptions, MessageBuilder},
@@ -65,7 +65,8 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(about, am_i_admin, say, commands, ping, latency, debug_args, upper_command)]
+#[commands(/*about, am_i_admin, say, commands, ping, */latency,
+    debug_args/*, upper_command*/)]
 struct General;
 
 #[group]
@@ -305,10 +306,10 @@ async fn main() {
         // #name is turned all uppercase
         .help(&MY_HELP)
         .group(&GENERAL_GROUP)
-        .group(&EMOJI_GROUP)
-        .group(&MATH_GROUP)
-        .group(&ATC_GROUP)
-        .group(&OWNER_GROUP);
+        //.group(&EMOJI_GROUP)
+        //.group(&MATH_GROUP)
+        .group(&ATC_GROUP);
+        //.group(&OWNER_GROUP);
         
     let mut client = Client::builder(&token)
         .event_handler(Handler)
@@ -607,6 +608,47 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
 #[description("This shows the status of current flights.")]
 async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     msg.channel_id.say(&ctx.http, "Current flights: None").await?;
+	// The message builder allows for creating a message by
+	// mentioning users dynamically, pushing "safe" versions of
+	// content (such as bolding normalized content), displaying
+	// emojis, and more.
+	let response = MessageBuilder::new()
+		.push("User ")
+		.push_bold_safe(&msg.author.name)
+		.push(" used the 'atc status' command in the ")
+		.mention(&msg.channel_id.to_channel_cached(&ctx.cache).await.unwrap())
+		.push(" channel")
+		.build();
+
+    if let Err(why) = msg.channel_id.say(&ctx.http, &response).await {
+        println!("Error sending message: {:?}", why);
+    }
+
+	let msg = msg
+                .channel_id
+                .send_message(&ctx.http, |m| {
+                    m.content("Rong ATC (Air Traffic Control) Status")
+                        .embed(|e| {
+                            e.title("Current Flights")
+                                .description("These are the recent running/landed flights.")
+                                .image("attachment://KyoukaSmile.jpg")
+                                .fields(vec![
+                                    ("Flight DB 14002", "Pilot: Dabomstew, Current Status: In Progress", true),
+                                    ("Flight RG 14001", "Pilot: Ring Current Status: Crashed", true),
+                                ])
+                                .field("Overall Flight Status", "Flights Today: 2", false)
+                                .footer(|f| f.text("Days since last int: 0"))
+                                // Add a timestamp for the current time
+                                // This also accepts a rfc3339 Timestamp
+                                .timestamp(chrono::Utc::now().to_rfc3339())
+                        })
+                        .add_file("./KyoukaSmile.jpg")
+                })
+                .await;
+
+            if let Err(why) = msg {
+                println!("Error sending message: {:?}", why);
+            }
 
     Ok(())
 }
