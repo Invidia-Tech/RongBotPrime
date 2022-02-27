@@ -111,6 +111,15 @@ struct Owner;
 #[default_command(flight_status)]
 struct ATC;
 
+// Rong Clan Battle utilities
+#[group]
+#[only_in(guilds)]
+#[prefixes("cb")]
+#[description = "These commands help with clan battle utilities, status, hit submission, etc."]
+#[summary = "Rong Clan Battle utilities."]
+#[commands(cb_status)]
+struct CB;
+
 // The framework provides two built-in help commands for you to use.
 // But you can also make your own customized help command that forwards
 // to the behaviour of either of them.
@@ -157,7 +166,7 @@ async fn my_help(
 #[hook]
 async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
     println!("Got command '{}' by user '{}'", command_name, msg.author.name);
-    
+
     // Increment the number of times this command has been run once. If
     // the command's name does not exist in the counter, add a default
     // value of 0.
@@ -165,7 +174,7 @@ async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
     let counter = data.get_mut::<CommandCounter>().expect("Expected CommandCounter in TypeMap.");
     let entry = counter.entry(command_name.to_string()).or_insert(0);
     *entry += 1;
-    
+
     true // if `before` returns false, command processing doesn't happen.
 }
 
@@ -230,9 +239,9 @@ fn _dispatch_error_no_macro<'fut>(
 #[tokio::main]
 async fn main() {
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
-    
+
     let http = Http::new_with_token(&token);
-    
+
     // We will fetch your bot's owners and id
     let (owners, bot_id) = match http.get_current_application_info().await {
         Ok(info) => {
@@ -249,7 +258,7 @@ async fn main() {
         },
         Err(why) => panic!("Could not access application info: {:?}", why),
     };
-    
+
     let framework = StandardFramework::new()
         .configure(|c| c
             .with_whitespace(true)
@@ -262,7 +271,7 @@ async fn main() {
             // Sets the bot's owners. These will be used for commands that
             // are owners only.
             .owners(owners))
-        
+
         // Set a function to be called prior to each command execution. This
         // provides the context of the command, the message that was received,
         // and the full name of the command that will be called.
@@ -308,9 +317,10 @@ async fn main() {
         .group(&GENERAL_GROUP)
         //.group(&EMOJI_GROUP)
         //.group(&MATH_GROUP)
-        .group(&ATC_GROUP);
+        .group(&ATC_GROUP)
+        .group(&CB_GROUP);
         //.group(&OWNER_GROUP);
-        
+
     let mut client = Client::builder(&token)
         .event_handler(Handler)
         .framework(framework)
@@ -324,12 +334,12 @@ async fn main() {
         .type_map_insert::<CommandCounter>(HashMap::default())
         .await
         .expect("Err creating client");
-        
+
     {
         let mut data = client.data.write().await;
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
     }
-        
+
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }
@@ -498,7 +508,7 @@ async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
             return Ok(());
         },
     };
-    
+
     println!("Latency is: {:?}", runner.latency);
     match runner.latency {
         Some(dur) => {
@@ -604,62 +614,114 @@ async fn slow_mode(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
     Ok(())
 }
 
+// =========================== CB COMMANDS ================================
 #[command("status")]
-#[description("This shows the status of current flights.")]
-async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-    msg.channel_id.say(&ctx.http, "Current flights: None").await?;
-	// The message builder allows for creating a message by
-	// mentioning users dynamically, pushing "safe" versions of
-	// content (such as bolding normalized content), displaying
-	// emojis, and more.
-	let response = MessageBuilder::new()
-		.push("User ")
-		.push_bold_safe(&msg.author.name)
-		.push(" used the 'atc status' command in the ")
-		.mention(&msg.channel_id.to_channel_cached(&ctx.cache).await.unwrap())
-		.push(" channel")
-		.build();
+#[description("This shows the status of the current active clan battle.")]
+async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+    // The message builder allows for creating a message by
+    // mentioning users dynamically, pushing "safe" versions of
+    // content (such as bolding normalized content), displaying
+    // emojis, and more.
+    let response = MessageBuilder::new()
+            .push("User ")
+            .push_bold_safe(&msg.author.name)
+            .push(" used the 'cb status' command in the ")
+            .mention(&msg.channel_id.to_channel_cached(&ctx.cache).await.unwrap())
+            .push(" channel")
+            .build();
 
     if let Err(why) = msg.channel_id.say(&ctx.http, &response).await {
         println!("Error sending message: {:?}", why);
     }
 
-	let msg = msg
-                .channel_id
-                .send_message(&ctx.http, |m| {
-                    m.content("Rong ATC (Air Traffic Control) Status")
-                        .embed(|e| {
-                            e.title("Current Flights")
-                                .description("These are the recent running/landed flights.")
-                                //.image("attachment://KyoukaSmile.jpg")
-                                .fields(vec![
-                                    ("🛫 __Flight DB 14002__", "Pilot: Dabomstew", false),
-                                    ("Current Status:", "**In Progress**", true),
-                                    ("Duration:", "37 Minutes", true),
-                                ])
-                                .fields(vec![
-                                    ("🛬 __Flight BN 14002__", "Pilot: Boon", false),
-                                    ("Current Status:", "**Landed**", true),
-                                    ("Duration:", "09 Minutes", true),
-                                ])
-                                .fields(vec![
-                                    ("💥 __Flight RG 14001__", "Pilot: Ring", false),
-                                    ("Current Status:", "**Crashed**", true),
-                                    ("Duration:", "23 Minutes", true),
-                                ])
-                                .field("Overall Flight Status", "Flights Today: 2", false)
-                                .footer(|f| f.text("Days since last int: 0"))
-                                // Add a timestamp for the current time
-                                // This also accepts a rfc3339 Timestamp
-                                .timestamp(chrono::Utc::now().to_rfc3339())
-                        })
-                        //.add_file("./KyoukaSmile.jpg")
+    let msg = msg
+        .channel_id
+        .send_message(&ctx.http, |m| {
+            m.content("Current CB: Test CB 13 (mocked)")
+                .embed(|e| {
+                    e.title("Clan: JEthereal")
+                        .description("Current day: 2")
+                        .image("attachment://KyoukaSmile.jpg")
+                        .fields(vec![
+                            ("Hits today:", "15", true),
+                            ("Bosses killed today:", "3", true),
+                            ("Dmg done today:", "89,204,302", true),
+                            ("Overall RV%:", "98.3%", false)
+                        ])
+                        .field("Current boss:", "Kyouka", false)
+                        .footer(|f| f.text("Days since last int: 0"))
+                        // Add a timestamp for the current time
+                        // This also accepts a rfc3339 Timestamp
+                        .timestamp(chrono::Utc::now().to_rfc3339())
                 })
-                .await;
+                .add_file("./KyoukaSmile.jpg")
+        })
+        .await;
 
-            if let Err(why) = msg {
-                println!("Error sending message: {:?}", why);
-            }
+    if let Err(why) = msg {
+        println!("Error sending message: {:?}", why);
+    }
+    Ok(())
+}
+
+// =========================== FLIGHT COMMANDS =====================================
+
+#[command("status")]
+#[description("This shows the status of current flights.")]
+async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+    msg.channel_id.say(&ctx.http, "Current flights: None").await?;
+    // The message builder allows for creating a message by
+    // mentioning users dynamically, pushing "safe" versions of
+    // content (such as bolding normalized content), displaying
+    // emojis, and more.
+    let response = MessageBuilder::new()
+            .push("User ")
+            .push_bold_safe(&msg.author.name)
+            .push(" used the 'atc status' command in the ")
+            .mention(&msg.channel_id.to_channel_cached(&ctx.cache).await.unwrap())
+            .push(" channel")
+            .build();
+
+    if let Err(why) = msg.channel_id.say(&ctx.http, &response).await {
+        println!("Error sending message: {:?}", why);
+    }
+
+    let msg = msg
+        .channel_id
+        .send_message(&ctx.http, |m| {
+            m.content("Rong ATC (Air Traffic Control) Status")
+                .embed(|e| {
+                    e.title("Current Flights")
+                        .description("These are the recent running/landed flights.")
+                        //.image("attachment://KyoukaSmile.jpg")
+                        .fields(vec![
+                            ("🛫 __Flight DB 14002__", "Pilot: Dabomstew", false),
+                            ("Current Status:", "**In Progress**", true),
+                            ("Duration:", "37 Minutes", true),
+                        ])
+                        .fields(vec![
+                            ("🛬 __Flight BN 14002__", "Pilot: Boon", false),
+                            ("Current Status:", "**Landed**", true),
+                            ("Duration:", "09 Minutes", true),
+                        ])
+                        .fields(vec![
+                            ("💥 __Flight RG 14001__", "Pilot: Ring", false),
+                            ("Current Status:", "**Crashed**", true),
+                            ("Duration:", "23 Minutes", true),
+                        ])
+                        .field("Overall Flight Status", "Flights Today: 2", false)
+                        .footer(|f| f.text("Days since last int: 0"))
+                        // Add a timestamp for the current time
+                        // This also accepts a rfc3339 Timestamp
+                        .timestamp(chrono::Utc::now().to_rfc3339())
+                })
+                //.add_file("./KyoukaSmile.jpg")
+        })
+        .await;
+
+    if let Err(why) = msg {
+        println!("Error sending message: {:?}", why);
+    }
 
     Ok(())
 }
@@ -669,58 +731,58 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
 #[bucket = "atc"]
 async fn flight_summary(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     msg.channel_id.say(&ctx.http, "Current flights: None").await?;
-	// The message builder allows for creating a message by
-	// mentioning users dynamically, pushing "safe" versions of
-	// content (such as bolding normalized content), displaying
-	// emojis, and more.
-	let response = MessageBuilder::new()
-		.push("User ")
-		.push_bold_safe(&msg.author.name)
-		.push(" used the 'atc status' command in the ")
-		.mention(&msg.channel_id.to_channel_cached(&ctx.cache).await.unwrap())
-		.push(" channel")
-		.build();
+    // The message builder allows for creating a message by
+    // mentioning users dynamically, pushing "safe" versions of
+    // content (such as bolding normalized content), displaying
+    // emojis, and more.
+    let response = MessageBuilder::new()
+            .push("User ")
+            .push_bold_safe(&msg.author.name)
+            .push(" used the 'atc status' command in the ")
+            .mention(&msg.channel_id.to_channel_cached(&ctx.cache).await.unwrap())
+            .push(" channel")
+            .build();
 
     if let Err(why) = msg.channel_id.say(&ctx.http, &response).await {
         println!("Error sending message: {:?}", why);
     }
 
-	let msg = msg
-                .channel_id
-                .send_message(&ctx.http, |m| {
-                    m.content("Rong ATC (Air Traffic Control) Status")
-                        .embed(|e| {
-                            e.title("Current Flights")
-                                .description("These are the recent running/landed flights.")
-                                //.image("attachment://KyoukaSmile.jpg")
-                                .fields(vec![
-                                    ("🛫 __Flight DB 14002__", "Pilot: Dabomstew", false),
-                                    ("Current Status:", "**In Progress**", true),
-                                    ("Duration:", "37 Minutes", true),
-                                ])
-                                .fields(vec![
-                                    ("🛬 __Flight BN 14002__", "Pilot: Boon", false),
-                                    ("Current Status:", "**Landed**", true),
-                                    ("Duration:", "09 Minutes", true),
-                                ])
-                                .fields(vec![
-                                    ("💥 __Flight RG 14001__", "Pilot: Ring", false),
-                                    ("Current Status:", "**Crashed**", true),
-                                    ("Duration:", "23 Minutes", true),
-                                ])
-                                .field("Overall Flight Status", "Flights Today: 2", false)
-                                .footer(|f| f.text("Days since last int: 0"))
-                                // Add a timestamp for the current time
-                                // This also accepts a rfc3339 Timestamp
-                                .timestamp(chrono::Utc::now().to_rfc3339())
-                        })
-                        //.add_file("./KyoukaSmile.jpg")
+    let msg = msg
+        .channel_id
+        .send_message(&ctx.http, |m| {
+            m.content("Rong ATC (Air Traffic Control) Status")
+                .embed(|e| {
+                    e.title("Current Flights")
+                        .description("These are the recent running/landed flights.")
+                        //.image("attachment://KyoukaSmile.jpg")
+                        .fields(vec![
+                            ("🛫 __Flight DB 14002__", "Pilot: Dabomstew", false),
+                            ("Current Status:", "**In Progress**", true),
+                            ("Duration:", "37 Minutes", true),
+                        ])
+                        .fields(vec![
+                            ("🛬 __Flight BN 14002__", "Pilot: Boon", false),
+                            ("Current Status:", "**Landed**", true),
+                            ("Duration:", "09 Minutes", true),
+                        ])
+                        .fields(vec![
+                            ("💥 __Flight RG 14001__", "Pilot: Ring", false),
+                            ("Current Status:", "**Crashed**", true),
+                            ("Duration:", "23 Minutes", true),
+                        ])
+                        .field("Overall Flight Status", "Flights Today: 2", false)
+                        .footer(|f| f.text("Days since last int: 0"))
+                        // Add a timestamp for the current time
+                        // This also accepts a rfc3339 Timestamp
+                        .timestamp(chrono::Utc::now().to_rfc3339())
                 })
-                .await;
+                //.add_file("./KyoukaSmile.jpg")
+        })
+        .await;
 
-            if let Err(why) = msg {
-                println!("Error sending message: {:?}", why);
-            }
+    if let Err(why) = msg {
+        println!("Error sending message: {:?}", why);
+    }
 
     Ok(())
 }
