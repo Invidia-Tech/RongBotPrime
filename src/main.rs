@@ -3,9 +3,12 @@ Here lies Rong, reborn, better than before.
 :KannaBurn:
 */
 
+mod utils;
+
 use std::{
     collections::{HashMap, HashSet},
     env,
+    error::Error,
     fmt::Write,
     sync::Arc,
 };
@@ -38,6 +41,8 @@ use serenity::{
 };
 
 use tokio::sync::Mutex;
+
+use sqlx::postgres::PgPoolOptions;
 
 // This allows data to be shared across the shard, so that all frameworks
 // and handlers can see the same data as long as they have a copy of the
@@ -237,8 +242,9 @@ fn _dispatch_error_no_macro<'fut>(
 }
 
 #[tokio::main]
-async fn main() {
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    let token = env::var("DISCORD_TOKEN").expect("Expect DISCORD_TOKEN in environment.");
+    let dburl = env::var("DB_URL").expect("Expect DB_URL in environment.");
 
     let http = Http::new_with_token(&token);
 
@@ -337,12 +343,16 @@ async fn main() {
 
     {
         let mut data = client.data.write().await;
+        let pgpool = PgPoolOptions::new().max_connections(20).connect(&dburl).await?;
+        data.insert::<DatabasePool>(pgpool);
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
     }
 
-    if let Err(why) = client.start().await {
+    if let Err(why) = client.start_autosharded().await {
         println!("Client error: {:?}", why);
     }
+
+    Ok(())
 }
 
 // Commands can be created via the attribute `#[command]` macro.

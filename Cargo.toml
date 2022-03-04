@@ -1,19 +1,23 @@
 [package]
-name = "rong_bot_prime"
+name		= "rong_bot_prime"
 version = "0.0.1"
 authors = ["ForeverAnApple"]
 edition = "2021"
 
 [dependencies.serenity]
-version = "0.10.9"
+version  = "0.10.9"
 features = ["framework", "standard_framework", "client", "gateway", "rustls_backend", "model"]
 
 [dependencies.tokio]
-version = "1.15"
+version  = "1.15"
 features = ["macros", "rt-multi-thread"]
 
 [dependencies.chrono]
-version = "0.4.19"
-default-features = false
-features = ["clock"]
+version						= "0.4.19"
+default-features	= false
+features					= ["clock"]
 
+[dependencies.sqlx]
+git               = "https://github.com/launchbadge/sqlx"
+default-features	= false
+features					= ["runtime-tokio-rustls", "macros", "postgres", "uuid"]
