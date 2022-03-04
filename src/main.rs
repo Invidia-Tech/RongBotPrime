@@ -12,6 +12,8 @@ use commands::{
     atc::{
         summary::*,
         status::*,
+        start::*,
+        end::*,
     },
 };
 
@@ -19,7 +21,6 @@ use std::{
     collections::{HashMap, HashSet},
     env,
     error::Error,
-    fmt::Write,
     sync::Arc,
 };
 
@@ -28,7 +29,7 @@ use serenity::{
     async_trait,
     client::bridge::gateway::{GatewayIntents, ShardId, ShardManager},
     framework::standard::{
-        buckets::{LimitedFor, RevertBucket},
+        buckets::LimitedFor,
         help_commands,
         macros::{check, command, group, help, hook},
         Args,
@@ -42,10 +43,9 @@ use serenity::{
     },
     http::Http,
     model::{
-        channel::{Channel, Message},
+        channel::Message,
         gateway::Ready,
         id::UserId,
-        permissions::Permissions,
     },
     utils::{content_safe, ContentSafeOptions},
 };
@@ -460,19 +460,3 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
-// =========================== FLIGHT COMMANDS =====================================
-#[command("start")]
-#[description("Start a flight.")]
-#[bucket = "atc"]
-async fn flight_start(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-
-    Ok(())
-}
-
-#[command("end")]
-#[description("End a flight.")]
-#[bucket = "atc"]
-async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-
-    Ok(())
-}
