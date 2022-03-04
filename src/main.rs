@@ -4,6 +4,7 @@ Here lies Rong, reborn, better than before.
 */
 
 mod utils;
+mod data;
 
 use std::{
     collections::{HashMap, HashSet},
@@ -43,6 +44,8 @@ use serenity::{
 use tokio::sync::Mutex;
 
 use sqlx::postgres::PgPoolOptions;
+
+use crate::data::DatabasePool;
 
 // This allows data to be shared across the shard, so that all frameworks
 // and handlers can see the same data as long as they have a copy of the
