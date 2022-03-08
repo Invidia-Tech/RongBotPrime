@@ -24,7 +24,10 @@ use commands::{
     help::help::*,
 };
 
-use listeners::hooks::general::*;
+use listeners::{
+    hooks::general::*,
+    handlers::basic::*,
+};
 
 use std::{
     collections::{HashMap, HashSet},
@@ -35,7 +38,6 @@ use std::{
 
 use serenity::prelude::*;
 use serenity::{
-    async_trait,
     client::bridge::gateway::GatewayIntents,
     framework::standard::{
         buckets::LimitedFor,
@@ -43,21 +45,11 @@ use serenity::{
         StandardFramework,
     },
     http::Http,
-    model::gateway::Ready,
 };
 
 use sqlx::postgres::PgPoolOptions;
 
 use crate::data::*;
-
-struct Handler;
-
-#[async_trait]
-impl EventHandler for Handler {
-    async fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
-    }
-}
 
 #[group]
 #[commands(say, latency, debug_args)]
