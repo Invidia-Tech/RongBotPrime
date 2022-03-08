@@ -10,10 +10,14 @@ mod commands;
 use commands::{
     cb::status::*,
     atc::{
-        summary::*,
         status::*,
+        summary::*,
         start::*,
-        end::*,
+        end::*
+    },
+    general::{
+        debug::*,
+        general::*,
     },
 };
 
@@ -27,7 +31,7 @@ use std::{
 use serenity::prelude::*;
 use serenity::{
     async_trait,
-    client::bridge::gateway::{GatewayIntents, ShardId},
+    client::bridge::gateway::GatewayIntents,
     framework::standard::{
         buckets::LimitedFor,
         help_commands,
@@ -46,8 +50,7 @@ use serenity::{
         channel::Message,
         gateway::Ready,
         id::UserId,
-    },
-    utils::{content_safe, ContentSafeOptions},
+    }
 };
 
 use sqlx::postgres::PgPoolOptions;
@@ -238,7 +241,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .configure(|c| c
             .with_whitespace(true)
             .on_mention(Some(bot_id))
-            .prefix("~")
+            .prefix(">")
             // In this case, if "," would be first, a message would never
             // be delimited at ", ", forcing you to trim your arguments if you
             // want to avoid whitespaces at the start of each.
@@ -324,32 +327,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     Ok(())
 }
 
-
-// Repeats what the user passed as argument but ensures that user and role
-// mentions are replaced with a safe textual alternative.
-// In this example channel mentions are excluded via the `ContentSafeOptions`.
-#[command]
-async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    let settings = if let Some(guild_id) = msg.guild_id {
-        // By default roles, users, and channel mentions are cleaned.
-        ContentSafeOptions::default()
-            // We do not want to clean channal mentions as they
-            // do not ping users.
-            .clean_channel(false)
-            // If it's a guild channel, we want mentioned users to be displayed
-            // as their display name.
-            .display_as_member_from(guild_id)
-    } else {
-        ContentSafeOptions::default().clean_channel(false).clean_role(false)
-    };
-
-    let content = content_safe(&ctx.cache, &args.rest(), &settings).await;
-
-    msg.channel_id.say(&ctx.http, &content).await?;
-
-    Ok(())
-}
-
 // A function which acts as a "check", to determine whether to call a command.
 //
 // In this case, this command checks to ensure you are the owner of the message
@@ -363,82 +340,23 @@ async fn owner_check(
     _: &mut Args,
     _: &CommandOptions,
 ) -> Result<(), Reason> {
-    // Replace 7 with your ID to make this check pass.
-    //
-    // 1. If you want to pass a reason alongside failure you can do:
-    // `Reason::User("Lacked admin permission.".to_string())`,
-    //
-    // 2. If you want to mark it as something you want to log only:
-    // `Reason::Log("User lacked admin permission.".to_string())`,
-    //
-    // 3. If the check's failure origin is unknown you can mark it as such:
-    // `Reason::Unknown`
-    //
-    // 4. If you want log for your system and for the user, use:
-    // `Reason::UserAndLog { user, log }`
+    /*
+    Replace 7 with your ID to make this check pass.
+
+    1. If you want to pass a reason alongside failure you can do:
+    `Reason::User("Lacked admin permission.".to_string())`,
+
+    2. If you want to mark it as something you want to log only:
+    `Reason::Log("User lacked admin permission.".to_string())`,
+
+    3. If the check's failure origin is unknown you can mark it as such:
+    `Reason::Unknown`
+
+    4. If you want log for your system and for the user, use:
+    `Reason::UserAndLog { user, log }`
+    */
     if msg.author.id != 162034086066520064 {
         return Err(Reason::User("Lacked owner permission".to_string()));
     }
-
     Ok(())
 }
-
-#[command]
-#[checks(Owner)]
-async fn debug_args(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    msg.channel_id.say(&ctx.http, &format!("Arguments: {:?}", args.rest())).await?;
-
-    Ok(())
-}
-
-#[command]
-async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
-    // The shard manager is an interface for mutating, stopping, restarting, and
-    // retrieving information about shards.
-    let data = ctx.data.read().await;
-
-    let shard_manager = match data.get::<ShardManagerContainer>() {
-        Some(v) => v,
-        None => {
-            msg.reply(ctx, "There was a problem getting the shard manager").await?;
-
-            return Ok(());
-        },
-    };
-
-    let manager = shard_manager.lock().await;
-    let runners = manager.runners.lock().await;
-
-    // Shards are backed by a "shard runner" responsible for processing events
-    // over the shard, so we'll get the information about the shard runner for
-    // the shard this command was sent over.
-    let runner = match runners.get(&ShardId(ctx.shard_id)) {
-        Some(runner) => runner,
-        None => {
-            msg.reply(ctx, "No shard found").await?;
-
-            return Ok(());
-        },
-    };
-
-    println!("Latency is: {:?}", runner.latency);
-    match runner.latency {
-        Some(dur) => {
-            msg.reply(ctx, &format!("This shard's latency is {:?}", dur)).await?;
-        },
-        None => {msg.reply(ctx, "Error retriving latency for this shard. Or it's not ready yet.").await?;},
-    };
-
-    Ok(())
-}
-
-#[command]
-// Limit command usage to guilds.
-#[only_in(guilds)]
-// #[checks(Owner)]
-async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.channel_id.say(&ctx.http, "Pong! : )").await?;
-
-    Ok(())
-}
-
