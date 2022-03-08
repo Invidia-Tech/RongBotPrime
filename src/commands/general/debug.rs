@@ -1,4 +1,4 @@
-use crate::check::owner::*;
+use crate::checks::owner::*;
 
 use serenity::{
     client::Context,
