@@ -27,7 +27,7 @@ use std::{
 use serenity::prelude::*;
 use serenity::{
     async_trait,
-    client::bridge::gateway::{GatewayIntents, ShardId, ShardManager},
+    client::bridge::gateway::{GatewayIntents, ShardId},
     framework::standard::{
         buckets::LimitedFor,
         help_commands,
@@ -50,27 +50,9 @@ use serenity::{
     utils::{content_safe, ContentSafeOptions},
 };
 
-use tokio::sync::Mutex;
-
 use sqlx::postgres::PgPoolOptions;
 
-use crate::data::DatabasePool;
-
-// This allows data to be shared across the shard, so that all frameworks
-// and handlers can see the same data as long as they have a copy of the
-// `data` Arc. Arc is an atomic reference counter btw. It's a thread safe
-// way to share immutable data.
-struct ShardManagerContainer;
-
-impl TypeMapKey for ShardManagerContainer {
-    type Value = Arc<Mutex<ShardManager>>;
-}
-
-struct CommandCounter;
-
-impl TypeMapKey for CommandCounter {
-    type Value = HashMap<String, u64>;
-}
+use crate::data::*;
 
 struct Handler;
 
