@@ -1,3 +1,5 @@
+use crate::data::DatabasePool;
+
 use serenity::{
     client::Context,
     framework::standard::{
@@ -27,6 +29,10 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     if let Err(why) = msg.channel_id.say(&ctx.http, &response).await {
         println!("Error sending message: {:?}", why);
     }
+
+    let pool = ctx.data.read().await.get::<DatabasePool>().cloned().unwrap();
+
+
 
     let msg = msg
         .channel_id
