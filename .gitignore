@@ -11,6 +11,7 @@ Cargo.lock
 
 # System prod/test environment files
 env/
+.env
 
 # Macos kinda shit
 .DS_Store

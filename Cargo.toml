@@ -1,5 +1,5 @@
 [package]
-name		= "rong_bot_prime"
+name	= "rong_bot_prime"
 version = "0.0.1"
 authors = ["ForeverAnApple"]
 edition = "2021"
@@ -13,11 +13,11 @@ version  = "1.15"
 features = ["macros", "rt-multi-thread"]
 
 [dependencies.chrono]
-version						= "0.4.19"
-default-features	= false
-features					= ["clock"]
+version		 = "0.4.19"
+default-features = false
+features		 = ["clock"]
 
 [dependencies.sqlx]
-git               = "https://github.com/launchbadge/sqlx"
-default-features	= false
-features					= ["runtime-tokio-rustls", "macros", "postgres", "uuid"]
+git              = "https://github.com/launchbadge/sqlx"
+default-features = false
+features         = ["runtime-tokio-rustls", "macros", "postgres"]
