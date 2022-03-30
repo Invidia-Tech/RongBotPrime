@@ -77,7 +77,7 @@ struct CB;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let token = env::var("DISCORD_TOKEN").expect("Expect DISCORD_TOKEN in environment.");
-    let dburl = env::var("DB_URL").expect("Expect DB_URL in environment.");
+    let dburl = env::var("DATABASE_URL").expect("Expect DATABASE_URL in environment.");
 
     let http = Http::new_with_token(&token);
 
