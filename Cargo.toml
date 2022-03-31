@@ -20,4 +20,4 @@ features		 = ["clock"]
 [dependencies.sqlx]
 git              = "https://github.com/launchbadge/sqlx"
 default-features = false
-features         = ["runtime-tokio-rustls", "macros", "postgres", "time"]
+features         = ["runtime-tokio-rustls", "macros", "postgres", "time", "bigdecimal"]

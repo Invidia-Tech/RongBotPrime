@@ -29,3 +29,9 @@ pub struct CommandCounter;
 impl TypeMapKey for CommandCounter {
     type Value = HashMap<String, u64>;
 }
+
+pub enum CbStatus {
+    FUTURE,
+    ACTIVE,
+    PAST
+}
