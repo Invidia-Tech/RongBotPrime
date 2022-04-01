@@ -11,6 +11,7 @@ mod listeners;
 
 use commands::{
     cb::status::*,
+    config::set_channel::*,
     atc::{
         status::*,
         summary::*,
@@ -72,7 +73,17 @@ struct ATC;
 #[description = "These commands help with clan battle utilities, status, hit submission, etc."]
 #[summary = "Rong Clan Battle utilities."]
 #[commands(cb_status)]
+#[default_command(cb_status)]
 struct CB;
+
+// Rong configs
+#[group]
+#[only_in(guilds)]
+#[prefixes("config")]
+#[description = "These commands help configure rong's internal workings."]
+#[summary = "Configure Rong's inner workings."]
+#[commands(set_channel)]
+struct Config;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -128,7 +139,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .help(&MY_HELP)
         .group(&GENERAL_GROUP)
         .group(&ATC_GROUP)
-        .group(&CB_GROUP);
+        .group(&CB_GROUP)
+        .group(&CONFIG_GROUP);
 
     let mut client = Client::builder(&token)
         .event_handler(Handler)
