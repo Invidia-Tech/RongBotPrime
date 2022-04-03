@@ -38,5 +38,6 @@ async fn rong_admin_check(
     if !user_admin_status {
         return Err(Reason::User("You are not a rong superadmin.".to_string()));
     }
+
     Ok(())
 }

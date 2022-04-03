@@ -35,10 +35,10 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     // }
 
     let pool = ctx.data.read().await.get::<DatabasePool>().cloned().unwrap();
-    let clans_info =
-        sqlx::query("SELECT id, platform_id FROM rong_clan WHERE platform_id != 'unset';")
-            .fetch_all(&pool)
-            .await?;
+    // let clans_info =
+    //     sqlx::query("SELECT id, platform_id FROM rong_clan WHERE platform_id != 'unset';")
+    //         .fetch_all(&pool)
+    //         .await?;
 
 
 
@@ -57,10 +57,15 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         .await {
             Ok(rows) => rows,
             Err(_) => {
-                msg.channel_id.say(ctx, "This channel does not allow cb commands.").await?;
+                msg.channel_id.say(ctx, "There are no clans within Rong.").await?;
                 return Ok(());
             }
         };
+
+    if clans_info.len() == 0 {
+        msg.channel_id.say(ctx, "This channel does not allow cb commands.").await?;
+        return Ok(());
+    }
 
     let mut clan_lookup = HashMap::new();
     for clan in &clans_info {
@@ -175,16 +180,16 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let cb_status: CbStatus;
     if epoch_now <= cb_end_epoch {
         if epoch_now >= cb_start_epoch {
-            cb_status = CbStatus::ACTIVE;
+            cb_status = CbStatus::Active;
         } else {
-            cb_status = CbStatus::FUTURE;
+            cb_status = CbStatus::Future;
         }
     } else {
-        cb_status = CbStatus::PAST;
+        cb_status = CbStatus::Past;
     }
 
     match cb_status {
-        CbStatus::ACTIVE => {
+        CbStatus::Active => {
             let cb_day:i32 = ((epoch_now - cb_start_epoch) / 86400 + 1).try_into().unwrap();
             let hits_today =
                 match sqlx::query!(
@@ -239,7 +244,7 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                })
                .await?;
         }
-        CbStatus::PAST => {
+        CbStatus::Past => {
             msg.channel_id
                .say(
                    ctx,
@@ -252,7 +257,7 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                .await?;
 
         }
-        CbStatus::FUTURE => {
+        CbStatus::Future => {
             msg.channel_id
                .say(
                    ctx,
