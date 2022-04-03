@@ -5,7 +5,7 @@ use std::{
 use serenity::client::bridge::gateway::ShardManager;
 use tokio::sync::Mutex;
 use serenity::prelude::TypeMapKey;
-use sqlx::PgPool;
+use sqlx::{PgPool, FromRow};
 
 
 pub struct DatabasePool;
@@ -30,8 +30,29 @@ impl TypeMapKey for CommandCounter {
     type Value = HashMap<String, u64>;
 }
 
+#[derive(Debug)]
 pub enum CbStatus {
-    FUTURE,
-    ACTIVE,
-    PAST
+    Future,
+    Active,
+    Past
+}
+
+#[derive(Debug, sqlx::Type, strum_macros::EnumString)]
+#[sqlx(type_name = "channel_persona", rename_all = "lowercase")]
+pub enum ChannelPersona {
+    #[strum(ascii_case_insensitive)]
+    Cb,
+    #[strum(ascii_case_insensitive)]
+    Pvp,
+    #[strum(ascii_case_insensitive)]
+    Clan,
+    #[strum(ascii_case_insensitive)]
+    Public
+}
+
+#[derive(Debug, sqlx::FromRow)]
+pub struct ChannelType {
+    pub channel_id: String,
+    pub clan_id: i32,
+    pub persona: ChannelPersona
 }

@@ -4,6 +4,10 @@ version = "0.0.1"
 authors = ["ForeverAnApple"]
 edition = "2021"
 
+[dependencies]
+strum = "0.24"
+strum_macros = "0.24"
+
 [dependencies.serenity]
 version  = "0.10.9"
 features = ["framework", "standard_framework", "client", "gateway", "rustls_backend", "model"]
