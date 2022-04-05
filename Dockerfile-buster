@@ -38,7 +38,7 @@ COPY --from=builder /etc/group /etc/group
 WORKDIR /rongbotprime
 
 # Copy our build
-COPY --from=builder /rongbotprime/target/release/myip ./
+COPY --from=builder /rongbotprime/target/release/rong_bot_prime ./
 
 # Use an unprivileged user.
 USER rong:rong
