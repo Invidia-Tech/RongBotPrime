@@ -1,3 +1,166 @@
 {
-  "db": "PostgreSQL"
+  "db": "PostgreSQL",
+  "0ee93b64c7380f7c130391de2bc776e2fd797ca61a7e9f0dff789f32d1a155aa": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT id\n             FROM public.rong_clan\n             WHERE name ilike $1"
+  },
+  "19f93a192c940494a10b6c6e1dd26cec60a2af8b1d500a8dfa3a93b462d64d51": {
+    "describe": {
+      "columns": [
+        {
+          "name": "start_time",
+          "ordinal": 0,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "end_time",
+          "ordinal": 1,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "current_boss",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "current_hp",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "current_lap",
+          "ordinal": 4,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT start_time, end_time, current_boss, current_hp, current_lap\n             FROM public.rong_clanbattle\n             WHERE id = $1;"
+  },
+  "57947c687aba05d7b007011e3a56570b8e3829e57b42f30df880fc3bec2f7bcf": {
+    "describe": {
+      "columns": [
+        {
+          "name": "is_superadmin",
+          "ordinal": 0,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT is_superadmin\n             FROM public.rong_user\n             WHERE platform_id = $1;"
+  },
+  "8e74f948b71be64bbc6975354dc86e3f2f16603179ef479b453ea8879c3570de": {
+    "describe": {
+      "columns": [
+        {
+          "name": "hits",
+          "ordinal": 0,
+          "type_info": "Numeric"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT\n                        COALESCE(SUM(CASE WHEN \"hit_type\" = 'Normal' THEN 1 ELSE 0.5 END), 0) as hits\n                     FROM public.rong_clanbattlescore\n                     WHERE\n                        clan_battle_id = $1\n                        AND day = $2;"
+  },
+  "9e50c8dbd5c0cae13e04290854587fe7b1901ad1e61fd55395e8d7243c117008": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "cb_name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT cb.id, cb.name AS cb_name\n            FROM rong_clanbattle AS cb\n            JOIN rong_clan AS clan\n            ON cb.clan_id = clan.id\n            WHERE start_time = (SELECT start_time\n                                FROM public.rong_clanbattle AS cb\n                                JOIN rong_clan AS clan\n                                ON cb.clan_id = clan.id\n                                WHERE clan.id = $1\n                                ORDER BY abs(EXTRACT(EPOCH FROM start_time) - EXTRACT(EPOCH FROM now()))\n                                LIMIT 1)\n                  AND clan.id = $1\n            LIMIT 1;"
+  },
+  "f21bf4899aad757f8bf683e4f01622e838331a7ac7178e10d8552a58918acc38": {
+    "describe": {
+      "columns": [
+        {
+          "name": "clan_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "clan_name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "platform_id",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT clan_id, name AS clan_name, platform_id\n             FROM rongbot.channel_type channel\n             JOIN public.rong_clan clan\n               ON channel.clan_id = clan.id\n             WHERE persona = 'cb'\n                   AND channel_id = $1\n                   AND platform_id != 'unset';"
+  }
 }

@@ -24,8 +24,9 @@ features		 = ["clock"]
 [dependencies.sqlx]
 git              = "https://github.com/launchbadge/sqlx"
 default-features = false
-features         = ["runtime-tokio-rustls", "macros", "postgres", "time", "bigdecimal"]
+features         = ["runtime-tokio-rustls", "macros", "postgres", "time", "bigdecimal", "offline"]
 
 [profile.release]
 lto = true
 codegen-units = 1
+# strip = true # Strip is not a stable feature
