@@ -1,12 +1,8 @@
-use std::{
-    collections::HashMap,
-    sync::Arc,
-};
 use serenity::client::bridge::gateway::ShardManager;
-use tokio::sync::Mutex;
 use serenity::prelude::TypeMapKey;
-use sqlx::{PgPool, FromRow};
-
+use sqlx::{FromRow, PgPool};
+use std::{collections::HashMap, sync::Arc};
+use tokio::sync::Mutex;
 
 pub struct DatabasePool;
 
@@ -34,7 +30,7 @@ impl TypeMapKey for CommandCounter {
 pub enum CbStatus {
     Future,
     Active,
-    Past
+    Past,
 }
 
 #[derive(Debug, sqlx::Type, strum_macros::EnumString)]
@@ -47,12 +43,12 @@ pub enum ChannelPersona {
     #[strum(ascii_case_insensitive)]
     Clan,
     #[strum(ascii_case_insensitive)]
-    Public
+    Public,
 }
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct ChannelType {
     pub channel_id: String,
     pub clan_id: i32,
-    pub persona: ChannelPersona
+    pub persona: ChannelPersona,
 }

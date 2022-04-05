@@ -1,10 +1,6 @@
 use serenity::{
     client::Context,
-    framework::standard::{
-        Args,
-        CommandResult,
-        macros::command,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
     utils::MessageBuilder,
 };
@@ -12,18 +8,20 @@ use serenity::{
 #[command("status")]
 #[description("This shows the status of current flights.")]
 async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-    msg.channel_id.say(&ctx.http, "Current flights: None").await?;
+    msg.channel_id
+        .say(&ctx.http, "Current flights: None")
+        .await?;
     // The message builder allows for creating a message by
     // mentioning users dynamically, pushing "safe" versions of
     // content (such as bolding normalized content), displaying
     // emojis, and more.
     let response = MessageBuilder::new()
-            .push("User ")
-            .push_bold_safe(&msg.author.name)
-            .push(" used the 'atc status' command in the ")
-            .mention(&msg.channel_id.to_channel_cached(&ctx.cache).await.unwrap())
-            .push(" channel")
-            .build();
+        .push("User ")
+        .push_bold_safe(&msg.author.name)
+        .push(" used the 'atc status' command in the ")
+        .mention(&msg.channel_id.to_channel_cached(&ctx.cache).await.unwrap())
+        .push(" channel")
+        .build();
 
     if let Err(why) = msg.channel_id.say(&ctx.http, &response).await {
         println!("Error sending message: {:?}", why);
@@ -58,7 +56,7 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
                         // This also accepts a rfc3339 Timestamp
                         .timestamp(chrono::Utc::now().to_rfc3339())
                 })
-                //.add_file("./KyoukaSmile.jpg")
+            //.add_file("./KyoukaSmile.jpg")
         })
         .await;
 

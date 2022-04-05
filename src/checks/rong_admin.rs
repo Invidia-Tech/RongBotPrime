@@ -2,12 +2,7 @@ use crate::data::DatabasePool;
 
 use serenity::{
     client::Context,
-    framework::standard::{
-        Args,
-        CommandOptions,
-        macros::check,
-        Reason,
-    },
+    framework::standard::{macros::check, Args, CommandOptions, Reason},
     model::channel::Message,
 };
 
@@ -19,21 +14,30 @@ async fn rong_admin_check(
     _: &mut Args,
     _: &CommandOptions,
 ) -> Result<(), Reason> {
-    let pool = ctx.data.read().await.get::<DatabasePool>().cloned().unwrap();
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
 
-    let user_admin_status =
-        match sqlx::query!(
-            "SELECT is_superadmin
+    let user_admin_status = match sqlx::query!(
+        "SELECT is_superadmin
              FROM public.rong_user
              WHERE platform_id = $1;",
-            msg.author.id.to_string())
-        .fetch_one(&pool)
-        .await {
-            Ok(row) => row.is_superadmin,
-            Err(_) => {
-                return Err(Reason::User("You do not exist within rong's database.".to_string()));
-            }
-        };
+        msg.author.id.to_string()
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(row) => row.is_superadmin,
+        Err(_) => {
+            return Err(Reason::User(
+                "You do not exist within rong's database.".to_string(),
+            ));
+        }
+    };
 
     if !user_admin_status {
         return Err(Reason::User("You are not a rong superadmin.".to_string()));

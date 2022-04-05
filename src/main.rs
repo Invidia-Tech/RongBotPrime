@@ -3,32 +3,21 @@ Here lies Rong, reborn, better than before.
 :KannaBurn:
 */
 
-mod utils;
-mod data;
 mod checks;
 mod commands;
+mod data;
 mod listeners;
+mod utils;
 
 use commands::{
+    atc::{end::*, start::*, status::*, summary::*},
     cb::status::*,
     config::set_channel::*,
-    atc::{
-        status::*,
-        summary::*,
-        start::*,
-        end::*
-    },
-    general::{
-        debug::*,
-        general::*,
-    },
+    general::{debug::*, general::*},
     help::help::*,
 };
 
-use listeners::{
-    hooks::general::*,
-    handlers::basic::*,
-};
+use listeners::{handlers::basic::*, hooks::general::*};
 
 use std::{
     collections::{HashMap, HashSet},
@@ -40,11 +29,7 @@ use std::{
 use serenity::prelude::*;
 use serenity::{
     client::bridge::gateway::GatewayIntents,
-    framework::standard::{
-        buckets::LimitedFor,
-        macros::group,
-        StandardFramework,
-    },
+    framework::standard::{buckets::LimitedFor, macros::group, StandardFramework},
     http::Http,
 };
 
@@ -105,37 +90,44 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 Ok(bot_id) => (owners, bot_id.id),
                 Err(why) => panic!("Could not access the bot id: {:?}", why),
             }
-        },
+        }
         Err(why) => panic!("Could not access application info: {:?}", why),
     };
 
     let framework = StandardFramework::new()
-        .configure(|c| c
-            .with_whitespace(true)
-            .on_mention(Some(bot_id))
-            .prefix(">")
-            .delimiters(vec![" ", ", ", ","])
-            .owners(owners))
-
+        .configure(|c| {
+            c.with_whitespace(true)
+                .on_mention(Some(bot_id))
+                .prefix(">")
+                .delimiters(vec![" ", ", ", ","])
+                .owners(owners)
+        })
         .before(before)
         .after(after)
         .unrecognised_command(unknown_command)
         .normal_message(normal_message)
         .on_dispatch_error(dispatch_error)
         // Can't be used more than once per 5 seconds:
-        .bucket("general", |b| b.delay(1)).await
-        .bucket("atc", |b| b.delay(5)).await
+        .bucket("general", |b| b.delay(1))
+        .await
+        .bucket("atc", |b| b.delay(5))
+        .await
         // Can't be used more than 2 times per 30 seconds, with a 5 second delay applying per channel.
         // Optionally `await_ratelimits` will delay until the command can be executed instead of
         // cancelling the command invocation.
-        .bucket("complicated", |b| b.limit(2).time_span(30).delay(5)
-        // The target each bucket will apply to.
-        .limit_for(LimitedFor::Channel)
-        // The maximum amount of command invocations that can be delayed per target.
-        // Setting this to 0 (default) will never await/delay commands and cancel the invocation.
-        .await_ratelimits(1)
-        // A function to call when a rate limit leads to a delay.
-        .delay_action(delay_action)).await
+        .bucket("complicated", |b| {
+            b.limit(2)
+                .time_span(30)
+                .delay(5)
+                // The target each bucket will apply to.
+                .limit_for(LimitedFor::Channel)
+                // The maximum amount of command invocations that can be delayed per target.
+                // Setting this to 0 (default) will never await/delay commands and cancel the invocation.
+                .await_ratelimits(1)
+                // A function to call when a rate limit leads to a delay.
+                .delay_action(delay_action)
+        })
+        .await
         .help(&MY_HELP)
         .group(&GENERAL_GROUP)
         .group(&ATC_GROUP)
@@ -152,7 +144,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     {
         let mut data = client.data.write().await;
-        let pgpool = PgPoolOptions::new().max_connections(20).connect(&dburl).await?;
+        let pgpool = PgPoolOptions::new()
+            .max_connections(20)
+            .connect(&dburl)
+            .await?;
         data.insert::<DatabasePool>(pgpool);
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
     }
@@ -163,4 +158,3 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     Ok(())
 }
-

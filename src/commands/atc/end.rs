@@ -1,10 +1,6 @@
 use serenity::{
     client::Context,
-    framework::standard::{
-        Args,
-        CommandResult,
-        macros::command,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
 };
 
@@ -12,6 +8,5 @@ use serenity::{
 #[description("End a flight.")]
 #[bucket = "atc"]
 async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-
     Ok(())
 }

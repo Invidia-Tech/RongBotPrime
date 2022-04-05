@@ -1,11 +1,6 @@
 use serenity::{
     client::Context,
-    framework::standard::{
-        Args,
-        CommandOptions,
-        macros::check,
-        Reason,
-    },
+    framework::standard::{macros::check, Args, CommandOptions, Reason},
     model::channel::Message,
 };
 

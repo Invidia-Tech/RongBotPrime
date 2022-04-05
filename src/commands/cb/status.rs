@@ -1,14 +1,13 @@
-use crate::data::{DatabasePool, CbStatus};
+use crate::data::{CbStatus, DatabasePool};
 
-use std::{time::{SystemTime, UNIX_EPOCH}, collections::HashMap};
+use std::{
+    collections::HashMap,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use serenity::{
     client::Context,
-    framework::standard::{
-        Args,
-        CommandResult,
-        macros::command,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::{channel::Message, id::RoleId},
     utils::{Color, MessageBuilder},
 };
@@ -34,42 +33,54 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     //     println!("Error sending message: {:?}", why);
     // }
 
-    let pool = ctx.data.read().await.get::<DatabasePool>().cloned().unwrap();
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
     // let clans_info =
     //     sqlx::query("SELECT id, platform_id FROM rong_clan WHERE platform_id != 'unset';")
     //         .fetch_all(&pool)
     //         .await?;
 
-
-
-    let clans_info =
-        match sqlx::query!(
-            "SELECT clan_id, name AS clan_name, platform_id
+    let clans_info = match sqlx::query!(
+        "SELECT clan_id, name AS clan_name, platform_id
              FROM rongbot.channel_type channel
              JOIN public.rong_clan clan
                ON channel.clan_id = clan.id
              WHERE persona = 'cb'
                    AND channel_id = $1
                    AND platform_id != 'unset';",
-            msg.channel_id.to_string()
-        )
-        .fetch_all(&pool)
-        .await {
-            Ok(rows) => rows,
-            Err(_) => {
-                msg.channel_id.say(ctx, "There are no clans within Rong.").await?;
-                return Ok(());
-            }
-        };
+        msg.channel_id.to_string()
+    )
+    .fetch_all(&pool)
+    .await
+    {
+        Ok(rows) => rows,
+        Err(_) => {
+            msg.channel_id
+                .say(ctx, "There are no clans within Rong.")
+                .await?;
+            return Ok(());
+        }
+    };
 
     if clans_info.len() == 0 {
-        msg.channel_id.say(ctx, "This channel does not allow cb commands.").await?;
+        msg.channel_id
+            .say(ctx, "This channel does not allow cb commands.")
+            .await?;
         return Ok(());
     }
 
     let mut clan_lookup = HashMap::new();
     for clan in &clans_info {
-        println!("Added {:?}: {:?} into clan lookup hashmap", RoleId(clan.platform_id.parse::<u64>()?), clan);
+        println!(
+            "Added {:?}: {:?} into clan lookup hashmap",
+            RoleId(clan.platform_id.parse::<u64>()?),
+            clan
+        );
         clan_lookup.insert(RoleId(clan.platform_id.parse::<u64>()?), clan);
     }
     println!("Clan lookup found {} clans", clan_lookup.len());
@@ -79,11 +90,15 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         match cache.member(guild_id, msg.author.id).await {
             Some(member) => member,
             None => {
-                if let Err(why) = msg.channel_id.say(&ctx.http, "Error finding member data").await {
+                if let Err(why) = msg
+                    .channel_id
+                    .say(&ctx.http, "Error finding member data")
+                    .await
+                {
                     println!("Error sending message: {:?}", why);
                 }
                 return Ok(());
-            },
+            }
         }
     };
 
@@ -97,10 +112,17 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         }
     }
     if !has_clan {
-        msg.channel_id.say(ctx, format!("You do not have the correct role for {:?}.", clan_info.clan_name)).await?;
+        msg.channel_id
+            .say(
+                ctx,
+                format!(
+                    "You do not have the correct role for {:?}.",
+                    clan_info.clan_name
+                ),
+            )
+            .await?;
         return Ok(());
     }
-
 
     // let required_role =
     //     Role
@@ -118,8 +140,9 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     //     return Ok(());
     // }
 
-
-    msg.channel_id.say(ctx, format!("Clan you're in is: {:?}", clan_info.clan_name)).await?;
+    msg.channel_id
+        .say(ctx, format!("Clan you're in is: {:?}", clan_info.clan_name))
+        .await?;
 
     let closest_cb =
         match sqlx::query!(
@@ -147,23 +170,33 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
             }
         };
 
-    msg.channel_id.say(ctx, format!("Current closest CB is {:?}", closest_cb.cb_name)).await?;
+    msg.channel_id
+        .say(
+            ctx,
+            format!("Current closest CB is {:?}", closest_cb.cb_name),
+        )
+        .await?;
 
-    let cb_info =
-        match sqlx::query!(
-            "SELECT start_time, end_time, current_boss, current_hp, current_lap
+    let cb_info = match sqlx::query!(
+        "SELECT start_time, end_time, current_boss, current_hp, current_lap
              FROM public.rong_clanbattle
              WHERE id = $1;",
-            closest_cb.id
-        )
-        .fetch_one(&pool)
-        .await {
-            Ok(row) => row,
-            Err(_) => {
-                msg.channel_id.say(ctx, format!("There are no clan battle info for {:}", closest_cb.cb_name)).await?;
-                return Ok(());
-            }
-        };
+        closest_cb.id
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(row) => row,
+        Err(_) => {
+            msg.channel_id
+                .say(
+                    ctx,
+                    format!("There are no clan battle info for {:}", closest_cb.cb_name),
+                )
+                .await?;
+            return Ok(());
+        }
+    };
 
     let cb_start_epoch = cb_info.start_time.unwrap().unix_timestamp();
     let cb_end_epoch = cb_info.end_time.unwrap().unix_timestamp();
@@ -172,11 +205,10 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     //                                 cb_start_epoch, cb_end_epoch,
     //                                 cb_info.current_boss.unwrap(), cb_info.current_hp.unwrap(), cb_info.current_lap.unwrap())).await?;
 
-    let epoch_now =
-        match SystemTime::now().duration_since(UNIX_EPOCH) {
-            Ok(t) => t.as_secs() as i64,
-            Err(_) => panic!("SystemTime before UNIX EPOCH!"),
-        };
+    let epoch_now = match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(t) => t.as_secs() as i64,
+        Err(_) => panic!("SystemTime before UNIX EPOCH!"),
+    };
     let cb_status: CbStatus;
     if epoch_now <= cb_end_epoch {
         if epoch_now >= cb_start_epoch {
@@ -190,7 +222,9 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
     match cb_status {
         CbStatus::Active => {
-            let cb_day:i32 = ((epoch_now - cb_start_epoch) / 86400 + 1).try_into().unwrap();
+            let cb_day: i32 = ((epoch_now - cb_start_epoch) / 86400 + 1)
+                .try_into()
+                .unwrap();
             let hits_today =
                 match sqlx::query!(
                     "SELECT
@@ -211,63 +245,74 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                     }
                 };
             msg.channel_id
-               .send_message(&ctx.http, |m| {
-                   m.embed(|e| {
-                       e.title(format!("{} - {}", clan_info.clan_name, closest_cb.cb_name))
-                        .description(
-                            format!("Current day: {}", cb_day))
-                        //.image("attachment://KyoukaSmile.jpg")
-                        .fields(vec![
-                            ("Status: Active",
-                             format!(
-                                 "Current Lap: {}\n\
+                .send_message(&ctx.http, |m| {
+                    m.embed(|e| {
+                        e.title(format!("{} - {}", clan_info.clan_name, closest_cb.cb_name))
+                            .description(format!("Current day: {}", cb_day))
+                            //.image("attachment://KyoukaSmile.jpg")
+                            .fields(vec![
+                                (
+                                    "Status: Active",
+                                    format!(
+                                        "Current Lap: {}\n\
                                   Current Boss: {}\n\
                                   Current Hp: {}",
-                                 cb_info.current_lap.unwrap(),
-                                 cb_info.current_boss.unwrap(),
-                                 cb_info.current_hp.unwrap()
-                             ), false),
-                            ("Hits Info",
-                             format!("Hits today: {}/90\n\
-                                      Carryovers left: WIP", hits_today), true),
-                            // ("Bosses killed today:", format!("WIP"), true),
-                            // ("Dmg done today:", format!("WIP"), true),
-                            // ("Overall RV%:", format!("WIP"), false)
-                        ])
-                        .footer(|f| f.text("Days since last int: 0"))
-                       // Add a timestamp for the current time
-                       // This also accepts a rfc3339 Timestamp
-                        .timestamp(chrono::Utc::now().to_rfc3339())
-                        .color(Color::BLITZ_BLUE)
-                   })
+                                        cb_info.current_lap.unwrap(),
+                                        cb_info.current_boss.unwrap(),
+                                        cb_info.current_hp.unwrap()
+                                    ),
+                                    false,
+                                ),
+                                (
+                                    "Hits Info",
+                                    format!(
+                                        "Hits today: {}/90\n\
+                                      Carryovers left: WIP",
+                                        hits_today
+                                    ),
+                                    true,
+                                ),
+                                // ("Bosses killed today:", format!("WIP"), true),
+                                // ("Dmg done today:", format!("WIP"), true),
+                                // ("Overall RV%:", format!("WIP"), false)
+                            ])
+                            .footer(|f| f.text("Days since last int: 0"))
+                            // Add a timestamp for the current time
+                            // This also accepts a rfc3339 Timestamp
+                            .timestamp(chrono::Utc::now().to_rfc3339())
+                            .color(Color::BLITZ_BLUE)
+                    })
                     //.add_file("./KyoukaSmile.jpg")
-               })
-               .await?;
+                })
+                .await?;
         }
         CbStatus::Past => {
             msg.channel_id
-               .say(
-                   ctx,
-                   format!("{clan_name} - {name} is already over. \
+                .say(
+                    ctx,
+                    format!(
+                        "{clan_name} - {name} is already over. \
                             {name} ended <t:{epoch}:R>.",
-                           clan_name=clan_info.clan_name,
-                           name=closest_cb.cb_name,
-                           epoch=cb_end_epoch)
-               )
-               .await?;
-
+                        clan_name = clan_info.clan_name,
+                        name = closest_cb.cb_name,
+                        epoch = cb_end_epoch
+                    ),
+                )
+                .await?;
         }
         CbStatus::Future => {
             msg.channel_id
-               .say(
-                   ctx,
-                   format!("{clan_name} - {name} has not started yet, \
+                .say(
+                    ctx,
+                    format!(
+                        "{clan_name} - {name} has not started yet, \
                             {name} will begin <t:{epoch}:R>.",
-                           clan_name=clan_info.clan_name,
-                           name=closest_cb.cb_name,
-                           epoch=cb_start_epoch)
-               )
-               .await?;
+                        clan_name = clan_info.clan_name,
+                        name = closest_cb.cb_name,
+                        epoch = cb_start_epoch
+                    ),
+                )
+                .await?;
         }
     }
     Ok(())

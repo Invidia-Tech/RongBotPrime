@@ -1,17 +1,12 @@
 use crate::data::ShardManagerContainer;
 
 use serenity::{
-    client::Context,
     client::bridge::gateway::ShardId,
-    framework::standard::{
-        Args,
-        CommandResult,
-        macros::command,
-    },
+    client::Context,
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
     utils::{content_safe, ContentSafeOptions},
 };
-
 
 // Repeats what the user passed as argument but ensures that user and role
 // mentions are replaced with a safe textual alternative.
@@ -28,7 +23,9 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
             // as their display name.
             .display_as_member_from(guild_id)
     } else {
-        ContentSafeOptions::default().clean_channel(false).clean_role(false)
+        ContentSafeOptions::default()
+            .clean_channel(false)
+            .clean_role(false)
     };
 
     let content = content_safe(&ctx.cache, &args.rest(), &settings).await;
@@ -57,10 +54,11 @@ async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
     let shard_manager = match data.get::<ShardManagerContainer>() {
         Some(v) => v,
         None => {
-            msg.reply(ctx, "There was a problem getting the shard manager").await?;
+            msg.reply(ctx, "There was a problem getting the shard manager")
+                .await?;
 
             return Ok(());
-        },
+        }
     };
 
     let manager = shard_manager.lock().await;
@@ -75,15 +73,22 @@ async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
             msg.reply(ctx, "No shard found").await?;
 
             return Ok(());
-        },
+        }
     };
 
     println!("Latency is: {:?}", runner.latency);
     match runner.latency {
         Some(dur) => {
-            msg.reply(ctx, &format!("This shard's latency is {:?}", dur)).await?;
-        },
-        None => {msg.reply(ctx, "Error retriving latency for this shard. Or it's not ready yet.").await?;},
+            msg.reply(ctx, &format!("This shard's latency is {:?}", dur))
+                .await?;
+        }
+        None => {
+            msg.reply(
+                ctx,
+                "Error retriving latency for this shard. Or it's not ready yet.",
+            )
+            .await?;
+        }
     };
 
     Ok(())
