@@ -7,6 +7,6 @@ use serenity::{
 #[command("end")]
 #[description("End a flight.")]
 #[bucket = "atc"]
-async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+async fn flight_end(_ctx: &Context, _msg: &Message, _args: Args) -> CommandResult {
     Ok(())
 }

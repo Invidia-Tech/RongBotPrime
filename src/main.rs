@@ -29,7 +29,7 @@ use std::{
 use serenity::prelude::*;
 use serenity::{
     client::bridge::gateway::GatewayIntents,
-    framework::standard::{buckets::{LimitedFor}, macros::group, StandardFramework},
+    framework::standard::{buckets::LimitedFor, macros::group, StandardFramework},
     http::Http,
 };
 
@@ -107,24 +107,28 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .unrecognised_command(unknown_command)
         .normal_message(normal_message)
         .on_dispatch_error(dispatch_error)
-        .bucket("general", |b| b.delay(3)).await
-        .bucket("atc", |b| b.delay(3)).await
+        .bucket("general", |b| b.delay(3))
+        .await
+        .bucket("atc", |b| b.delay(3))
+        .await
         // Can't be used more than 2 times per 30 seconds, with a 5 second delay applying per channel.
         // Optionally `await_ratelimits` will delay until the command can be executed instead of
         // cancelling the command invocation.
         .bucket("cb", |b| {
             b.limit(3)
-             .time_span(10)
-             .delay(5)
-             // The target each bucket will apply to.
-             .limit_for(LimitedFor::Channel)
-             // The maximum amount of command invocations that can be delayed per target.
-             // Setting this to 0 (default) will never await/delay commands and cancel the invocation.
-             .await_ratelimits(1)
-             // A function to call when a rate limit leads to a delay.
-             .delay_action(delay_action)
-        }).await
-        .bucket("config", |b| b.delay(3)).await
+                .time_span(10)
+                .delay(5)
+                // The target each bucket will apply to.
+                .limit_for(LimitedFor::Channel)
+                // The maximum amount of command invocations that can be delayed per target.
+                // Setting this to 0 (default) will never await/delay commands and cancel the invocation.
+                .await_ratelimits(1)
+                // A function to call when a rate limit leads to a delay.
+                .delay_action(delay_action)
+        })
+        .await
+        .bucket("config", |b| b.delay(3))
+        .await
         .help(&MY_HELP)
         .group(&GENERAL_GROUP)
         .group(&ATC_GROUP)
@@ -147,7 +151,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             .await?;
         println!("Rong database is connected.");
         // Run migrations, which updates the database's schema to the latest version.
-        sqlx::migrate!("./migrations").run(&pgpool).await.expect("Couldn't run database migrations");
+        sqlx::migrate!("./migrations")
+            .run(&pgpool)
+            .await
+            .expect("Couldn't run database migrations");
         println!("Database migrations complete.");
         data.insert::<DatabasePool>(pgpool);
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));

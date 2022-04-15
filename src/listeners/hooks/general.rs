@@ -65,17 +65,17 @@ pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) 
         DispatchError::Ratelimited(secs) => {
             error_response = format!("Stop the spaaaaaam, I'm rate limiting you! Try again in {} second(s). <:Angry:964436597909127169>", secs.as_secs());
         }
-        DispatchError::CheckFailed(check, reason) => {
-            match reason {
-                Reason::User(why) => error_response = format!("User error: {}. {}", check, why),
-                _ => {
-                    error_response = "Unknown error, oh god <@162034086066520064> help! <:YuiCry:924146816201654293>".to_string();
-                    println!("Unhandled reason type within CheckFailed: {:?}", reason);
-                }
+        DispatchError::CheckFailed(check, reason) => match reason {
+            Reason::User(why) => error_response = format!("User error: {}. {}", check, why),
+            _ => {
+                error_response = "Unknown error, oh god <@162034086066520064> help! <:YuiCry:924146816201654293>".to_string();
+                println!("Unhandled reason type within CheckFailed: {:?}", reason);
             }
-        }
+        },
         _ => {
-            error_response = "Unknown error, oh god <@162034086066520064> help! <:YuiCry:924146816201654293>".to_string();
+            error_response =
+                "Unknown error, oh god <@162034086066520064> help! <:YuiCry:924146816201654293>"
+                    .to_string();
             println!("Unhandled Dispatch error: {:?}", error);
         }
     }

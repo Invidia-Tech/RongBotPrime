@@ -45,7 +45,9 @@ async fn rong_admin_check(
     };
 
     if !user_admin_status {
-        return Err(Reason::User("Nice try, but you are not a rong superadmin! <:YuiBat:964435494509346897>".to_string()));
+        return Err(Reason::User(
+            "Nice try, but you are not a rong superadmin! <:YuiBat:964435494509346897>".to_string(),
+        ));
     }
 
     Ok(())

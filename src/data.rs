@@ -1,6 +1,6 @@
 use serenity::client::bridge::gateway::ShardManager;
 use serenity::prelude::TypeMapKey;
-use sqlx::{FromRow, PgPool};
+use sqlx::PgPool;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 

@@ -9,7 +9,7 @@ use serenity::{
     client::Context,
     framework::standard::{macros::command, Args, CommandResult},
     model::{channel::Message, id::RoleId},
-    utils::{Color, MessageBuilder},
+    utils::Color,
 };
 
 #[command("status")]
