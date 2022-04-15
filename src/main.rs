@@ -148,8 +148,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             .max_connections(20)
             .connect(&dburl)
             .await?;
+        println!("Rong database is connected.");
         // Run migrations, which updates the database's schema to the latest version.
         sqlx::migrate!("./migrations").run(&pgpool).await.expect("Couldn't run database migrations");
+        println!("Database migrations complete.");
         data.insert::<DatabasePool>(pgpool);
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
     }
