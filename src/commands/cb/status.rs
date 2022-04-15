@@ -14,6 +14,7 @@ use serenity::{
 
 #[command("status")]
 #[aliases("s")]
+#[bucket = "cb"]
 #[description("This shows the status of the current active clan battle.")]
 async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let cache = &ctx.cache;
@@ -67,7 +68,7 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         }
     };
 
-    if clans_info.len() == 0 {
+    if clans_info.is_empty() {
         msg.channel_id
             .say(ctx, "This channel does not allow cb commands.")
             .await?;
