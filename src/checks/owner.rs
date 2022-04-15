@@ -32,7 +32,8 @@ async fn owner_check(
     4. If you want log for your system and for the user, use:
     `Reason::UserAndLog { user, log }`
     */
-    if msg.author.id != 162034086066520064 {
+    // Only Dabo and Ring are superadmins by default.
+    if msg.author.id != 162034086066520064 || msg.author.id != 79515100536385536 {
         return Err(Reason::User("Lacked owner permission".to_string()));
     }
     Ok(())

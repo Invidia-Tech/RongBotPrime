@@ -14,6 +14,11 @@ async fn rong_admin_check(
     _: &mut Args,
     _: &CommandOptions,
 ) -> Result<(), Reason> {
+    // Ring/Dabo admin aboose
+    if msg.author.id == 162034086066520064 || msg.author.id == 79515100536385536 {
+        Ok(())
+    }
+
     let pool = ctx
         .data
         .read()
