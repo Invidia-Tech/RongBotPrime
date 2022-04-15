@@ -23,6 +23,8 @@ WORKDIR /rongbotprime
 
 COPY ./ .
 
+ENV SQLX_OFFLINE true
+
 # We no longer need to use the x86_64-unknown-linux-musl target
 RUN cargo build --release
 

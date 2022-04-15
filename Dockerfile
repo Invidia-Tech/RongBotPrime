@@ -12,20 +12,6 @@ RUN rustup target add x86_64-unknown-linux-musl
 
 WORKDIR /usr/src/rong
 
-COPY Cargo.toml Cargo.toml
-
-RUN mkdir src/
-
-# ENV CC_x86_64_unknown_linux_musl=x86_64-linux-musl-gcc
-
-# RUN ln -s /usr/local/opt/musl-cross/bin/x86_64-linux-musl-gcc /usr/local/bin/musl-gcc && echo "$CC_x86_64_unknown_linux_musl"
-
-RUN echo "fn main() {println!(\"if you see this, the build broke\")}" > src/main.rs
-
-RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
-
-RUN rm -f target/x86_64-unknown-linux-musl/release/deps/rongbotprime*
-
 COPY . .
 
 RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
