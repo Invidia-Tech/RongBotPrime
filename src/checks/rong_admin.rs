@@ -34,13 +34,13 @@ async fn rong_admin_check(
         Ok(row) => row.is_superadmin,
         Err(_) => {
             return Err(Reason::User(
-                "You do not exist within rong's database.".to_string(),
+                "Hey wait a minute... Who are you? I don't see you in my database. <:Suzunaaaaaaaaa:914426187378466836>".to_string(),
             ));
         }
     };
 
     if !user_admin_status {
-        return Err(Reason::User("You are not a rong superadmin.".to_string()));
+        return Err(Reason::User("Nice try, but you are not a rong superadmin! <:YuiBat:964435494509346897>".to_string()));
     }
 
     Ok(())

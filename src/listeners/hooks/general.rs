@@ -1,6 +1,6 @@
 use serenity::{
     client::Context,
-    framework::standard::{macros::hook, CommandResult, DispatchError},
+    framework::standard::{macros::hook, CommandResult, DispatchError, Reason},
     model::channel::Message,
 };
 
@@ -60,16 +60,24 @@ pub async fn delay_action(ctx: &Context, msg: &Message) {
 
 #[hook]
 pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) {
-    if let DispatchError::Ratelimited(info) = error {
-        // We notify them only once.
-        if info.is_first_try {
-            let _ = msg
-                .channel_id
-                .say(
-                    &ctx.http,
-                    &format!("Try this again in {} seconds.", info.as_secs()),
-                )
-                .await;
+    let error_response: String;
+    match error {
+        DispatchError::Ratelimited(secs) => {
+            error_response = format!("Stop the spaaaaaam, I'm rate limiting you! Try again in {} second(s). <:Angry:964436597909127169>", secs.as_secs());
+        }
+        DispatchError::CheckFailed(check, reason) => {
+            match reason {
+                Reason::User(why) => error_response = format!("User error: {}. {}", check, why),
+                _ => {
+                    error_response = "Unknown error, oh god <@162034086066520064> help! <:YuiCry:924146816201654293>".to_string();
+                    println!("Unhandled reason type within CheckFailed: {:?}", reason);
+                }
+            }
+        }
+        _ => {
+            error_response = "Unknown error, oh god <@162034086066520064> help! <:YuiCry:924146816201654293>".to_string();
+            println!("Unhandled Dispatch error: {:?}", error);
         }
     }
+    let _ = msg.channel_id.say(ctx, error_response).await;
 }
