@@ -148,10 +148,11 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             .max_connections(20)
             .connect(&dburl)
             .await?;
+        // Run migrations, which updates the database's schema to the latest version.
+        sqlx::migrate!("./migrations").run(&pgpool).await.expect("Couldn't run database migrations");
         data.insert::<DatabasePool>(pgpool);
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
     }
-
     if let Err(why) = client.start_autosharded().await {
         println!("Client error: {:?}", why);
     }
