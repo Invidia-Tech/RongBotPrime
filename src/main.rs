@@ -115,7 +115,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         // Optionally `await_ratelimits` will delay until the command can be executed instead of
         // cancelling the command invocation.
         .bucket("cb", |b| {
-            b.limit(3)
+            b.limit(5)
                 .time_span(10)
                 .delay(5)
                 // The target each bucket will apply to.

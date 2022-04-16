@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS rongbot.flight(
     flight_id integer PRIMARY KEY NOT NULL,
     call_sign character varying(20),
     pilot_id integer REFERENCES rongbot.pilot NOT NULL,
+    clan_id integer REFERENCES rong_clan NOT NULL,
     passenger_id integer REFERENCES rong_user NOT NULL,
     start_time timestamptz NOT NULL,
     end_time timestamptz,

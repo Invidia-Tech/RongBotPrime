@@ -1,5 +1,5 @@
--- Add migration script here
---create types
+-- Adds channel type for new rong permissions.
+
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'channel_persona') THEN
