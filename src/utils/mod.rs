@@ -106,7 +106,7 @@ pub async fn get_user_id(ctx: &Context, msg: &Message) -> Result<i32, RongError>
     .await
     {
         Ok(row) => Ok(row.id),
-        Err(e) => Err(RongError::Custom(format!(
+        Err(_) => Err(RongError::Custom(format!(
             "Who are you? I've never seen {} before...",
             msg.author_nick(&ctx.http)
                 .await
@@ -141,7 +141,6 @@ pub async fn update_pilot_info(ctx: &Context, pilot_info: &RongPilot) -> Result<
 
 pub async fn get_pilot_info_or_create_new(
     ctx: &Context,
-    msg: &Message,
     user_id: &i32,
     clan_id: &i32,
 ) -> Result<RongPilot, RongError> {
@@ -162,7 +161,7 @@ pub async fn get_pilot_info_or_create_new(
     .await
     {
         Ok(row) => Ok(row),
-        Err(e) => {
+        Err(_) => {
             match sqlx::query_as!(
                 RongPilot,
                 "INSERT INTO rongbot.pilot (user_id, clan_id)
@@ -179,3 +178,16 @@ pub async fn get_pilot_info_or_create_new(
         }
     }
 }
+
+macro_rules! result_or_say_why {
+    ($expression:expr, $ctx:ident, $msg:ident) => {
+        match $expression.await {
+            Ok(info) => info,
+            Err(why) => {
+                $msg.channel_id.say($ctx, why).await?;
+                return Ok(());
+            }
+        }
+    }
+}
+pub(crate) use result_or_say_why;
