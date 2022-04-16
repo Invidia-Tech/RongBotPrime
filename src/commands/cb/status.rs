@@ -1,5 +1,5 @@
 use crate::data::{CbStatus, ChannelPersona, DatabasePool};
-use crate::utils::*;
+use crate::utils::{clan::*, macros::*};
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -27,14 +27,11 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     //         .fetch_all(&pool)
     //         .await?;
 
-    let (clan_id, clan_name) =
-        match get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb).await {
-            Ok(info) => info,
-            Err(why) => {
-                msg.channel_id.say(ctx, why).await?;
-                return Ok(());
-            }
-        };
+    let (clan_id, clan_name) = result_or_say_why!(
+        get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb),
+        ctx,
+        msg
+    );
 
     // let required_role =
     //     Role
