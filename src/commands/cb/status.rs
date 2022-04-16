@@ -1,14 +1,12 @@
 use crate::data::{CbStatus, ChannelPersona, DatabasePool};
-use crate::utils::rong_db::*;
+use crate::utils::*;
 
-use std::{
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use serenity::{
     client::Context,
     framework::standard::{macros::command, Args, CommandResult},
-    model::{channel::Message},
+    model::channel::Message,
     utils::Color,
 };
 
