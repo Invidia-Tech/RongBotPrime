@@ -1,4 +1,4 @@
-use crate::data::{ChannelPersona, DatabasePool};
+use crate::data::{ChannelPersona, DatabasePool, RongPilot};
 use crate::error::RongError;
 
 use std::collections::HashMap;
@@ -51,14 +51,14 @@ pub async fn get_clan_from_channel_context(
 
     let mut clan_lookup = HashMap::new();
     for clan in &clans_info {
-        println!(
-            "Added {:?}: {:?} into clan lookup hashmap",
-            RoleId(clan.platform_id.parse::<u64>()?),
-            clan
-        );
+        // println!(
+        //     "Added {:?}: {:?} into clan lookup hashmap",
+        //     RoleId(clan.platform_id.parse::<u64>()?),
+        //     clan
+        // );
         clan_lookup.insert(RoleId(clan.platform_id.parse::<u64>()?), clan);
     }
-    println!("Clan lookup found {} clans", clan_lookup.len());
+    // println!("Clan lookup found {} clans", clan_lookup.len());
 
     let guild_id = msg
         .guild_id
@@ -88,4 +88,94 @@ pub async fn get_clan_from_channel_context(
     }
 
     Ok((clan_info.clan_id, clan_info.clan_name.to_owned()))
+}
+
+pub async fn get_user_id(ctx: &Context, msg: &Message) -> Result<i32, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query!(
+        "SELECT id FROM rong_user WHERE platform_id = $1;",
+        msg.author.id.to_string()
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(row) => Ok(row.id),
+        Err(e) => Err(RongError::Custom(format!(
+            "Who are you? I've never seen {} before...",
+            msg.author_nick(&ctx.http)
+                .await
+                .unwrap_or_else(|| String::from(&*msg.author.name))
+        ))),
+    }
+}
+
+pub async fn update_pilot_info(ctx: &Context, pilot_info: &RongPilot) -> Result<(), RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query!(
+        "UPDATE rongbot.pilot SET (nickname, motto, code) = ($1, $2, $3)
+         WHERE pilot_id = $4 RETURNING pilot_id;",
+        pilot_info.nickname,
+        pilot_info.motto,
+        pilot_info.code,
+        pilot_info.pilot_id
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(_) => Ok(()),
+        Err(e) => Err(RongError::Database(e)),
+    }
+}
+
+pub async fn get_pilot_info_or_create_new(
+    ctx: &Context,
+    msg: &Message,
+    user_id: &i32,
+    clan_id: &i32,
+) -> Result<RongPilot, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query_as!(
+        RongPilot,
+        "SELECT * FROM rongbot.pilot WHERE user_id = $1 AND clan_id = $2;",
+        user_id,
+        clan_id
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(row) => Ok(row),
+        Err(e) => {
+            match sqlx::query_as!(
+                RongPilot,
+                "INSERT INTO rongbot.pilot (user_id, clan_id)
+                 VALUES ($1, $2) RETURNING *",
+                user_id,
+                clan_id
+            )
+            .fetch_one(&pool)
+            .await
+            {
+                Ok(row) => Ok(row),
+                Err(e) => Err(RongError::Database(e)),
+            }
+        }
+    }
 }
