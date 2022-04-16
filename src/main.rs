@@ -6,6 +6,7 @@ Here lies Rong, reborn, better than before.
 mod checks;
 mod commands;
 mod data;
+mod error;
 mod listeners;
 mod utils;
 
