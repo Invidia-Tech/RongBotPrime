@@ -46,9 +46,35 @@ pub enum ChannelPersona {
     Public,
 }
 
+#[derive(Debug, sqlx::Type, strum_macros::EnumString)]
+#[sqlx(type_name = "flight_status", rename_all = "lowercase")]
+pub enum FlightStatus {
+    #[strum(ascii_case_insensitive)]
+    Canceled,
+    #[strum(ascii_case_insensitive, serialize = "in flight")]
+    #[sqlx(rename = "in flight")]
+    InFlight,
+    #[strum(ascii_case_insensitive)]
+    Landed,
+    #[strum(ascii_case_insensitive)]
+    Crashed,
+    #[strum(ascii_case_insensitive)]
+    Amb,
+}
+
 #[derive(Debug, sqlx::FromRow)]
 pub struct ChannelType {
     pub channel_id: String,
     pub clan_id: i32,
     pub persona: ChannelPersona,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+pub struct RongPilot {
+    pub pilot_id: i32,
+    pub nickname: Option<String>,
+    pub motto: Option<String>,
+    pub code: Option<String>,
+    pub clan_id: i32,
+    pub user_id: i32,
 }
