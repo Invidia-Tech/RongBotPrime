@@ -1,4 +1,5 @@
-use crate::data::{CbStatus, DatabasePool};
+use crate::data::{CbStatus, DatabasePool, ChannelPersona};
+use crate::utils::rong_db::*;
 
 use std::{
     collections::HashMap,
@@ -17,23 +18,6 @@ use serenity::{
 #[bucket = "cb"]
 #[description("This shows the status of the current active clan battle.")]
 async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-    let cache = &ctx.cache;
-    // The message builder allows for creating a message by
-    // mentioning users dynamically, pushing "safe" versions of
-    // content (such as bolding normalized content), displaying
-    // emojis, and more.
-    // let response = MessageBuilder::new()
-    //         .push("User ")
-    //         .push_bold_safe(&msg.author.name)
-    //         .push(" used the 'cb status' command in the ")
-    //         .mention(&msg.channel_id.to_channel_cached(cache).await.unwrap())
-    //         .push(" channel")
-    //         .build();
-
-    // if let Err(why) = msg.channel_id.say(&ctx.http, &response).await {
-    //     println!("Error sending message: {:?}", why);
-    // }
-
     let pool = ctx
         .data
         .read()
@@ -46,84 +30,13 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     //         .fetch_all(&pool)
     //         .await?;
 
-    let clans_info = match sqlx::query!(
-        "SELECT clan_id, name AS clan_name, platform_id
-             FROM rongbot.channel_type channel
-             JOIN public.rong_clan clan
-               ON channel.clan_id = clan.id
-             WHERE persona = 'cb'
-                   AND channel_id = $1
-                   AND platform_id != 'unset';",
-        msg.channel_id.to_string()
-    )
-    .fetch_all(&pool)
-    .await
-    {
-        Ok(rows) => rows,
-        Err(_) => {
-            msg.channel_id
-                .say(ctx, "There are no clans within Rong.")
-                .await?;
+    let (clan_id, clan_name) = match get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb).await {
+        Ok(info) => info,
+        Err(why) => {
+            msg.channel_id.say(ctx, why).await?;
             return Ok(());
         }
     };
-
-    if clans_info.is_empty() {
-        msg.channel_id
-            .say(ctx, "This channel does not allow cb commands.")
-            .await?;
-        return Ok(());
-    }
-
-    let mut clan_lookup = HashMap::new();
-    for clan in &clans_info {
-        println!(
-            "Added {:?}: {:?} into clan lookup hashmap",
-            RoleId(clan.platform_id.parse::<u64>()?),
-            clan
-        );
-        clan_lookup.insert(RoleId(clan.platform_id.parse::<u64>()?), clan);
-    }
-    println!("Clan lookup found {} clans", clan_lookup.len());
-
-    let guild_id = msg.guild_id.ok_or("Failed to get GuildID from Message.")?;
-    let member = {
-        match cache.member(guild_id, msg.author.id).await {
-            Some(member) => member,
-            None => {
-                if let Err(why) = msg
-                    .channel_id
-                    .say(&ctx.http, "Error finding member data")
-                    .await
-                {
-                    println!("Error sending message: {:?}", why);
-                }
-                return Ok(());
-            }
-        }
-    };
-
-    let mut clan_info = &clans_info[0];
-    let mut has_clan = false;
-    for role in &member.roles {
-        println!("Checking {:?}", role);
-        if clan_lookup.contains_key(role) {
-            clan_info = clan_lookup[&role];
-            has_clan = true;
-        }
-    }
-    if !has_clan {
-        msg.channel_id
-            .say(
-                ctx,
-                format!(
-                    "You do not have the correct role for {:?}.",
-                    clan_info.clan_name
-                ),
-            )
-            .await?;
-        return Ok(());
-    }
 
     // let required_role =
     //     Role
@@ -141,9 +54,9 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     //     return Ok(());
     // }
 
-    msg.channel_id
-        .say(ctx, format!("Clan you're in is: {:?}", clan_info.clan_name))
-        .await?;
+    // msg.channel_id
+    //     .say(ctx, format!("Clan you're in is: {:?}", clan_info.clan_name))
+    //     .await?;
 
     let closest_cb =
         match sqlx::query!(
@@ -160,23 +73,23 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                                 LIMIT 1)
                   AND clan.id = $1
             LIMIT 1;",
-            clan_info.clan_id
+            clan_id
         )
         .fetch_one(&pool)
         .await {
             Ok(row) => row,
             Err(_) => {
-                msg.channel_id.say(ctx, format!("There are no available clan battles for {:}", clan_info.clan_name)).await?;
+                msg.channel_id.say(ctx, format!("There are no available clan battles for {:}", clan_name)).await?;
                 return Ok(());
             }
         };
 
-    msg.channel_id
-        .say(
-            ctx,
-            format!("Current closest CB is {:?}", closest_cb.cb_name),
-        )
-        .await?;
+    // msg.channel_id
+    //     .say(
+    //         ctx,
+    //         format!("Current closest CB is {:?}", closest_cb.cb_name),
+    //     )
+    //     .await?;
 
     let cb_info = match sqlx::query!(
         "SELECT start_time, end_time, current_boss, current_hp, current_lap
@@ -248,7 +161,7 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
             msg.channel_id
                 .send_message(&ctx.http, |m| {
                     m.embed(|e| {
-                        e.title(format!("{} - {}", clan_info.clan_name, closest_cb.cb_name))
+                        e.title(format!("{} - {}", clan_name, closest_cb.cb_name))
                             .description(format!("Current day: {}", cb_day))
                             //.image("attachment://KyoukaSmile.jpg")
                             .fields(vec![
@@ -294,7 +207,7 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                     format!(
                         "{clan_name} - {name} is already over. \
                             {name} ended <t:{epoch}:R>.",
-                        clan_name = clan_info.clan_name,
+                        clan_name = clan_name,
                         name = closest_cb.cb_name,
                         epoch = cb_end_epoch
                     ),
@@ -308,7 +221,7 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                     format!(
                         "{clan_name} - {name} has not started yet, \
                             {name} will begin <t:{epoch}:R>.",
-                        clan_name = clan_info.clan_name,
+                        clan_name = clan_name,
                         name = closest_cb.cb_name,
                         epoch = cb_start_epoch
                     ),
