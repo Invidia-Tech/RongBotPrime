@@ -13,7 +13,9 @@ CREATE TABLE IF NOT EXISTS rongbot.pilot(
     nickname character varying(40),
     motto text,
     code character varying(10),
-    user_id integer REFERENCES rong_user NOT NULL
+    clan_id integer REFERENCES rong_clan NOT NULL,
+    user_id integer REFERENCES rong_user NOT NULL,
+    UNIQUE (clan_id, user_id)
 );
 
 ALTER TABLE rongbot.pilot OWNER TO rongprod;
