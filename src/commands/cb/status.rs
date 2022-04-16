@@ -1,15 +1,14 @@
-use crate::data::{CbStatus, DatabasePool, ChannelPersona};
+use crate::data::{CbStatus, ChannelPersona, DatabasePool};
 use crate::utils::rong_db::*;
 
 use std::{
-    collections::HashMap,
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use serenity::{
     client::Context,
     framework::standard::{macros::command, Args, CommandResult},
-    model::{channel::Message, id::RoleId},
+    model::{channel::Message},
     utils::Color,
 };
 
@@ -30,13 +29,14 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     //         .fetch_all(&pool)
     //         .await?;
 
-    let (clan_id, clan_name) = match get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb).await {
-        Ok(info) => info,
-        Err(why) => {
-            msg.channel_id.say(ctx, why).await?;
-            return Ok(());
-        }
-    };
+    let (clan_id, clan_name) =
+        match get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb).await {
+            Ok(info) => info,
+            Err(why) => {
+                msg.channel_id.say(ctx, why).await?;
+                return Ok(());
+            }
+        };
 
     // let required_role =
     //     Role

@@ -3,14 +3,11 @@ use crate::error::RongError;
 
 use std::{
     collections::HashMap,
-    time::{SystemTime, UNIX_EPOCH},
 };
 
 use serenity::{
     client::Context,
-    framework::standard::{macros::command, Args, CommandResult},
     model::{channel::Message, id::RoleId},
-    utils::Color,
 };
 
 pub async fn get_clan_from_channel_context(
