@@ -22,14 +22,14 @@ use serenity::{
 )]
 #[checks(RongAdmin)]
 async fn set_channel(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    // if args.len() != 3 {
-    //     msg.channel_id
-    //        .say(ctx,
-    //             "Invalid command usage. Please use the help command on `config channel`."
-    //        )
-    //        .await?;
-    //     return Ok(());
-    // }
+    if args.len() != 3 {
+        msg.channel_id
+           .say(ctx,
+                "Invalid command usage. Please use the help command on `config channel`."
+           )
+           .await?;
+        return Ok(());
+    }
 
     let pool = ctx
         .data
@@ -71,18 +71,18 @@ async fn set_channel(ctx: &Context, msg: &Message, mut args: Args) -> CommandRes
     let persona = p.as_str();
     match ChannelPersona::from_str(persona) {
         Ok(persona_enum) => {
-            sqlx::query_as::<_, ChannelType>(
+            // println!("Channel: {}, clan_id: {}, persona: {:?}", mentioned_ch, clan_id, persona_enum);
+            sqlx::query_as_unchecked!(
+                ChannelType,
                 "INSERT INTO rongbot.channel_type (channel_id, clan_id, persona)
-                   VALUES ($1, $2, $3)
-                   ON CONFLICT (channel_id, clan_id) DO UPDATE
-                     SET persona = $3;",
+                 VALUES ($1, $2, $3)
+                 ON CONFLICT (channel_id, clan_id)
+                 DO UPDATE SET persona = $3;",
+                mentioned_ch.to_string(),
+                clan_id,
+                persona_enum
             )
-            .bind(mentioned_ch.to_string())
-            .bind(clan_id)
-            .bind(persona_enum)
-            .fetch_one(&pool)
-            .await
-            .unwrap();
+            .fetch(&pool);
             msg.channel_id
                 .say(
                     ctx,
