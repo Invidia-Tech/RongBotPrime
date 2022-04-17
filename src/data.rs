@@ -3,6 +3,7 @@ use serenity::prelude::TypeMapKey;
 use sqlx::PgPool;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
+use chrono::{DateTime, Utc};
 
 pub struct DatabasePool;
 
@@ -77,4 +78,16 @@ pub struct RongPilot {
     pub code: Option<String>,
     pub clan_id: i32,
     pub user_id: i32,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+pub struct CbInfo {
+    pub id: i32,
+    pub name: String,
+    pub start_time: Option<DateTime<Utc>>,
+    pub end_time: Option<DateTime<Utc>>,
+    pub clan_id: i32,
+    pub current_boss: Option<i32>,
+    pub current_hp: Option<i32>,
+    pub current_lap: Option<i32>
 }

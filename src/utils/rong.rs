@@ -8,7 +8,11 @@ use serenity::{
     model::{channel::Message, id::RoleId},
 };
 
-pub async fn get_user_id(ctx: &Context, msg: &Message) -> Result<i32, RongError> {
+pub async fn get_user_id(
+    ctx: &Context,
+    msg: &Message,
+    platform_id: &String,
+) -> Result<i32, RongError> {
     let pool = ctx
         .data
         .read()
@@ -18,7 +22,7 @@ pub async fn get_user_id(ctx: &Context, msg: &Message) -> Result<i32, RongError>
         .unwrap();
     match sqlx::query!(
         "SELECT id FROM rong_user WHERE platform_id = $1;",
-        msg.author.id.to_string()
+        platform_id
     )
     .fetch_one(&pool)
     .await
