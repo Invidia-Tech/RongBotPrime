@@ -9,7 +9,7 @@ BEGIN
 END$$;
 
 CREATE TABLE IF NOT EXISTS rongbot.pilot(
-    pilot_id integer PRIMARY KEY NOT NULL,
+    id SERIAL PRIMARY KEY NOT NULL,
     nickname character varying(40),
     motto text,
     code character varying(10),
@@ -22,12 +22,12 @@ ALTER TABLE rongbot.pilot OWNER TO rongprod;
 
 
 CREATE TABLE IF NOT EXISTS rongbot.flight(
-    flight_id integer PRIMARY KEY NOT NULL,
-    call_sign character varying(20),
+    id SERIAL PRIMARY KEY NOT NULL,
+    call_sign character varying(20) NOT NULL,
     pilot_id integer REFERENCES rongbot.pilot NOT NULL,
     clan_id integer REFERENCES rong_clan NOT NULL,
     cb_id integer REFERENCES rong_clanbattle NOT NULL,
-    passenger_id integer REFERENCES rong_clanmember NOT NULL,
+    passenger_id integer REFERENCES rong_clanmember,
     start_time timestamptz NOT NULL,
     end_time timestamptz,
     status flight_status NOT NULL,
@@ -35,3 +35,13 @@ CREATE TABLE IF NOT EXISTS rongbot.flight(
 );
 
 ALTER TABLE rongbot.flight OWNER TO rongprod;
+
+
+CREATE TABLE IF NOT EXISTS rongbot.flight_metadata(
+    clan_id integer REFERENCES rong_clan NOT NULL,
+    cb_id integer REFERENCES rong_clanbattle NOT NULL,
+    call_sign_prefix character varying(10) NOT NULL,
+    PRIMARY KEY (clan_id, cb_id)
+);
+
+ALTER TABLE rongbot.flight_metadata OWNER TO rongprod;
