@@ -24,10 +24,11 @@ use serenity::{
 async fn set_channel(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if args.len() != 3 {
         msg.channel_id
-           .say(ctx,
-                "Invalid command usage. Please use the help command on `config channel`."
-           )
-           .await?;
+            .say(
+                ctx,
+                "Invalid command usage. Please use the help command on `config channel`.",
+            )
+            .await?;
         return Ok(());
     }
 

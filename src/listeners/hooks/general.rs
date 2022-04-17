@@ -28,14 +28,20 @@ pub async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
 
 #[hook]
 pub async fn after(
-    _ctx: &Context,
-    _msg: &Message,
+    ctx: &Context,
+    msg: &Message,
     command_name: &str,
     command_result: CommandResult,
 ) {
     match command_result {
         Ok(()) => println!("Processed command '{}'", command_name),
-        Err(why) => println!("Command '{}' returned error {:?}", command_name, why),
+        Err(why) => {
+            let _ = msg
+                .channel_id
+                .say(ctx, "An unknown error occured! AHHHHHHH")
+                .await;
+            println!("Command '{}' returned error {:?}", command_name, why);
+        }
     }
 }
 

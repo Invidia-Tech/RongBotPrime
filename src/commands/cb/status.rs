@@ -53,9 +53,8 @@ async fn cb_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     //     .say(ctx, format!("Clan you're in is: {:?}", clan_info.clan_name))
     //     .await?;
 
-    let (cb_info, cb_status) = result_or_say_why!(
-        get_latest_cb(ctx, &clan_id, &clan_name), ctx, msg
-    );
+    let (cb_info, cb_status) =
+        result_or_say_why!(get_latest_cb(ctx, &clan_id, &clan_name), ctx, msg);
 
     let cb_start_epoch = cb_info.start_time.unwrap().timestamp();
     let cb_end_epoch = cb_info.end_time.unwrap().timestamp();

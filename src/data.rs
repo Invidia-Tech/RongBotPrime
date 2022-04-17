@@ -1,9 +1,9 @@
+use chrono::{DateTime, Utc};
 use serenity::client::bridge::gateway::ShardManager;
 use serenity::prelude::TypeMapKey;
 use sqlx::PgPool;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
-use chrono::{DateTime, Utc};
 
 pub struct DatabasePool;
 
@@ -89,7 +89,7 @@ pub struct CbInfo {
     pub clan_id: i32,
     pub current_boss: Option<i32>,
     pub current_hp: Option<i32>,
-    pub current_lap: Option<i32>
+    pub current_lap: Option<i32>,
 }
 
 #[derive(Debug, sqlx::FromRow)]
@@ -103,5 +103,5 @@ pub struct Flight {
     pub pilot_id: i32,
     pub passenger_id: Option<i32>,
     pub status: FlightStatus,
-    pub team_id: Option<i32>
+    pub team_id: Option<i32>,
 }

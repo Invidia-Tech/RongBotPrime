@@ -1,8 +1,8 @@
-use crate::data::{ChannelPersona, DatabasePool, CbStatus, CbInfo};
+use crate::data::{CbInfo, CbStatus, ChannelPersona, DatabasePool};
 use crate::error::RongError;
 
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use serenity::{
     client::Context,
@@ -91,7 +91,11 @@ pub async fn get_clan_from_channel_context(
     Ok((clan_info.clan_id, clan_info.clan_name.to_owned()))
 }
 
-pub async fn get_latest_cb(ctx: &Context, clan_id: &i32, clan_name: &String) -> Result<(CbInfo, CbStatus), RongError> {
+pub async fn get_latest_cb(
+    ctx: &Context,
+    clan_id: &i32,
+    clan_name: &String,
+) -> Result<(CbInfo, CbStatus), RongError> {
     let pool = ctx
         .data
         .read()
@@ -136,12 +140,12 @@ pub async fn get_latest_cb(ctx: &Context, clan_id: &i32, clan_name: &String) -> 
     .await
     {
         Ok(info) => info,
-        Err(_) =>
-            return Err(
-                RongError::Custom(
-                    format!(
-                        "There are no clan battle info for {:}",
-                        closest_cb.cb_name)))
+        Err(_) => {
+            return Err(RongError::Custom(format!(
+                "There are no clan battle info for {:}",
+                closest_cb.cb_name
+            )))
+        }
     };
 
     let cb_start_epoch = cb_info.start_time.unwrap().timestamp();
