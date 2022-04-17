@@ -72,7 +72,7 @@ pub struct ChannelType {
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct RongPilot {
-    pub pilot_id: i32,
+    pub id: i32,
     pub nickname: Option<String>,
     pub motto: Option<String>,
     pub code: Option<String>,
@@ -90,4 +90,18 @@ pub struct CbInfo {
     pub current_boss: Option<i32>,
     pub current_hp: Option<i32>,
     pub current_lap: Option<i32>
+}
+
+#[derive(Debug, sqlx::FromRow)]
+pub struct Flight {
+    pub id: i32,
+    pub call_sign: String,
+    pub start_time: DateTime<Utc>,
+    pub end_time: Option<DateTime<Utc>>,
+    pub clan_id: i32,
+    pub cb_id: i32,
+    pub pilot_id: i32,
+    pub passenger_id: Option<i32>,
+    pub status: FlightStatus,
+    pub team_id: Option<i32>
 }
