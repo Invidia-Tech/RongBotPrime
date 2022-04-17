@@ -1,6 +1,7 @@
-use crate::data::{ChannelPersona, DatabasePool, RongPilot};
+use crate::data::{ChannelPersona, DatabasePool, CbStatus, CbInfo};
 use crate::error::RongError;
 
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::collections::HashMap;
 
 use serenity::{
@@ -88,4 +89,81 @@ pub async fn get_clan_from_channel_context(
     }
 
     Ok((clan_info.clan_id, clan_info.clan_name.to_owned()))
+}
+
+pub async fn get_latest_cb(ctx: &Context, clan_id: &i32, clan_name: &String) -> Result<(CbInfo, CbStatus), RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+
+    let closest_cb =
+        match sqlx::query!(
+            "SELECT cb.id, cb.name AS cb_name
+            FROM rong_clanbattle AS cb
+            JOIN rong_clan AS clan
+            ON cb.clan_id = clan.id
+            WHERE start_time = (SELECT start_time
+                                FROM public.rong_clanbattle AS cb
+                                JOIN rong_clan AS clan
+                                ON cb.clan_id = clan.id
+                                WHERE clan.id = $1
+                                ORDER BY abs(EXTRACT(EPOCH FROM start_time) - EXTRACT(EPOCH FROM now()))
+                                LIMIT 1)
+                  AND clan.id = $1
+            LIMIT 1;",
+            clan_id
+        )
+        .fetch_one(&pool)
+        .await {
+            Ok(row) => row,
+            Err(_) =>
+                return Err(RongError::Custom(format!("There are no available clan battles for {}", clan_name)))
+        };
+
+    let cb_info = match sqlx::query_as!(
+        CbInfo,
+        "SELECT id, name, clan_id, start_time, end_time,
+                current_boss, current_hp, current_lap
+         FROM public.rong_clanbattle
+         WHERE id = $1;",
+        closest_cb.id
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(info) => info,
+        Err(_) =>
+            return Err(
+                RongError::Custom(
+                    format!(
+                        "There are no clan battle info for {:}",
+                        closest_cb.cb_name)))
+    };
+
+    let cb_start_epoch = cb_info.start_time.unwrap().timestamp();
+    let cb_end_epoch = cb_info.end_time.unwrap().timestamp();
+
+    // msg.channel_id.say(ctx, format!("CB info: start: <t:{:}:f>, end: <t:{:}:f>, {:}, {:}, {:}",
+    //                                 cb_start_epoch, cb_end_epoch,
+    //                                 cb_info.current_boss.unwrap(), cb_info.current_hp.unwrap(), cb_info.current_lap.unwrap())).await?;
+
+    let epoch_now = match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(t) => t.as_secs() as i64,
+        Err(_) => panic!("SystemTime before UNIX EPOCH!"),
+    };
+    let cb_status: CbStatus;
+    if epoch_now <= cb_end_epoch {
+        if epoch_now >= cb_start_epoch {
+            cb_status = CbStatus::Active;
+        } else {
+            cb_status = CbStatus::Future;
+        }
+    } else {
+        cb_status = CbStatus::Past;
+    }
+    Ok((cb_info, cb_status))
 }

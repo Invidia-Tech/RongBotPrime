@@ -24,7 +24,7 @@ features		 = ["clock"]
 [dependencies.sqlx]
 git              = "https://github.com/launchbadge/sqlx"
 default-features = false
-features         = ["runtime-tokio-rustls", "macros", "postgres", "time", "bigdecimal", "offline", "migrate"]
+features         = ["runtime-tokio-rustls", "macros", "postgres", "chrono", "bigdecimal", "offline", "migrate"]
 
 # [profile.release]
 # lto = true
