@@ -1,37 +1,48 @@
-# ------------------------------------------------------------------------------
-# Cargo Build Stage
-# ------------------------------------------------------------------------------
+####################################################################################################
+## Builder
+####################################################################################################
+FROM rust:latest AS builder
 
-FROM rust:latest as cargo-build
+RUN update-ca-certificates
 
-RUN apt-get update
+# Create appuser
+ENV USER=rong
+ENV UID=10001
 
-RUN apt-get install musl-tools -y
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    "${USER}"
 
-RUN rustup target add x86_64-unknown-linux-musl
 
-WORKDIR /usr/src/rong
+WORKDIR /rongbotprime
 
-COPY . .
+COPY ./ .
 
-RUN RUSTFLAGS=-Clinker=musl-gcc cargo build --release --target=x86_64-unknown-linux-musl
+ENV SQLX_OFFLINE true
 
-# ------------------------------------------------------------------------------
-# Final Stage
-# ------------------------------------------------------------------------------
+# We no longer need to use the x86_64-unknown-linux-musl target
+RUN cargo build --release
 
-FROM alpine:latest
+####################################################################################################
+## Final image
+####################################################################################################
+FROM ubuntu:latest
 
-RUN addgroup -g 1000 rong
+# Import from builder.
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
 
-RUN adduser -D -s /bin/sh -u 1000 -G rong rong
+WORKDIR /rongbotprime
 
-WORKDIR /home/rong/bin/
+# Copy our build
+COPY --from=builder /rongbotprime/target/release/rong_bot_prime ./
 
-COPY --from=cargo-build /usr/src/rong/target/x86_64-unknown-linux-musl/release/rong_bot_prime .
+# Use an unprivileged user.
+USER rong:rong
 
-RUN chown rong:rong rong_bot_prime
-
-USER rong
-
-CMD ["./rong_bot_prime"]
+CMD ["/rongbotprime/rong_bot_prime"]
