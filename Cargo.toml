@@ -1,6 +1,6 @@
 [package]
-name	= "rong_bot_prime"
-version = "0.0.1"
+name	= "rongbotprime"
+version = "0.1.0"
 authors = ["ForeverAnApple"]
 edition = "2021"
 

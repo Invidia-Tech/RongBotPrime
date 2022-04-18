@@ -18,14 +18,26 @@ RUN adduser \
     --uid "${UID}" \
     "${USER}"
 
-
+RUN cargo new --bin rongbotprime
 WORKDIR /rongbotprime
 
-COPY ./ .
+COPY Cargo.toml Cargo.toml
+COPY Cargo.lock Cargo.lock
+
+# Cache builds of libraries for release
+RUN cargo build --release
+
+# Delete and move in the real source
+RUN rm -rf src/
+
+COPY ./src ./src
+COPY sqlx-data.json sqlx-data.json
+RUN mkdir ./migrations
 
 ENV SQLX_OFFLINE true
 
-# We no longer need to use the x86_64-unknown-linux-musl target
+# build for release
+RUN rm ./target/release/deps/rongbotprime*
 RUN cargo build --release
 
 ####################################################################################################
@@ -40,9 +52,12 @@ COPY --from=builder /etc/group /etc/group
 WORKDIR /rongbotprime
 
 # Copy our build
-COPY --from=builder /rongbotprime/target/release/rong_bot_prime ./
+COPY --from=builder /rongbotprime/target/release/rongbotprime ./
+
+# DB Migrations
+COPY ./migrations ./migrations
 
 # Use an unprivileged user.
 USER rong:rong
 
-CMD ["/rongbotprime/rong_bot_prime"]
+CMD ["/rongbotprime/rongbotprime"]
