@@ -32,7 +32,7 @@ RUN rm -rf src/
 
 COPY ./src ./src
 COPY sqlx-data.json sqlx-data.json
-RUN mkdir ./migrations
+COPY ./migrations ./migrations
 
 ENV SQLX_OFFLINE true
 
