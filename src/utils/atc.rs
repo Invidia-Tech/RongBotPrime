@@ -1,4 +1,4 @@
-use crate::data::{ChannelPersona, DatabasePool, RongPilot};
+use crate::data::{ChannelPersona, DatabasePool, Flight, RongPilot};
 use crate::error::RongError;
 
 use std::collections::HashMap;
@@ -18,11 +18,11 @@ pub async fn update_pilot_info(ctx: &Context, pilot_info: &RongPilot) -> Result<
         .unwrap();
     match sqlx::query!(
         "UPDATE rongbot.pilot SET (nickname, motto, code) = ($1, $2, $3)
-         WHERE pilot_id = $4 RETURNING pilot_id;",
+         WHERE id = $4 RETURNING id;",
         pilot_info.nickname,
         pilot_info.motto,
         pilot_info.code,
-        pilot_info.pilot_id
+        pilot_info.id
     )
     .fetch_one(&pool)
     .await
@@ -69,5 +69,38 @@ pub async fn get_pilot_info_or_create_new(
                 Err(e) => Err(RongError::Database(e)),
             }
         }
+    }
+}
+
+pub async fn get_ongoing_flights(
+    ctx: &Context,
+    pilot_id: &i32,
+    clan_id: &i32,
+    cb_id: &i32,
+) -> Result<Vec<Flight>, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query_as_unchecked!(
+        Flight,
+        "SELECT * FROM rongbot.flight
+         WHERE  id      = $1
+            AND clan_id = $2
+            AND cb_id   = $3",
+        pilot_id,
+        clan_id,
+        cb_id
+    )
+    .fetch_all(&pool)
+    .await
+    {
+        Ok(flights) => Ok(flights),
+        Err(_) => Err(RongError::Custom(
+            "There is a problem getting all of your flights.".to_string(),
+        )),
     }
 }

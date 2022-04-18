@@ -171,3 +171,28 @@ pub async fn get_latest_cb(
     }
     Ok((cb_info, cb_status))
 }
+
+pub async fn get_clan_member_id(ctx: &Context, clan_id: &i32, ign: &String) -> Result<i32, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query!(
+        "SELECT id FROM rong_clanmember
+         WHERE  clan_id = $1
+            AND ign ilike $2",
+        clan_id,
+        ign
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(row) => Ok(row.id),
+        Err(_) => Err(RongError::Custom(
+            format!("Who is {}? <:ReiThink:924146816151351366>", ign),
+        )),
+    }
+}
