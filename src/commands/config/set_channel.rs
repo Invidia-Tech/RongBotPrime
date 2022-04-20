@@ -83,7 +83,8 @@ async fn set_channel(ctx: &Context, msg: &Message, mut args: Args) -> CommandRes
                 clan_id,
                 persona_enum
             )
-            .fetch(&pool);
+            .execute(&pool)
+            .await?;
             msg.channel_id
                 .say(
                     ctx,
