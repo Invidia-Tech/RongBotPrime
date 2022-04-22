@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use serenity::{
     client::Context,
-    model::{channel::Message, id::RoleId},
+    model::channel::Message,
 };
 
 pub async fn get_user_id(

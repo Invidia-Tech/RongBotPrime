@@ -91,9 +91,6 @@ async fn set_channel(ctx: &Context, msg: &Message, mut args: Args) -> CommandRes
                     &format!("<#{}> has been updated to {}.", mentioned_ch, persona),
                 )
                 .await?;
-            // println!("Channel ID: {} has been updated to {:?}.",
-            //          ch_type.channel_id,
-            //          ch_type.persona);
         }
         Err(_) => {
             msg.channel_id.say(ctx, "Invalid channel type.").await?;
