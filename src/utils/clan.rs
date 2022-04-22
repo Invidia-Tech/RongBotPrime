@@ -172,7 +172,7 @@ pub async fn get_latest_cb(
     Ok((cb_info, cb_status))
 }
 
-pub async fn get_clan_member_id(ctx: &Context, clan_id: &i32, ign: &String) -> Result<i32, RongError> {
+pub async fn get_clan_member_id_by_ign(ctx: &Context, clan_id: &i32, ign: &String) -> Result<(i32, i32), RongError> {
     let pool = ctx
         .data
         .read()
@@ -181,7 +181,7 @@ pub async fn get_clan_member_id(ctx: &Context, clan_id: &i32, ign: &String) -> R
         .cloned()
         .unwrap();
     match sqlx::query!(
-        "SELECT id FROM rong_clanmember
+        "SELECT id, user_id FROM rong_clanmember
          WHERE  clan_id = $1
             AND ign ilike $2",
         clan_id,
@@ -190,7 +190,7 @@ pub async fn get_clan_member_id(ctx: &Context, clan_id: &i32, ign: &String) -> R
     .fetch_one(&pool)
     .await
     {
-        Ok(row) => Ok(row.id),
+        Ok(row) => Ok((row.id, row.user_id.unwrap_or(0))),
         Err(_) => Err(RongError::Custom(
             format!("Who is {}? <:ReiThink:924146816151351366>", ign),
         )),

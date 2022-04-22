@@ -3,6 +3,7 @@ use crate::error::RongError;
 
 use std::collections::HashMap;
 
+use serenity::futures::TryFutureExt;
 use serenity::{
     client::Context,
     model::{channel::Message, id::RoleId},
@@ -18,17 +19,16 @@ pub async fn update_pilot_info(ctx: &Context, pilot_info: &RongPilot) -> Result<
         .unwrap();
     match sqlx::query!(
         "UPDATE rongbot.pilot SET (nickname, motto, code) = ($1, $2, $3)
-         WHERE id = $4 RETURNING id;",
+         WHERE id = $4;",
         pilot_info.nickname,
         pilot_info.motto,
         pilot_info.code,
         pilot_info.id
     )
-    .fetch_one(&pool)
-    .await
-    {
+    .execute(&pool)
+    .await {
         Ok(_) => Ok(()),
-        Err(e) => Err(RongError::Database(e)),
+        Err(e) => Err(RongError::Database(e))
     }
 }
 

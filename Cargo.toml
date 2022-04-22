@@ -10,7 +10,7 @@ strum_macros = "0.24.0"
 
 [dependencies.serenity]
 version = "0.10.10"
-features = ["framework", "standard_framework", "client", "gateway", "rustls_backend", "model"]
+features = ["framework", "standard_framework", "client", "gateway", "rustls_backend", "model", "collector"]
 
 [dependencies.tokio]
 version = "1.17.0"

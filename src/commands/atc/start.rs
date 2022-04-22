@@ -1,13 +1,13 @@
 use serenity::{
     client::Context,
     framework::standard::{macros::command, Args, CommandResult},
-    model::channel::Message,
-    utils::parse_username,
+    model::channel::Message
 };
-use serenity::model::prelude::UserId;
+
+use std::time::Duration;
 
 use crate::{
-    data::{CbStatus, ChannelPersona},
+    data::{CbStatus, ChannelPersona, Flight},
     utils::{atc::*, clan::*, macros::*, rong::*},
 };
 
@@ -50,10 +50,10 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         _ => (),
     };
 
-    let user_id = result_or_say_why!(get_user_id(ctx, msg, &msg.author.id.to_string()), ctx, msg);
+    let pilot_user_id = result_or_say_why!(get_user_id(ctx, msg, &msg.author.id.to_string()), ctx, msg);
 
     let pilot_info = result_or_say_why!(
-        get_pilot_info_or_create_new(ctx, &user_id, &clan_id),
+        get_pilot_info_or_create_new(ctx, &pilot_user_id, &clan_id),
         ctx,
         msg
     );
@@ -61,23 +61,21 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
     match args.len() {
         0 | 1 => {
             // Get passenger or determine solo flight
-            let passenger: Option<i32>;
+            let passenger_member_id: Option<i32>;
             if !args.is_empty() {
                 if let ign = args.single::<String>().unwrap() {
-                    if false {// UserId(passenger_id) == msg.author.id {
-                        passenger = None;
+                    let (member_id, passenger_user_id) =
+                        result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
+                    // msg.channel_id
+                    //    .say(ctx, format!("Passenger_member_id is: {:?}", passenger_member_id))
+                    //    .await?;
+                    passenger_member_id = Some(member_id);
+                    if (passenger_user_id == pilot_user_id) {
                         msg.channel_id
-                           .say(ctx, "No need to mention yourself! Starting a solo flight.")
-                           .await?;
-                    } else {
-                        passenger =
-                            Some(
-                                result_or_say_why!(get_clan_member_id(ctx, &clan_id, &ign), ctx, msg)
-                            );
-                        msg.channel_id
-                           .say(ctx, format!("Passenger is: {:?}", passenger))
+                           .say(ctx, "Warning! You mentioned yourself! This flight will start assuming this is not a solo flight. This may mess up pilot stats.")
                            .await?;
                     }
+
                 } else {
                     msg.channel_id
                         .say(ctx, "Please mention a valid passenger!")
@@ -85,20 +83,62 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                     return Ok(());
                 }
             } else {
-                passenger = None;
+                passenger_member_id = None;
                 msg.channel_id
                     .say(ctx, "No passenger! Starting a solo flight.")
                     .await?;
             }
 
-            // Ensure that the passenger is within the same guild as the pilot.
-            // if passenger.
+            // Ensure that the passenger_member_id is within the same guild as the pilot.
 
             let pilot_ongoing_flights = result_or_say_why!(
                 get_ongoing_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
                 ctx,
                 msg
             );
+
+            for flight in pilot_ongoing_flights {
+                if flight.passenger_id == passenger_member_id {
+                    msg.channel_id
+                       .say(ctx, "Warning! You already have an ongoing flight with this passenger!")
+                       .await?;
+                    return Ok(());
+                }
+            }
+
+
+            // Ask the user if they're ready to start.
+            let react_msg = msg
+                .reply(ctx, "Are you ready to start your flight?")
+                .await
+                .unwrap();
+            react_msg.react(ctx, '✅').await?;
+            react_msg.react(ctx, '❌').await?;
+            // The message model has a way to collect reactions on it.
+            // Other methods are `await_n_reactions` and `await_all_reactions`.
+            // Same goes for messages!
+            if let Some(reaction) = &react_msg
+                .await_reaction(&ctx)
+                .timeout(Duration::from_secs(10))
+                .author_id(msg.author.id)
+                .await
+            {
+                // By default, the collector will collect only added reactions.
+                // We could also pattern-match the reaction in case we want
+                // to handle added or removed reactions.
+                // In this case we will just get the inner reaction.
+                let emoji = &reaction.as_inner_ref().emoji;
+
+                match emoji.as_data().as_str() {
+                    "✅" => {
+                        msg.reply(ctx, "Taking off! Have a safe flight captain!").await?
+                    },
+                    _ => msg.reply(ctx, "Deboarding your plane...").await?,
+                };
+            } else {
+                msg.reply(ctx, "Timed out. We've deboarded your plane.").await?;
+            };
+
         }
         _ => {
             msg.channel_id
