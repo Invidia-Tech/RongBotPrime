@@ -51,7 +51,7 @@ pub async fn unknown_command(_ctx: &Context, _msg: &Message, unknown_command_nam
 }
 
 #[hook]
-pub async fn normal_message(_ctx: &Context, msg: &Message) {
+pub async fn normal_message(_ctx: &Context, _msg: &Message) {
     // println!(
     //     "Normal message '{}#{}: {}'",
     //     msg.author.name, msg.author.discriminator, msg.content

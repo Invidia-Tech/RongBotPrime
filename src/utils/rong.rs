@@ -1,12 +1,7 @@
-use crate::data::{ChannelPersona, DatabasePool, RongPilot};
+use crate::data::DatabasePool;
 use crate::error::RongError;
 
-use std::collections::HashMap;
-
-use serenity::{
-    client::Context,
-    model::channel::Message,
-};
+use serenity::{client::Context, model::channel::Message};
 
 pub async fn get_user_id(
     ctx: &Context,

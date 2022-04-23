@@ -9,8 +9,9 @@ use serenity::{
 #[command]
 #[checks(Owner)]
 async fn debug_args(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    println!("Arugments: {:?}", args.rest());
     msg.channel_id
-        .say(&ctx.http, &format!("Arguments: {:?}", args.rest()))
+        .say(&ctx.http, &format!("Check logs!"))
         .await?;
 
     Ok(())

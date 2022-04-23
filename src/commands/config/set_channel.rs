@@ -1,6 +1,6 @@
 use crate::{
     checks::rong_admin::*,
-    data::{ChannelPersona, ChannelType, DatabasePool},
+    data::{ChannelPersona, DatabasePool},
 };
 
 use std::str::FromStr;

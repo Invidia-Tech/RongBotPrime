@@ -34,7 +34,7 @@ async fn owner_check(
     */
     // Only Dabo and Ring are superadmins by default.
     if msg.author.id != 162034086066520064 && msg.author.id != 79515100536385536 {
-        return Err(Reason::User("Lacked owner permission".to_string()))
+        return Err(Reason::User("Lacked owner permission".to_string()));
     }
 
     Ok(())
