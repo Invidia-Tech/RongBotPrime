@@ -20,7 +20,7 @@ async fn flight_summary(ctx: &Context, msg: &Message, _args: Args) -> CommandRes
         .push("User ")
         .push_bold_safe(&msg.author.name)
         .push(" used the 'atc status' command in the ")
-        .mention(&msg.channel_id.to_channel_cached(&ctx.cache).await.unwrap())
+        .mention(&msg.channel_id.to_channel_cached(&ctx.cache).unwrap())
         .push(" channel")
         .build();
 

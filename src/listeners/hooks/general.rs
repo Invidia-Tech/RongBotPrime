@@ -65,9 +65,20 @@ pub async fn delay_action(ctx: &Context, msg: &Message) {
 }
 
 #[hook]
-pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) {
+pub async fn dispatch_error(
+    ctx: &Context,
+    msg: &Message,
+    error: DispatchError,
+    command_name: &str,
+) {
     let error_response: String;
     match error {
+        DispatchError::NotEnoughArguments { min, given } => {
+            error_response = format!("Need {} arguments, but only got {}.", min, given);
+        }
+        DispatchError::TooManyArguments { max, given } => {
+            error_response = format!("Max arguments allowed is {}, but got {}.", max, given);
+        }
         DispatchError::Ratelimited(secs) => {
             error_response = format!("Stop the spaaaaaam, I'm rate limiting you! Try again in {} second(s). <:Angry:964436597909127169>", secs.as_secs());
         }
@@ -75,14 +86,20 @@ pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) 
             Reason::User(why) => error_response = format!("User error: {}. {}", check, why),
             _ => {
                 error_response = "Unknown error, oh god <@162034086066520064> help! <:YuiCry:924146816201654293>".to_string();
-                println!("Unhandled reason type within CheckFailed: {:?}", reason);
+                println!(
+                    "Unhandled reason type within CheckFailed: {:?} on command {}",
+                    reason, command_name
+                );
             }
         },
         _ => {
             error_response =
                 "Unknown error, oh god <@162034086066520064> help! <:YuiCry:924146816201654293>"
                     .to_string();
-            println!("Unhandled Dispatch error: {:?}", error);
+            println!(
+                "Unhandled Dispatch error: {:?} on command {}",
+                error, command_name
+            );
         }
     }
     let _ = msg.channel_id.say(ctx, error_response).await;

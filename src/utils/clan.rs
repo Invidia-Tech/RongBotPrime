@@ -65,7 +65,7 @@ pub async fn get_clan_from_channel_context(
         .guild_id
         .ok_or_else(|| "Failed to get GuildID from Message.".to_string())?;
     let member = {
-        match cache.member(guild_id, msg.author.id).await {
+        match cache.member(guild_id, msg.author.id) {
             Some(member) => member,
             None => return Err(RongError::Custom("Error finding member data".to_string())),
         }

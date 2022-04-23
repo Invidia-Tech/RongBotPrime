@@ -29,9 +29,9 @@ use std::{
 
 use serenity::prelude::*;
 use serenity::{
-    client::bridge::gateway::GatewayIntents,
     framework::standard::{buckets::LimitedFor, macros::group, StandardFramework},
-    http::Http,
+    http::client::Http,
+    model::gateway::GatewayIntents,
 };
 
 use sqlx::postgres::PgPoolOptions;
@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let token = env::var("DISCORD_TOKEN").expect("Expect DISCORD_TOKEN in environment.");
     let dburl = env::var("DATABASE_URL").expect("Expect DATABASE_URL in environment.");
 
-    let http = Http::new_with_token(&token);
+    let http = serenity::http::client::Http::new(&token);
 
     // We will fetch your bot's owners and id
     let (owners, bot_id) = match http.get_current_application_info().await {
@@ -136,7 +136,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .group(&CB_GROUP)
         .group(&CONFIG_GROUP);
 
-    let mut client = Client::builder(&token)
+    let intents =
+        GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
+    let mut client = Client::builder(&token, intents)
         .event_handler(Handler)
         .framework(framework)
         .intents(GatewayIntents::all())
