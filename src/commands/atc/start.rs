@@ -1,13 +1,13 @@
 use serenity::{
     client::Context,
     framework::standard::{macros::command, Args, CommandResult},
-    model::channel::Message
+    model::channel::Message,
 };
 
 use std::time::Duration;
 
 use crate::{
-    data::{CbStatus, ChannelPersona, Flight},
+    data::{CbStatus, ChannelPersona, DatabasePool},
     utils::{atc::*, clan::*, macros::*, rong::*},
 };
 
@@ -50,7 +50,8 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         _ => (),
     };
 
-    let pilot_user_id = result_or_say_why!(get_user_id(ctx, msg, &msg.author.id.to_string()), ctx, msg);
+    let pilot_user_id =
+        result_or_say_why!(get_user_id(ctx, msg, &msg.author.id.to_string()), ctx, msg);
 
     let pilot_info = result_or_say_why!(
         get_pilot_info_or_create_new(ctx, &pilot_user_id, &clan_id),
@@ -63,24 +64,17 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             // Get passenger or determine solo flight
             let passenger_member_id: Option<i32>;
             if !args.is_empty() {
-                if let ign = args.single::<String>().unwrap() {
-                    let (member_id, passenger_user_id) =
-                        result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
-                    // msg.channel_id
-                    //    .say(ctx, format!("Passenger_member_id is: {:?}", passenger_member_id))
-                    //    .await?;
-                    passenger_member_id = Some(member_id);
-                    if (passenger_user_id == pilot_user_id) {
-                        msg.channel_id
-                           .say(ctx, "Warning! You mentioned yourself! This flight will start assuming this is not a solo flight. This may mess up pilot stats.")
-                           .await?;
-                    }
-
-                } else {
+                let ign = args.single::<String>().unwrap();
+                let (member_id, passenger_user_id) =
+                    result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
+                // msg.channel_id
+                //    .say(ctx, format!("Passenger_member_id is: {:?}", passenger_member_id))
+                //    .await?;
+                passenger_member_id = Some(member_id);
+                if passenger_user_id == pilot_user_id {
                     msg.channel_id
-                        .say(ctx, "Please mention a valid passenger!")
-                        .await?;
-                    return Ok(());
+                       .say(ctx, "Warning! You mentioned yourself! This flight will start assuming this is not a solo flight. This may mess up pilot stats.")
+                       .await?;
                 }
             } else {
                 passenger_member_id = None;
@@ -100,12 +94,14 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             for flight in pilot_ongoing_flights {
                 if flight.passenger_id == passenger_member_id {
                     msg.channel_id
-                       .say(ctx, "Warning! You already have an ongoing flight with this passenger!")
-                       .await?;
+                        .say(
+                            ctx,
+                            "Warning! You already have an ongoing flight with this passenger!",
+                        )
+                        .await?;
                     return Ok(());
                 }
             }
-
 
             // Ask the user if they're ready to start.
             let react_msg = msg
@@ -131,14 +127,42 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
 
                 match emoji.as_data().as_str() {
                     "✅" => {
-                        msg.reply(ctx, "Taking off! Have a safe flight captain!").await?
-                    },
+                        let pool = ctx
+                            .data
+                            .read()
+                            .await
+                            .get::<DatabasePool>()
+                            .cloned()
+                            .unwrap();
+
+                        let all_flights = result_or_say_why!(
+                            get_all_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
+                            ctx,
+                            msg
+                        );
+
+                        sqlx::query!(
+                            "INSERT INTO rongbot.flight
+                                (call_sign, pilot_id, clan_id, cb_id,
+                                 passenger_id, start_time, status)
+                             VALUES ($1, $2, $3, $4, $5, now(), 'in flight');",
+                            all_flights.len().to_string(),
+                            pilot_info.id,
+                            clan_id,
+                            cb_info.id,
+                            passenger_member_id,
+                        )
+                        .execute(&pool)
+                        .await?;
+                        msg.reply(ctx, "Taking off! Have a safe flight captain! <:KyaruAya:966980880939749397>")
+                            .await?
+                    }
                     _ => msg.reply(ctx, "Deboarding your plane...").await?,
                 };
             } else {
-                msg.reply(ctx, "Timed out. We've deboarded your plane.").await?;
+                msg.reply(ctx, "Timed out. We've deboarded your plane.")
+                    .await?;
             };
-
         }
         _ => {
             msg.channel_id

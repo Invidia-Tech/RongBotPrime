@@ -1,13 +1,7 @@
-use crate::data::{ChannelPersona, DatabasePool, Flight, RongPilot};
+use crate::data::{DatabasePool, Flight, RongPilot};
 use crate::error::RongError;
 
-use std::collections::HashMap;
-
-use serenity::futures::TryFutureExt;
-use serenity::{
-    client::Context,
-    model::{channel::Message, id::RoleId},
-};
+use serenity::client::Context;
 
 pub async fn update_pilot_info(ctx: &Context, pilot_info: &RongPilot) -> Result<(), RongError> {
     let pool = ctx
@@ -26,9 +20,10 @@ pub async fn update_pilot_info(ctx: &Context, pilot_info: &RongPilot) -> Result<
         pilot_info.id
     )
     .execute(&pool)
-    .await {
+    .await
+    {
         Ok(_) => Ok(()),
-        Err(e) => Err(RongError::Database(e))
+        Err(e) => Err(RongError::Database(e)),
     }
 }
 
@@ -88,7 +83,41 @@ pub async fn get_ongoing_flights(
     match sqlx::query_as_unchecked!(
         Flight,
         "SELECT * FROM rongbot.flight
-         WHERE  id      = $1
+         WHERE  pilot_id      = $1
+            AND clan_id = $2
+            AND cb_id   = $3
+            AND status = 'in flight'",
+        pilot_id,
+        clan_id,
+        cb_id
+    )
+    .fetch_all(&pool)
+    .await
+    {
+        Ok(flights) => Ok(flights),
+        Err(_) => Err(RongError::Custom(
+            "There is a problem getting all of your flights.".to_string(),
+        )),
+    }
+}
+
+pub async fn get_all_flights(
+    ctx: &Context,
+    pilot_id: &i32,
+    clan_id: &i32,
+    cb_id: &i32,
+) -> Result<Vec<Flight>, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query_as_unchecked!(
+        Flight,
+        "SELECT * FROM rongbot.flight
+         WHERE  pilot_id      = $1
             AND clan_id = $2
             AND cb_id   = $3",
         pilot_id,

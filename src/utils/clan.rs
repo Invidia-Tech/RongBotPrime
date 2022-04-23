@@ -172,7 +172,11 @@ pub async fn get_latest_cb(
     Ok((cb_info, cb_status))
 }
 
-pub async fn get_clan_member_id_by_ign(ctx: &Context, clan_id: &i32, ign: &String) -> Result<(i32, i32), RongError> {
+pub async fn get_clan_member_id_by_ign(
+    ctx: &Context,
+    clan_id: &i32,
+    ign: &String,
+) -> Result<(i32, i32), RongError> {
     let pool = ctx
         .data
         .read()
@@ -191,8 +195,9 @@ pub async fn get_clan_member_id_by_ign(ctx: &Context, clan_id: &i32, ign: &Strin
     .await
     {
         Ok(row) => Ok((row.id, row.user_id.unwrap_or(0))),
-        Err(_) => Err(RongError::Custom(
-            format!("Who is {}? <:ReiThink:924146816151351366>", ign),
-        )),
+        Err(_) => Err(RongError::Custom(format!(
+            "Who is {}? <:ReiThink:924146816151351366>",
+            ign
+        ))),
     }
 }
