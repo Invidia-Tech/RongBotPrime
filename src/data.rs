@@ -1,8 +1,16 @@
-use chrono::{DateTime, Utc};
-use serenity::client::bridge::gateway::ShardManager;
-use serenity::prelude::TypeMapKey;
+use chrono::{
+    DateTime,
+    Utc,
+};
+use serenity::{
+    client::bridge::gateway::ShardManager,
+    prelude::TypeMapKey,
+};
 use sqlx::PgPool;
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    sync::Arc,
+};
 use tokio::sync::Mutex;
 
 pub struct DatabasePool;

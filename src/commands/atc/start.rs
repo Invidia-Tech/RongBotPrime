@@ -1,14 +1,27 @@
 use serenity::{
     client::Context,
-    framework::standard::{macros::command, Args, CommandResult},
+    framework::standard::{
+        macros::command,
+        Args,
+        CommandResult,
+    },
     model::channel::Message,
 };
 
 use std::time::Duration;
 
 use crate::{
-    data::{CbStatus, ChannelPersona, DatabasePool},
-    utils::{atc::*, clan::*, macros::*, rong::*},
+    data::{
+        CbStatus,
+        ChannelPersona,
+        DatabasePool,
+    },
+    utils::{
+        atc::*,
+        clan::*,
+        macros::*,
+        rong::*,
+    },
 };
 
 #[command("atc_start")]

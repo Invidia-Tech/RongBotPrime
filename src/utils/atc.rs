@@ -1,5 +1,11 @@
-use crate::data::{DatabasePool, Flight, RongPilot};
-use crate::error::RongError;
+use crate::{
+    data::{
+        DatabasePool,
+        Flight,
+        RongPilot,
+    },
+    error::RongError,
+};
 
 use std::collections::HashMap;
 

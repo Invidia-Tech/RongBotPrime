@@ -11,27 +11,45 @@ mod listeners;
 mod utils;
 
 use commands::{
-    atc::{end::*, start::*, status::*, summary::*},
+    atc::{
+        end::*,
+        start::*,
+        status::*,
+        summary::*,
+    },
     cb::status::*,
     config::set_channel::*,
-    general::{debug::*, general::*},
+    general::{
+        debug::*,
+        general::*,
+    },
     help::help::*,
 };
 
-use listeners::{handlers::basic::*, hooks::general::*};
+use listeners::{
+    handlers::basic::*,
+    hooks::general::*,
+};
 
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{
+        HashMap,
+        HashSet,
+    },
     env,
     error::Error,
     sync::Arc,
 };
 
-use serenity::prelude::*;
 use serenity::{
-    framework::standard::{buckets::LimitedFor, macros::group, StandardFramework},
+    framework::standard::{
+        buckets::LimitedFor,
+        macros::group,
+        StandardFramework,
+    },
     http::client::Http,
     model::gateway::GatewayIntents,
+    prelude::*,
 };
 
 use sqlx::postgres::PgPoolOptions;

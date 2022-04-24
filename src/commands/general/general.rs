@@ -1,11 +1,20 @@
 use crate::data::ShardManagerContainer;
 
 use serenity::{
-    client::bridge::gateway::ShardId,
-    client::Context,
-    framework::standard::{macros::command, Args, CommandResult},
+    client::{
+        bridge::gateway::ShardId,
+        Context,
+    },
+    framework::standard::{
+        macros::command,
+        Args,
+        CommandResult,
+    },
     model::channel::Message,
-    utils::{content_safe, ContentSafeOptions},
+    utils::{
+        content_safe,
+        ContentSafeOptions,
+    },
 };
 
 // Repeats what the user passed as argument but ensures that user and role

@@ -3,9 +3,17 @@ use std::collections::HashSet;
 use serenity::{
     client::Context,
     framework::standard::{
-        help_commands, macros::help, Args, CommandGroup, CommandResult, HelpOptions,
+        help_commands,
+        macros::help,
+        Args,
+        CommandGroup,
+        CommandResult,
+        HelpOptions,
     },
-    model::{channel::Message, id::UserId},
+    model::{
+        channel::Message,
+        id::UserId,
+    },
 };
 
 // The framework provides two built-in help commands for you to use.

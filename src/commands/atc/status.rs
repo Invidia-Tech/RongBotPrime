@@ -1,15 +1,29 @@
-use std::fmt;
-use std::str::FromStr;
-use std::time::Duration;
+use std::{
+    fmt,
+    str::FromStr,
+    time::Duration,
+};
 
 use serenity::{
     builder::{
-        CreateActionRow, CreateButton, CreateEmbed, CreateSelectMenu, CreateSelectMenuOption,
+        CreateActionRow,
+        CreateButton,
+        CreateEmbed,
+        CreateSelectMenu,
+        CreateSelectMenuOption,
     },
     client::Context,
-    framework::standard::{macros::command, Args, CommandResult},
+    framework::standard::{
+        macros::command,
+        Args,
+        CommandResult,
+    },
     model::{
-        channel::{Embed, Message, ReactionType},
+        channel::{
+            Embed,
+            Message,
+            ReactionType,
+        },
         interactions::message_component::ButtonStyle,
     },
     utils::MessageBuilder,
@@ -18,10 +32,21 @@ use serenity::{
 use chrono::Utc;
 use humantime::format_duration;
 
-use crate::error::RongError;
 use crate::{
-    data::{CbStatus, ChannelPersona, DatabasePool, FlightStatus, RongPilot},
-    utils::{atc::*, clan::*, macros::*, rong::*},
+    data::{
+        CbStatus,
+        ChannelPersona,
+        DatabasePool,
+        FlightStatus,
+        RongPilot,
+    },
+    error::RongError,
+    utils::{
+        atc::*,
+        clan::*,
+        macros::*,
+        rong::*,
+    },
 };
 
 // #[derive(Debug)]

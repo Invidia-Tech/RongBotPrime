@@ -1,0 +1,4 @@
+edition = "2021"
+imports_granularity = "Crate"
+imports_layout = "Vertical"
+fn_single_line = true
