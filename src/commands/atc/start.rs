@@ -86,7 +86,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             // Ensure that the passenger_member_id is within the same guild as the pilot.
 
             let pilot_ongoing_flights = result_or_say_why!(
-                get_ongoing_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
+                get_pilot_ongoing_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
                 ctx,
                 msg
             );
@@ -136,7 +136,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                             .unwrap();
 
                         let all_flights = result_or_say_why!(
-                            get_all_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
+                            get_all_pilot_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
                             ctx,
                             msg
                         );

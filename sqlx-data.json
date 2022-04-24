@@ -20,6 +20,114 @@
     },
     "query": "SELECT id\n             FROM public.rong_clan\n             WHERE name ilike $1"
   },
+  "0f7d2976962b05091b7ab431033fac46009d489f869b462de4046b7ef301a8e5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "nickname",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "motto",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "code",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "clan_id",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 5,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM rongbot.pilot WHERE clan_id = $1;"
+  },
+  "18c073e8610d1422957b70fcb3010fcdf1256733c36d93bc8e89b528ff273df7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "ign",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT p.id, name, ign\n         FROM rongbot.pilot p\n         JOIN rong_user u\n            ON p.user_id=u.id\n         JOIN rong_clanmember cm\n            ON cm.user_id = u.id\n         WHERE cm.clan_id = $1;"
+  },
+  "1d82c1f8fd2c349e429afd5992cb7ec06e8ce8d38d6344aa63db247e1cb0031d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "ign",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT id, ign\n         FROM rong_clanmember\n         WHERE clan_id = $1\n            AND active = TRUE;"
+  },
   "36e16f8d33ecaeaa0f13898d77c3b1e1c57b75d131f04af94e656c94b23ea79b": {
     "describe": {
       "columns": [
@@ -71,163 +179,7 @@
     },
     "query": "INSERT INTO rongbot.pilot (user_id, clan_id)\n                 VALUES ($1, $2) RETURNING *"
   },
-  "37ef978c632dc6a028e044e75976235e72bfc43e67cb76aae415d0894816c0c3": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Int4",
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "cb",
-                  "clan",
-                  "pvp",
-                  "public"
-                ]
-              },
-              "name": "channel_persona"
-            }
-          }
-        ]
-      }
-    },
-    "query": "INSERT INTO rongbot.channel_type (channel_id, clan_id, persona)\n                 VALUES ($1, $2, $3)\n                 ON CONFLICT (channel_id, clan_id)\n                 DO UPDATE SET persona = $3;"
-  },
-  "57947c687aba05d7b007011e3a56570b8e3829e57b42f30df880fc3bec2f7bcf": {
-    "describe": {
-      "columns": [
-        {
-          "name": "is_superadmin",
-          "ordinal": 0,
-          "type_info": "Bool"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "SELECT is_superadmin\n             FROM public.rong_user\n             WHERE platform_id = $1;"
-  },
-  "7a182f547548c815a6d68c3036c926a55d75a6b350d79533cbdfd8641033288a": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Text"
-        ]
-      }
-    },
-    "query": "SELECT id FROM rong_clanmember\n         WHERE  clan_id = $1\n            AND ign ilike $2"
-  },
-  "8233d18632cd42213074ca158b1818ad1504a5b891abe5f8d9ce8f65598d0a06": {
-    "describe": {
-      "columns": [
-        {
-          "name": "clan_id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "clan_name",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "platform_id",
-          "ordinal": 2,
-          "type_info": "Varchar"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "cb",
-                  "clan",
-                  "pvp",
-                  "public"
-                ]
-              },
-              "name": "channel_persona"
-            }
-          },
-          "Text"
-        ]
-      }
-    },
-    "query": "SELECT clan_id, name AS clan_name, platform_id\n             FROM rongbot.channel_type channel\n             JOIN public.rong_clan clan\n               ON channel.clan_id = clan.id\n             WHERE persona = $1\n                   AND channel_id = $2\n                   AND platform_id != 'unset'"
-  },
-  "8a44c63fe7e80be1a1087617f83e032e8fe8878d83d16aff4a06d26adabc1584": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Varchar",
-          "Text",
-          "Varchar",
-          "Int4"
-        ]
-      }
-    },
-    "query": "UPDATE rongbot.pilot SET (nickname, motto, code) = ($1, $2, $3)\n         WHERE id = $4 RETURNING id;"
-  },
-  "8e74f948b71be64bbc6975354dc86e3f2f16603179ef479b453ea8879c3570de": {
-    "describe": {
-      "columns": [
-        {
-          "name": "hits",
-          "ordinal": 0,
-          "type_info": "Numeric"
-        }
-      ],
-      "nullable": [
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Int4"
-        ]
-      }
-    },
-    "query": "SELECT\n                        COALESCE(SUM(CASE WHEN \"hit_type\" = 'Normal' THEN 1 ELSE 0.5 END), 0) as hits\n                     FROM public.rong_clanbattlescore\n                     WHERE\n                        clan_battle_id = $1\n                        AND day = $2;"
-  },
-  "94002a95ccd1d6375376862c3ae9297e3ccff086823abbb296ccd7a1b447108e": {
+  "371e1b3541055ceca123cdaa57beaa0b3abfbc265e543a57923ecfe435a0be68": {
     "describe": {
       "columns": [
         {
@@ -314,7 +266,266 @@
         ]
       }
     },
-    "query": "SELECT * FROM rongbot.flight\n         WHERE  id      = $1\n            AND clan_id = $2\n            AND cb_id   = $3"
+    "query": "SELECT * FROM rongbot.flight\n         WHERE  clan_id  = $1\n            AND cb_id    = $2\n            AND pilot_id = $3\n         ORDER BY CASE status\n                    WHEN 'in flight' THEN 0\n                    WHEN 'landed' THEN 1\n                  END,\n            start_time;"
+  },
+  "37ef978c632dc6a028e044e75976235e72bfc43e67cb76aae415d0894816c0c3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Int4",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "cb",
+                  "clan",
+                  "pvp",
+                  "public"
+                ]
+              },
+              "name": "channel_persona"
+            }
+          }
+        ]
+      }
+    },
+    "query": "INSERT INTO rongbot.channel_type (channel_id, clan_id, persona)\n                 VALUES ($1, $2, $3)\n                 ON CONFLICT (channel_id, clan_id)\n                 DO UPDATE SET persona = $3;"
+  },
+  "475bc174498f7430fbc685095c59e4952d6cbc540bf003f90dc0516c127f4f80": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT id, user_id FROM rong_clanmember\n         WHERE  clan_id = $1\n            AND ign ilike $2"
+  },
+  "57947c687aba05d7b007011e3a56570b8e3829e57b42f30df880fc3bec2f7bcf": {
+    "describe": {
+      "columns": [
+        {
+          "name": "is_superadmin",
+          "ordinal": 0,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT is_superadmin\n             FROM public.rong_user\n             WHERE platform_id = $1;"
+  },
+  "740be7f17d566ef8f58e5899d09da4f4378e982108d89ec0a20697b33996337e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Text",
+          "Varchar",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE rongbot.pilot SET (nickname, motto, code) = ($1, $2, $3)\n         WHERE id = $4;"
+  },
+  "8233d18632cd42213074ca158b1818ad1504a5b891abe5f8d9ce8f65598d0a06": {
+    "describe": {
+      "columns": [
+        {
+          "name": "clan_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "clan_name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "platform_id",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "cb",
+                  "clan",
+                  "pvp",
+                  "public"
+                ]
+              },
+              "name": "channel_persona"
+            }
+          },
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT clan_id, name AS clan_name, platform_id\n             FROM rongbot.channel_type channel\n             JOIN public.rong_clan clan\n               ON channel.clan_id = clan.id\n             WHERE persona = $1\n                   AND channel_id = $2\n                   AND platform_id != 'unset'"
+  },
+  "8e74f948b71be64bbc6975354dc86e3f2f16603179ef479b453ea8879c3570de": {
+    "describe": {
+      "columns": [
+        {
+          "name": "hits",
+          "ordinal": 0,
+          "type_info": "Numeric"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT\n                        COALESCE(SUM(CASE WHEN \"hit_type\" = 'Normal' THEN 1 ELSE 0.5 END), 0) as hits\n                     FROM public.rong_clanbattlescore\n                     WHERE\n                        clan_battle_id = $1\n                        AND day = $2;"
+  },
+  "8eee244eb28c8977dde9e562da2dee19a49fce9eb968ef46825eb565d86769bf": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "call_sign",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "pilot_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "clan_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "cb_id",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "passenger_id",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "start_time",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "end_time",
+          "ordinal": 7,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "status",
+          "ordinal": 8,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "in flight",
+                  "landed",
+                  "crashed",
+                  "amb"
+                ]
+              },
+              "name": "flight_status"
+            }
+          }
+        },
+        {
+          "name": "team_id",
+          "ordinal": 9,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM rongbot.flight\n         WHERE  pilot_id = $1\n            AND clan_id  = $2\n            AND cb_id    = $3\n            AND status   = 'in flight'"
+  },
+  "9aaf2b8304ad56d9edf5429bcf559219d7138a8ff9c0289151a8f8ed966aee7c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Int4",
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO rongbot.flight\n                                (call_sign, pilot_id, clan_id, cb_id,\n                                 passenger_id, start_time, status)\n                             VALUES ($1, $2, $3, $4, $5, now(), 'in flight');"
   },
   "9e50c8dbd5c0cae13e04290854587fe7b1901ad1e61fd55395e8d7243c117008": {
     "describe": {
@@ -341,6 +552,94 @@
       }
     },
     "query": "SELECT cb.id, cb.name AS cb_name\n            FROM rong_clanbattle AS cb\n            JOIN rong_clan AS clan\n            ON cb.clan_id = clan.id\n            WHERE start_time = (SELECT start_time\n                                FROM public.rong_clanbattle AS cb\n                                JOIN rong_clan AS clan\n                                ON cb.clan_id = clan.id\n                                WHERE clan.id = $1\n                                ORDER BY abs(EXTRACT(EPOCH FROM start_time) - EXTRACT(EPOCH FROM now()))\n                                LIMIT 1)\n                  AND clan.id = $1\n            LIMIT 1;"
+  },
+  "be00ce455bb77536154f81903fd04cb098d3af357734d3c29a7f15f9c3cb7a62": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "call_sign",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "pilot_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "clan_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "cb_id",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "passenger_id",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "start_time",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "end_time",
+          "ordinal": 7,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "status",
+          "ordinal": 8,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "in flight",
+                  "landed",
+                  "crashed",
+                  "amb"
+                ]
+              },
+              "name": "flight_status"
+            }
+          }
+        },
+        {
+          "name": "team_id",
+          "ordinal": 9,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM rongbot.flight\n         WHERE  clan_id  = $1\n            AND cb_id    = $2\n         ORDER BY CASE status\n                    WHEN 'in flight' THEN 0\n                    WHEN 'landed' THEN 1\n                  END,\n            start_time;"
   },
   "de21a693fd7d31e4013bfcc71c348b7af03d92ca370be2d65db8631f15331c18": {
     "describe": {

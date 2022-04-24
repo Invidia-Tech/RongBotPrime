@@ -4,6 +4,7 @@ use crate::error::RongError;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use chrono::Timelike;
 use serenity::{
     client::Context,
     model::{channel::Message, id::RoleId},
@@ -199,5 +200,37 @@ pub async fn get_clan_member_id_by_ign(
             "Who is {}? <:ReiThink:924146816151351366>",
             ign
         ))),
+    }
+}
+
+pub async fn get_all_clanmember_ign_map(
+    ctx: &Context,
+    clan_id: &i32,
+) -> Result<HashMap<i32, String>, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query!(
+        "SELECT id, ign
+         FROM rong_clanmember
+         WHERE clan_id = $1
+            AND active = TRUE;",
+        clan_id
+    )
+    .fetch_all(&pool)
+    .await
+    {
+        Ok(rows) => {
+            let mut names_hashmap: HashMap<i32, String> = HashMap::default();
+            for row in rows {
+                names_hashmap.insert(row.id, row.ign);
+            }
+            Ok(names_hashmap)
+        }
+        Err(e) => Err(RongError::Database(e)),
     }
 }
