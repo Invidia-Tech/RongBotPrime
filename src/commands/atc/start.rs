@@ -78,8 +78,9 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         0 | 1 => {
             // Get passenger or determine solo flight
             let passenger_member_id: Option<i32>;
+            let mut ign = "Self Flight".to_string();
             if !args.is_empty() {
-                let ign = args.single::<String>().unwrap();
+                ign = args.single::<String>().unwrap();
                 let (member_id, passenger_user_id) =
                     result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
                 // msg.channel_id
@@ -156,19 +157,28 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                             msg
                         );
 
-                        sqlx::query!(
+                        let flight_id = match sqlx::query!(
                             "INSERT INTO rongbot.flight
                                 (call_sign, pilot_id, clan_id, cb_id,
                                  passenger_id, start_time, status)
-                             VALUES ($1, $2, $3, $4, $5, now(), 'in flight');",
+                             VALUES ($1, $2, $3, $4, $5, now(), 'in flight') RETURNING id;",
                             (all_flights.len() + 1).to_string(),
                             pilot_info.id,
                             clan_id,
                             cb_info.id,
                             passenger_member_id,
                         )
-                        .execute(&pool)
-                        .await?;
+                        .fetch_one(&pool)
+                        .await
+                        {
+                            Ok(row) => row.id,
+                            Err(e) => {
+                                msg.channel_id
+                                    .say(ctx, format!("Something went wrong! {}", e))
+                                    .await?;
+                                return Ok(());
+                            }
+                        };
                         msg.reply(ctx, "Taking off! Have a safe flight captain! <:KyaruAya:966980880939749397>")
                            .await?;
 
@@ -225,6 +235,32 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                                 }
                             }
                         }
+
+                        let mut alert_times = 0;
+                        // Start alerting loop, every half an hour if the flight is still ongoing
+                        loop {
+                            // std::thread::sleep(Duration::from_secs(2));
+                            tokio::time::sleep(Duration::from_secs(60 * 30)).await;
+                            alert_times += 1;
+                            let res: Option<i32> = match sqlx::query!(
+                                "SELECT id FROM rongbot.flight
+                                     WHERE id=$1 AND status='in flight';",
+                                flight_id
+                            )
+                            .fetch_one(&pool)
+                            .await
+                            {
+                                Ok(row) => Some(row.id),
+                                Err(e) => None,
+                            };
+
+                            if res == None {
+                                break;
+                            } else {
+                                msg.reply_mention(ctx, format!("WARNING, your flight ({}) has been going on for {} minutes.", ign, 30*&alert_times)).await?;
+                            }
+                        }
+
                         return Ok(());
                     }
                     _ => msg.reply(ctx, "Deboarding your plane...").await?,
