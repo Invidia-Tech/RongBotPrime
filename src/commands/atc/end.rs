@@ -136,7 +136,8 @@ impl<'a> PassengerOptions<'a> {
     }
 }
 
-#[command("end")]
+#[command("atc_end")]
+#[aliases("end")]
 #[description("End a flight.")]
 #[bucket = "atc"]
 async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
