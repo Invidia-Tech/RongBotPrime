@@ -128,6 +128,94 @@
     },
     "query": "SELECT id, ign\n         FROM rong_clanmember\n         WHERE clan_id = $1\n            AND active = TRUE;"
   },
+  "35a56d83db65ea95f09925a094003c3354d7b46a367a5b140feadec741411101": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "call_sign",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "pilot_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "clan_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "cb_id",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "passenger_id",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "start_time",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "end_time",
+          "ordinal": 7,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "status",
+          "ordinal": 8,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "in flight",
+                  "landed",
+                  "crashed",
+                  "amb"
+                ]
+              },
+              "name": "flight_status"
+            }
+          }
+        },
+        {
+          "name": "team_id",
+          "ordinal": 9,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM rongbot.flight\n         WHERE  clan_id  = $1\n            AND cb_id    = $2\n         ORDER BY CASE status\n                    WHEN 'in flight' THEN 0\n                  END,\n            start_time DESC;"
+  },
   "36e16f8d33ecaeaa0f13898d77c3b1e1c57b75d131f04af94e656c94b23ea79b": {
     "describe": {
       "columns": [
@@ -341,6 +429,32 @@
     },
     "query": "SELECT is_superadmin\n             FROM public.rong_user\n             WHERE platform_id = $1;"
   },
+  "6dfa3927508b470aa75b17043a018852b4faffdfcc49c200ed6571158d521e5e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "in flight",
+                  "landed",
+                  "crashed",
+                  "amb"
+                ]
+              },
+              "name": "flight_status"
+            }
+          },
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE rongbot.flight SET (end_time, status) =\n\t\t (now(), $1) WHERE id = $2"
+  },
   "740be7f17d566ef8f58e5899d09da4f4378e982108d89ec0a20697b33996337e": {
     "describe": {
       "columns": [],
@@ -552,94 +666,6 @@
       }
     },
     "query": "SELECT cb.id, cb.name AS cb_name\n            FROM rong_clanbattle AS cb\n            JOIN rong_clan AS clan\n            ON cb.clan_id = clan.id\n            WHERE start_time = (SELECT start_time\n                                FROM public.rong_clanbattle AS cb\n                                JOIN rong_clan AS clan\n                                ON cb.clan_id = clan.id\n                                WHERE clan.id = $1\n                                ORDER BY abs(EXTRACT(EPOCH FROM start_time) - EXTRACT(EPOCH FROM now()))\n                                LIMIT 1)\n                  AND clan.id = $1\n            LIMIT 1;"
-  },
-  "be00ce455bb77536154f81903fd04cb098d3af357734d3c29a7f15f9c3cb7a62": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "call_sign",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "pilot_id",
-          "ordinal": 2,
-          "type_info": "Int4"
-        },
-        {
-          "name": "clan_id",
-          "ordinal": 3,
-          "type_info": "Int4"
-        },
-        {
-          "name": "cb_id",
-          "ordinal": 4,
-          "type_info": "Int4"
-        },
-        {
-          "name": "passenger_id",
-          "ordinal": 5,
-          "type_info": "Int4"
-        },
-        {
-          "name": "start_time",
-          "ordinal": 6,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "end_time",
-          "ordinal": 7,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "status",
-          "ordinal": 8,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "canceled",
-                  "in flight",
-                  "landed",
-                  "crashed",
-                  "amb"
-                ]
-              },
-              "name": "flight_status"
-            }
-          }
-        },
-        {
-          "name": "team_id",
-          "ordinal": 9,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Int4"
-        ]
-      }
-    },
-    "query": "SELECT * FROM rongbot.flight\n         WHERE  clan_id  = $1\n            AND cb_id    = $2\n         ORDER BY CASE status\n                    WHEN 'in flight' THEN 0\n                    WHEN 'landed' THEN 1\n                  END,\n            start_time;"
   },
   "de21a693fd7d31e4013bfcc71c348b7af03d92ca370be2d65db8631f15331c18": {
     "describe": {

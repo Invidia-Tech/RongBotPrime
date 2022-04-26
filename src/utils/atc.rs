@@ -193,9 +193,8 @@ pub async fn get_all_flights(
             AND cb_id    = $2
          ORDER BY CASE status
                     WHEN 'in flight' THEN 0
-                    WHEN 'landed' THEN 1
                   END,
-            start_time;",
+            start_time DESC;",
         clan_id,
         cb_id
     )
