@@ -12,6 +12,7 @@ mod utils;
 
 use commands::{
     atc::{
+        alert::*,
         end::*,
         start::*,
         status::*,
@@ -66,7 +67,13 @@ struct General;
 #[prefixes("atc", "flight")]
 #[description = "These commands helps us to know the status of pilots, current flights, and logins."]
 #[summary = "Rong ATC (Air Traffic Control)"]
-#[commands(flight_status, flight_summary, flight_end, flight_start)]
+#[commands(
+    flight_status,
+    flight_summary,
+    flight_end,
+    flight_start,
+    set_alert_channel
+)]
 #[default_command(flight_status)]
 struct ATC;
 

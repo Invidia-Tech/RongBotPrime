@@ -687,6 +687,19 @@
     },
     "query": "SELECT id FROM rong_user WHERE platform_id = $1;"
   },
+  "f7e28b5fc9a0193e172a99a20fda945f2bc14b7ffbbfc95cd7051edd8afd2726": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "INSERT INTO rongbot.atc_config (clan_id, alert_channel)\n\t\t VALUES ($1, $2)\n\t\t ON CONFLICT (clan_id)\n         DO UPDATE SET alert_channel = $2;"
+  },
   "f8bcc0416698b5f356324235113c02211c1210e5a44443b539ce253f3c72f8f8": {
     "describe": {
       "columns": [
