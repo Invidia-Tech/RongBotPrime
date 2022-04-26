@@ -73,7 +73,7 @@ pub enum FlightStatus {
     Landed,
     #[strum(ascii_case_insensitive)]
     Crashed,
-    #[strum(ascii_case_insensitive)]
+    #[strum(ascii_case_insensitive, serialize = "ambulanced")]
     Amb,
 }
 

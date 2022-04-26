@@ -249,3 +249,29 @@ pub async fn get_all_clanmember_ign_map(
         Err(e) => Err(RongError::Database(e)),
     }
 }
+
+pub async fn get_clanmember_mention_from_id(
+    ctx: &Context,
+    clanmember_id: &i32,
+) -> Result<Option<u64>, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query!(
+        "SELECT platform_id
+         FROM rong_clanmember cm
+         JOIN rong_user u ON user_id = u.id
+         WHERE cm.id = $1;",
+        clanmember_id
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(row) => Ok(Some(row.platform_id.parse::<u64>()?)),
+        Err(_) => Ok(None),
+    }
+}

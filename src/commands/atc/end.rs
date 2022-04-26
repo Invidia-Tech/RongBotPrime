@@ -196,6 +196,8 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
     let all_clanmember_ign_map =
         result_or_say_why!(get_all_clanmember_ign_map(ctx, &clan_id), ctx, msg);
 
+    let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
+
     let passenger_options = PassengerOptions::new(&all_clanmember_ign_map);
     let m = msg
         .channel_id
@@ -335,6 +337,65 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
         Err(e) => {
             msg.reply_mention(ctx, format!("Something's wrong! {}", e))
                 .await?;
+            // Delete the orig message or there will be dangling components
+            m.delete(&ctx).await?;
+            return Ok(());
+        }
+    }
+
+    // Alert the passenger if exists;
+    let mention_ch = match result_or_say_why!(get_alert_channel_for_clan(ctx, &clan_id), ctx, msg) {
+        None => {
+            msg.reply(
+                ctx,
+                "Warning! I cannot notify your passenger as the ATC alert channel is not set!",
+            )
+            .await?;
+            return Ok(());
+        }
+        Some(alert_ch) => alert_ch,
+    };
+    if let Some(clanmember_id) = end_flight.passenger_id {
+        match result_or_say_why!(
+            get_clanmember_mention_from_id(ctx, &clanmember_id),
+            ctx,
+            msg
+        ) {
+            None => return Ok(()),
+            Some(p_mention) => {
+                msg.reply(ctx, "I will now alert your passenger.").await?;
+                let channel = match ctx.cache.guild_channel(mention_ch) {
+                    Some(channel) => channel,
+                    None => {
+                        let result = msg
+                            .channel_id
+                            .say(ctx, "Could not find guild's channel data")
+                            .await;
+                        if let Err(why) = result {
+                            println!("Error sending message: {:?}", why);
+                        }
+
+                        return Ok(());
+                    }
+                };
+                let default_no_ign = "No IGN".to_string();
+                let pilot_name = format!(
+                    "{}",
+                    all_pilot_ign_map
+                        .get(&pilot_info.id)
+                        .unwrap_or(&default_no_ign)
+                );
+
+                channel
+                    .say(
+                        ctx,
+                        format!(
+                            "<@{}> [**OFF**] Captain {} has ended your flight! Status: {}. Flight duration: {}",
+                            &p_mention, &pilot_name, &end_flight_status, &humantime_ago
+                        ),
+                    )
+                    .await?;
+            }
         }
     }
 

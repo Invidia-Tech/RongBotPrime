@@ -245,3 +245,31 @@ pub async fn get_all_pilot_flights(
         )),
     }
 }
+
+pub async fn get_alert_channel_for_clan(
+    ctx: &Context,
+    clan_id: &i32,
+) -> Result<Option<u64>, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query!(
+        "SELECT alert_channel
+         FROM rongbot.atc_config
+         WHERE clan_id = $1;",
+        clan_id
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(row) => match row.alert_channel {
+            Some(ch) => Ok(Some(ch.parse::<u64>()?)),
+            None => Ok(None),
+        },
+        Err(_) => Ok(None),
+    }
+}

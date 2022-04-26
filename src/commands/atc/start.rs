@@ -72,6 +72,8 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         msg
     );
 
+    let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
+
     match args.len() {
         0 | 1 => {
             // Get passenger or determine solo flight
@@ -159,7 +161,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                                 (call_sign, pilot_id, clan_id, cb_id,
                                  passenger_id, start_time, status)
                              VALUES ($1, $2, $3, $4, $5, now(), 'in flight');",
-                            all_flights.len().to_string(),
+                            (all_flights.len() + 1).to_string(),
                             pilot_info.id,
                             clan_id,
                             cb_info.id,
@@ -168,7 +170,62 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                         .execute(&pool)
                         .await?;
                         msg.reply(ctx, "Taking off! Have a safe flight captain! <:KyaruAya:966980880939749397>")
-                            .await?
+                           .await?;
+
+                        // Alert the passenger if exists;
+                        let mention_ch = match result_or_say_why!(
+                            get_alert_channel_for_clan(ctx, &clan_id),
+                            ctx,
+                            msg
+                        ) {
+                            None => {
+                                msg.reply(
+                                    ctx,
+                                    "Warning! I cannot notify your passenger as the ATC alert channel is not set!")
+                                   .await?;
+                                return Ok(());
+                            }
+                            Some(alert_ch) => alert_ch,
+                        };
+                        if let Some(clanmember_id) = passenger_member_id {
+                            match result_or_say_why!(
+                                get_clanmember_mention_from_id(ctx, &clanmember_id),
+                                ctx,
+                                msg
+                            ) {
+                                None => return Ok(()),
+                                Some(p_mention) => {
+                                    msg.reply(ctx, "I will now alert your passenger.").await?;
+                                    let channel = match ctx.cache.guild_channel(mention_ch) {
+                                        Some(channel) => channel,
+                                        None => {
+                                            let result = msg
+                                                .channel_id
+                                                .say(ctx, "Could not find guild's channel data")
+                                                .await;
+                                            if let Err(why) = result {
+                                                println!("Error sending message: {:?}", why);
+                                            }
+
+                                            return Ok(());
+                                        }
+                                    };
+                                    let default_no_ign = "No IGN".to_string();
+                                    let pilot_name = format!(
+                                        "{}",
+                                        all_pilot_ign_map
+                                            .get(&pilot_info.id)
+                                            .unwrap_or(&default_no_ign)
+                                    );
+
+                                    channel.say(ctx,
+                                                format!("<@{}> [**ON**] Captain {} is taking off with you as a passenger!",
+                                                        &p_mention, &pilot_name))
+                                           .await?;
+                                }
+                            }
+                        }
+                        return Ok(());
                     }
                     _ => msg.reply(ctx, "Deboarding your plane...").await?,
                 };
