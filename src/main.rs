@@ -86,7 +86,7 @@ struct ATC;
 #[description = "These commands help with clan battle utilities, status, hit submission, etc."]
 #[summary = "Rong Clan Battle utilities."]
 #[commands(cb_status)]
-#[default_command(cb_status)]
+//#[default_command(cb_status)]
 struct CB;
 
 // Rong configs
