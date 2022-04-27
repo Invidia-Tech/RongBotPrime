@@ -316,7 +316,7 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
         .get::<DatabasePool>()
         .cloned()
         .unwrap();
-    match sqlx::query_unchecked!(
+    let mut nm = match sqlx::query_unchecked!(
         "UPDATE rongbot.flight SET (end_time, status) =
 		 (now(), $1) WHERE id = $2",
         &end_flight_status,
@@ -333,7 +333,7 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
                     &passenger_text, &humantime_ago, &end_flight_status,
                 ),
             )
-            .await?;
+            .await?
         }
         Err(e) => {
             msg.reply_mention(ctx, format!("Something's wrong! {}", e))
@@ -342,21 +342,21 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
             m.delete(&ctx).await?;
             return Ok(());
         }
-    }
+    };
 
+    let mut alert_msg = String::default();
     // Alert the passenger if exists;
     let mention_ch = match result_or_say_why!(get_alert_channel_for_clan(ctx, &clan_id), ctx, msg) {
         None => {
-            msg.reply(
-                ctx,
+            alert_msg.push_str(
                 "Warning! I cannot notify your passenger as the ATC alert channel is not set!",
-            )
-            .await?;
-            return Ok(());
+            );
+            None
         }
-        Some(alert_ch) => alert_ch,
+        Some(alert_ch) => Some(alert_ch),
     };
     if let Some(clanmember_id) = end_flight.passenger_id {
+        let mention_ch = mention_ch.unwrap_or(msg.channel_id.0);
         match result_or_say_why!(
             get_clanmember_mention_from_id(ctx, &clanmember_id),
             ctx,
@@ -364,7 +364,11 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
         ) {
             None => return Ok(()),
             Some(p_mention) => {
-                msg.reply(ctx, "I will now alert your passenger.").await?;
+                let out_msg = format!(
+                    "{}\n{}\nTime to ping them... <:KyoukaGiggle:968707085212745819>",
+                    &nm.content, &alert_msg
+                );
+                nm.edit(ctx, |nm| nm.content(out_msg)).await?;
                 let channel = match ctx.cache.guild_channel(mention_ch) {
                     Some(channel) => channel,
                     None => {
