@@ -1,14 +1,26 @@
 use serenity::{
+    builder::{
+        CreateActionRow,
+        CreateButton,
+        CreateComponents,
+    },
     client::Context,
     framework::standard::{
         macros::command,
         Args,
         CommandResult,
     },
-    model::channel::Message,
+    model::{
+        channel::Message,
+        interactions::message_component::ButtonStyle,
+    },
 };
 
-use std::time::Duration;
+use core::fmt;
+use std::{
+    str::FromStr,
+    time::Duration,
+};
 
 use crate::{
     data::{
@@ -23,6 +35,49 @@ use crate::{
         rong::*,
     },
 };
+
+#[derive(Debug, strum_macros::EnumString)]
+enum StartOptions {
+    #[strum(ascii_case_insensitive)]
+    Yes,
+    #[strum(ascii_case_insensitive)]
+    No,
+}
+
+impl fmt::Display for StartOptions {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Yes => write!(f, "Yes"),
+            Self::No => write!(f, "No"),
+        }
+    }
+}
+
+impl StartOptions {
+    pub fn emoji(&self) -> char {
+        match self {
+            Self::Yes => '✅',
+            Self::No => '❌',
+        }
+    }
+
+    fn button(&self) -> CreateButton {
+        let mut b = CreateButton::default();
+        b.custom_id(self);
+        b.emoji(self.emoji());
+        b.label(self);
+        b.style(ButtonStyle::Primary);
+        b
+    }
+
+    pub fn action_row() -> CreateActionRow {
+        let mut ar = CreateActionRow::default();
+        // We can add up to 5 buttons per action row
+        ar.add_button(StartOptions::Yes.button());
+        ar.add_button(StartOptions::No.button());
+        ar
+    }
+}
 
 #[command("atc_start")]
 #[aliases("start")]
@@ -76,6 +131,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
 
     match args.len() {
         0 | 1 => {
+            let mut pre_flight_alerts: String = "".to_string();
             // Get passenger or determine solo flight
             let passenger_member_id: Option<i32>;
             let mut ign = "Self Flight".to_string();
@@ -88,15 +144,15 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                 //    .await?;
                 passenger_member_id = Some(member_id);
                 if passenger_user_id == pilot_user_id {
-                    msg.channel_id
-                       .say(ctx, "Warning! You mentioned yourself! This flight will start assuming this is not a solo flight. This may mess up pilot stats.")
-                       .await?;
+                    pre_flight_alerts.push_str(
+                        "Warning! You mentioned yourself! \
+                         This flight will start assuming this is not a solo flight. \
+                         This may mess up pilot stats.\n",
+                    );
                 }
             } else {
                 passenger_member_id = None;
-                msg.channel_id
-                    .say(ctx, "No passenger! Starting a solo flight.")
-                    .await?;
+                pre_flight_alerts.push_str("No passenger! Starting a solo flight.\n");
             }
 
             // Ensure that the passenger_member_id is within the same guild as the pilot.
@@ -112,162 +168,180 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                     msg.channel_id
                         .say(
                             ctx,
-                            "Warning! You already have an ongoing flight with this passenger!",
+                            "Warning! You already have an ongoing flight with this passenger! I've canceled this flight.",
                         )
                         .await?;
                     return Ok(());
                 }
             }
 
-            // Ask the user if they're ready to start.
-            let react_msg = msg
-                .reply(ctx, "Are you ready to start your flight?")
+            let m = msg
+                .channel_id
+                .send_message(&ctx, |m| {
+                    m.content(format!(
+                        "{}Are you ready to begin your flight?",
+                        &pre_flight_alerts
+                    ))
+                    .components(|c| c.add_action_row(StartOptions::action_row()))
+                })
                 .await
                 .unwrap();
-            react_msg.react(ctx, '✅').await?;
-            react_msg.react(ctx, '❌').await?;
-            // The message model has a way to collect reactions on it.
-            // Other methods are `await_n_reactions` and `await_all_reactions`.
-            // Same goes for messages!
-            if let Some(reaction) = &react_msg
-                .await_reaction(&ctx)
-                .timeout(Duration::from_secs(10))
-                .author_id(msg.author.id)
+
+            // Wait for the user to make a selection
+            let mci = match m
+                .await_component_interaction(&ctx)
+                .timeout(Duration::from_secs(20))
                 .await
             {
-                // By default, the collector will collect only added reactions.
-                // We could also pattern-match the reaction in case we want
-                // to handle added or removed reactions.
-                // In this case we will just get the inner reaction.
-                let emoji = &reaction.as_inner_ref().emoji;
+                Some(ci) => ci,
+                None => {
+                    msg.reply(&ctx, "Timed out.").await.unwrap();
+                    m.delete(&ctx).await.unwrap();
+                    return Ok(());
+                }
+            };
 
-                match emoji.as_data().as_str() {
-                    "✅" => {
-                        let pool = ctx
-                            .data
-                            .read()
-                            .await
-                            .get::<DatabasePool>()
-                            .cloned()
-                            .unwrap();
+            let selected_option: StartOptions = StartOptions::from_str(&mci.data.custom_id)?;
+            match selected_option {
+                StartOptions::Yes => {
+                    let pool = ctx
+                        .data
+                        .read()
+                        .await
+                        .get::<DatabasePool>()
+                        .cloned()
+                        .unwrap();
 
-                        let all_flights = result_or_say_why!(
-                            get_all_pilot_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
-                            ctx,
-                            msg
-                        );
+                    let all_flights = result_or_say_why!(
+                        get_all_pilot_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
+                        ctx,
+                        msg
+                    );
 
-                        let flight_id = match sqlx::query!(
-                            "INSERT INTO rongbot.flight
+                    let flight_id = match sqlx::query!(
+                        "INSERT INTO rongbot.flight
                                 (call_sign, pilot_id, clan_id, cb_id,
                                  passenger_id, start_time, status)
                              VALUES ($1, $2, $3, $4, $5, now(), 'in flight') RETURNING id;",
-                            (all_flights.len() + 1).to_string(),
-                            pilot_info.id,
-                            clan_id,
-                            cb_info.id,
-                            passenger_member_id,
+                        (all_flights.len() + 1).to_string(),
+                        pilot_info.id,
+                        clan_id,
+                        cb_info.id,
+                        passenger_member_id,
+                    )
+                    .fetch_one(&pool)
+                    .await
+                    {
+                        Ok(row) => row.id,
+                        Err(e) => {
+                            msg.channel_id
+                                .say(ctx, format!("Something went wrong! {}", e))
+                                .await?;
+                            return Ok(());
+                        }
+                    };
+                    m.delete(ctx).await?;
+                    let mut m = msg.reply(
+                        ctx,
+                        "Taking off! Have a safe flight captain! <:KyaruAya:966980880939749397>",
+                    )
+                    .await?;
+
+                    let mut alert_msg = String::default();
+                    // Alert the passenger if exists;
+                    let mention_ch =
+                        result_or_say_why!(get_alert_channel_for_clan(ctx, &clan_id), ctx, msg);
+
+                    if mention_ch == None {
+                        alert_msg.push_str("Warning! I cannot notify your passenger as the ATC alert channel is not set!\n");
+                    }
+
+                    if let Some(clanmember_id) = passenger_member_id {
+                        match result_or_say_why!(
+                            get_clanmember_mention_from_id(ctx, &clanmember_id),
+                            ctx,
+                            msg
+                        ) {
+                            None => return Ok(()),
+                            Some(p_mention) => {
+                                let out_msg = format!(
+                                    "{}\n{}\nTime to ping them... <:KyoukaGiggle:968707085212745819>",
+                                    &m.content, &alert_msg
+                                );
+
+                                let _ = &m.edit(ctx, |nm| nm.content(out_msg)).await?;
+
+                                let channel = match ctx
+                                    .cache
+                                    .guild_channel(mention_ch.unwrap_or(msg.channel_id.0))
+                                {
+                                    Some(channel) => channel,
+                                    None => {
+                                        let result = msg
+                                            .channel_id
+                                            .say(ctx, "Could not find guild's channel data")
+                                            .await;
+                                        if let Err(why) = result {
+                                            println!("Error sending message: {:?}", why);
+                                        }
+
+                                        return Ok(());
+                                    }
+                                };
+                                let default_no_ign = "No IGN".to_string();
+                                let pilot_name = format!(
+                                    "{}",
+                                    all_pilot_ign_map
+                                        .get(&pilot_info.id)
+                                        .unwrap_or(&default_no_ign)
+                                );
+
+                                channel.say(ctx,
+                                                format!("<@{}> [**ON**] Captain {} is taking off with you as a passenger!",
+                                                        &p_mention, &pilot_name))
+                                           .await?;
+                            }
+                        }
+                    }
+
+                    let mut alert_times = 0;
+                    // Start alerting loop, every half an hour if the flight is still ongoing
+                    loop {
+                        // std::thread::sleep(Duration::from_secs(2));
+                        tokio::time::sleep(Duration::from_secs(60 * 30)).await;
+                        alert_times += 1;
+                        let res: Option<i32> = match sqlx::query!(
+                            "SELECT id FROM rongbot.flight
+                                     WHERE id=$1 AND status='in flight';",
+                            flight_id
                         )
                         .fetch_one(&pool)
                         .await
                         {
-                            Ok(row) => row.id,
-                            Err(e) => {
-                                msg.channel_id
-                                    .say(ctx, format!("Something went wrong! {}", e))
-                                    .await?;
-                                return Ok(());
-                            }
+                            Ok(row) => Some(row.id),
+                            Err(e) => None,
                         };
-                        msg.reply(ctx, "Taking off! Have a safe flight captain! <:KyaruAya:966980880939749397>")
-                           .await?;
 
-                        // Alert the passenger if exists;
-                        let mention_ch = match result_or_say_why!(
-                            get_alert_channel_for_clan(ctx, &clan_id),
-                            ctx,
-                            msg
-                        ) {
-                            None => {
-                                msg.reply(
-                                    ctx,
-                                    "Warning! I cannot notify your passenger as the ATC alert channel is not set!")
-                                   .await?;
-                                return Ok(());
-                            }
-                            Some(alert_ch) => alert_ch,
-                        };
-                        if let Some(clanmember_id) = passenger_member_id {
-                            match result_or_say_why!(
-                                get_clanmember_mention_from_id(ctx, &clanmember_id),
+                        if res == None {
+                            break;
+                        } else {
+                            msg.reply_mention(
                                 ctx,
-                                msg
-                            ) {
-                                None => return Ok(()),
-                                Some(p_mention) => {
-                                    msg.reply(ctx, "I will now alert your passenger.").await?;
-                                    let channel = match ctx.cache.guild_channel(mention_ch) {
-                                        Some(channel) => channel,
-                                        None => {
-                                            let result = msg
-                                                .channel_id
-                                                .say(ctx, "Could not find guild's channel data")
-                                                .await;
-                                            if let Err(why) = result {
-                                                println!("Error sending message: {:?}", why);
-                                            }
-
-                                            return Ok(());
-                                        }
-                                    };
-                                    let default_no_ign = "No IGN".to_string();
-                                    let pilot_name = format!(
-                                        "{}",
-                                        all_pilot_ign_map
-                                            .get(&pilot_info.id)
-                                            .unwrap_or(&default_no_ign)
-                                    );
-
-                                    channel.say(ctx,
-                                                format!("<@{}> [**ON**] Captain {} is taking off with you as a passenger!",
-                                                        &p_mention, &pilot_name))
-                                           .await?;
-                                }
-                            }
-                        }
-
-                        let mut alert_times = 0;
-                        // Start alerting loop, every half an hour if the flight is still ongoing
-                        loop {
-                            // std::thread::sleep(Duration::from_secs(2));
-                            tokio::time::sleep(Duration::from_secs(60 * 30)).await;
-                            alert_times += 1;
-                            let res: Option<i32> = match sqlx::query!(
-                                "SELECT id FROM rongbot.flight
-                                     WHERE id=$1 AND status='in flight';",
-                                flight_id
+                                format!(
+                                    "WARNING, your flight ({}) has been going on for {} minutes.",
+                                    ign,
+                                    30 * &alert_times
+                                ),
                             )
-                            .fetch_one(&pool)
-                            .await
-                            {
-                                Ok(row) => Some(row.id),
-                                Err(e) => None,
-                            };
-
-                            if res == None {
-                                break;
-                            } else {
-                                msg.reply_mention(ctx, format!("WARNING, your flight ({}) has been going on for {} minutes.", ign, 30*&alert_times)).await?;
-                            }
+                            .await?;
                         }
-
-                        return Ok(());
                     }
-                    _ => msg.reply(ctx, "Deboarding your plane...").await?,
-                };
-            } else {
-                msg.reply(ctx, "Timed out. We've deboarded your plane.")
-                    .await?;
+                }
+                StartOptions::No => {
+                    m.delete(ctx).await?;
+                    msg.reply(ctx, "Canceled, deboarding your plane...").await?;
+                    return Ok(());
+                }
             };
         }
         _ => {
