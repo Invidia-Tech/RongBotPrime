@@ -175,26 +175,26 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
     let (cb_info, cb_status) =
         result_or_say_why!(get_latest_cb(ctx, &clan_id, &clan_name), ctx, msg);
 
-    match cb_status {
-        CbStatus::Past | CbStatus::Future => {
-            msg.channel_id
-                .say(
-                    ctx,
-                    format!(
-                        "You cannot take off without an active CB!
-                        {clan_name} - {name} is already over. \
-                        {name} started <t:{start_epoch}:R> and ended <t:{end_epoch}:R>.",
-                        clan_name = clan_name,
-                        name = cb_info.name,
-                        start_epoch = cb_info.start_time.unwrap().timestamp(),
-                        end_epoch = cb_info.end_time.unwrap().timestamp()
-                    ),
-                )
-                .await?;
-            return Ok(());
-        }
-        _ => (),
-    };
+    // match cb_status {
+    //     CbStatus::Past | CbStatus::Future => {
+    //         msg.channel_id
+    //             .say(
+    //                 ctx,
+    //                 format!(
+    //                     "You cannot take off without an active CB!
+    //                     {clan_name} - {name} is already over. \
+    //                     {name} started <t:{start_epoch}:R> and ended <t:{end_epoch}:R>.",
+    //                     clan_name = clan_name,
+    //                     name = cb_info.name,
+    //                     start_epoch = cb_info.start_time.unwrap().timestamp(),
+    //                     end_epoch = cb_info.end_time.unwrap().timestamp()
+    //                 ),
+    //             )
+    //             .await?;
+    //         return Ok(());
+    //     }
+    //     _ => (),
+    // };
 
     let pilot_user_id =
         result_or_say_why!(get_user_id(ctx, msg, &msg.author.id.to_string()), ctx, msg);
@@ -218,10 +218,10 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
 
     // Total flights information
     let mut amb_count: u8 = 0;
-    let mut in_flight_count: u8 = 0;
-    let mut landed_count: u8 = 0;
-    let mut canceled_count: u8 = 0;
-    let mut crash_count: u8 = 0;
+    let mut in_flight_count: u32 = 0;
+    let mut landed_count: u32 = 0;
+    let mut canceled_count: u32 = 0;
+    let mut crash_count: u32 = 0;
 
     let mut flight_embeds: Vec<CreateEmbed> = Vec::default();
     let flights_per_page = 3;
