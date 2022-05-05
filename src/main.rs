@@ -13,6 +13,7 @@ mod utils;
 use commands::{
     atc::{
         alert::*,
+        award::*,
         call_sign::*,
         end::*,
         start::*,
@@ -74,7 +75,8 @@ struct General;
     flight_end,
     flight_start,
     set_alert_channel,
-    set_call_sign
+    set_call_sign,
+    atc_award
 )]
 #[default_command(flight_status)]
 struct ATC;

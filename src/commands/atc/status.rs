@@ -172,8 +172,7 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
         msg
     );
 
-    let (cb_info, cb_status) =
-        result_or_say_why!(get_latest_cb(ctx, &clan_id, &clan_name), ctx, msg);
+    let (cb_info, _) = result_or_say_why!(get_latest_cb(ctx, &clan_id, &clan_name), ctx, msg);
 
     // match cb_status {
     //     CbStatus::Past | CbStatus::Future => {
@@ -196,8 +195,8 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
     //     _ => (),
     // };
 
-    let pilot_user_id =
-        result_or_say_why!(get_user_id(ctx, msg, &msg.author.id.to_string()), ctx, msg);
+    // let pilot_user_id =
+    //     result_or_say_why!(get_user_id(ctx, msg, &msg.author.id.to_string()), ctx, msg);
 
     let all_flights = result_or_say_why!(get_all_flights(ctx, &clan_id, &cb_info.id), ctx, msg);
 
@@ -217,7 +216,7 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
         result_or_say_why!(get_all_clanmember_ign_map(ctx, &clan_id), ctx, msg);
 
     // Total flights information
-    let mut amb_count: u8 = 0;
+    let mut amb_count: u32 = 0;
     let mut in_flight_count: u32 = 0;
     let mut landed_count: u32 = 0;
     let mut canceled_count: u32 = 0;
