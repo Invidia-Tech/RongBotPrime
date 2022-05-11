@@ -61,7 +61,7 @@ pub enum ChannelPersona {
     Public,
 }
 
-#[derive(Debug, sqlx::Type, strum_macros::EnumString)]
+#[derive(Debug, sqlx::Type, strum_macros::EnumString, PartialEq, Eq)]
 #[sqlx(type_name = "flight_status", rename_all = "lowercase")]
 pub enum FlightStatus {
     #[strum(ascii_case_insensitive)]
