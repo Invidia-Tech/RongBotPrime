@@ -128,6 +128,94 @@
     },
     "query": "SELECT id, ign\n         FROM rong_clanmember\n         WHERE clan_id = $1\n            AND active = TRUE;"
   },
+  "24b03291684966fd7a56e74667727931bbb0bee8c25ea51fda1698352c4d00e4": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "call_sign",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "pilot_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "clan_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "cb_id",
+          "ordinal": 4,
+          "type_info": "Int4"
+        },
+        {
+          "name": "passenger_id",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "start_time",
+          "ordinal": 6,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "end_time",
+          "ordinal": 7,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "status",
+          "ordinal": 8,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "canceled",
+                  "in flight",
+                  "landed",
+                  "crashed",
+                  "amb"
+                ]
+              },
+              "name": "flight_status"
+            }
+          }
+        },
+        {
+          "name": "team_id",
+          "ordinal": 9,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM rongbot.flight\n         WHERE  clan_id  = $1\n            AND cb_id    = $2\n            AND status   = 'in flight'\n         ORDER BY CASE status\n                    WHEN 'in flight' THEN 0\n                  END,\n            start_time DESC;"
+  },
   "35a56d83db65ea95f09925a094003c3354d7b46a367a5b140feadec741411101": {
     "describe": {
       "columns": [
@@ -513,6 +601,32 @@
       }
     },
     "query": "UPDATE rongbot.pilot SET (nickname, motto, code) = ($1, $2, $3)\n         WHERE id = $4;"
+  },
+  "7ed6eb52cdd837d76d8a7bed04bb9c0624ebc694cee5e231de9472e9f3f425c7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT id, name\n         FROM rong_clanbattle\n         WHERE clan_id = $1\n         ORDER BY start_time DESC;"
   },
   "8233d18632cd42213074ca158b1818ad1504a5b891abe5f8d9ce8f65598d0a06": {
     "describe": {

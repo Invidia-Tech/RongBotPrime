@@ -208,6 +208,41 @@ pub async fn get_all_flights(
     }
 }
 
+pub async fn get_all_in_air_flights(
+    ctx: &Context,
+    clan_id: &i32,
+    cb_id: &i32,
+) -> Result<Vec<Flight>, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query_as_unchecked!(
+        Flight,
+        "SELECT * FROM rongbot.flight
+         WHERE  clan_id  = $1
+            AND cb_id    = $2
+            AND status   = 'in flight'
+         ORDER BY CASE status
+                    WHEN 'in flight' THEN 0
+                  END,
+            start_time DESC;",
+        clan_id,
+        cb_id
+    )
+    .fetch_all(&pool)
+    .await
+    {
+        Ok(flights) => Ok(flights),
+        Err(_) => Err(RongError::Custom(
+            "There is a problem getting all of your flights.".to_string(),
+        )),
+    }
+}
+
 pub async fn get_all_pilot_flights(
     ctx: &Context,
     pilot_id: &i32,
