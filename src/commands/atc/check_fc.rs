@@ -1,21 +1,14 @@
 use chrono::Utc;
 use serenity::{
-    builder::{
-        CreateEmbed,
-    },
+    builder::CreateEmbed,
     client::Context,
     framework::standard::{
         macros::command,
         Args,
         CommandResult,
     },
-    model::{
-        channel::Message,
-    },
+    model::channel::Message,
 };
-
-
-
 
 use crate::{
     data::{
@@ -44,12 +37,29 @@ async fn check_fc(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
         result_or_say_why!(get_latest_cb(ctx, &clan_id, &clan_name), ctx, msg);
 
     match cb_status {
-        CbStatus::Past | CbStatus::Future => {
+        CbStatus::Future => {
             msg.channel_id
                 .say(
                     ctx,
                     format!(
-                        "You cannot call FC commands without an active CB.
+                        "You cannot call FC commands without an active CB.\n\
+                        {clan_name} - {name} has not started yet. \
+                        {name} will start <t:{start_epoch}:R> and end <t:{end_epoch}:R>.",
+                        clan_name = clan_name,
+                        name = cb_info.name,
+                        start_epoch = cb_info.start_time.unwrap().timestamp(),
+                        end_epoch = cb_info.end_time.unwrap().timestamp()
+                    ),
+                )
+                .await?;
+            return Ok(());
+        }
+        CbStatus::Past => {
+            msg.channel_id
+                .say(
+                    ctx,
+                    format!(
+                        "You cannot call FC commands without an active CB.\n\
                         {clan_name} - {name} is already over. \
                         {name} started <t:{start_epoch}:R> and ended <t:{end_epoch}:R>.",
                         clan_name = clan_name,
