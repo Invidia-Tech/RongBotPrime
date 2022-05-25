@@ -11,6 +11,7 @@ use serenity::{
         Args,
         CommandResult,
     },
+    futures::TryFutureExt,
     model::{
         channel::Message,
         interactions::message_component::ButtonStyle,
@@ -139,6 +140,14 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
 
     match args.len() {
         0 | 1 => {
+            let pool = ctx
+                .data
+                .read()
+                .await
+                .get::<DatabasePool>()
+                .cloned()
+                .unwrap();
+
             let mut pre_flight_alerts: String = "".to_string();
             // Get passenger or determine solo flight
             let passenger_member_id: Option<i32>;
@@ -183,6 +192,101 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                 }
             }
 
+            let conflicting_flights;
+            // Ensure that the self flight or passenger is not already in the air by ANOTHER pilot.
+            if let Some(passenger_clanmember_id) = passenger_member_id {
+                let passenger_pilot_id = match sqlx::query!(
+                    "SELECT p.id FROM rongbot.pilot p
+                     JOIN rong_clanmember cm
+                        ON p.clan_id = cm.clan_id AND
+                           p.user_id = cm.user_id
+                     WHERE cm.id = $1;",
+                    &passenger_clanmember_id
+                )
+                .fetch_one(&pool)
+                .await
+                {
+                    Ok(row) => row.id,
+                    _ => -1,
+                };
+
+                conflicting_flights = match sqlx::query!(
+                    "SELECT COUNT(*) as count
+                     FROM rongbot.flight
+                     WHERE status = 'in flight' AND
+                           ((pilot_id = $1 AND
+                             passenger_id is NULL) OR
+                            (passenger_id = $2));",
+                    &passenger_pilot_id,
+                    &passenger_clanmember_id
+                )
+                .fetch_one(&pool)
+                .await
+                {
+                    Ok(row) => row.count.unwrap_or(0),
+                    Err(_) => {
+                        msg.channel_id
+                            .say(
+                                ctx,
+                                "There is an error in getting your conflicting flights.",
+                            )
+                            .await?;
+                        return Ok(());
+                    }
+                };
+            } else {
+                let pilot_cm_id = match sqlx::query!(
+                    "SELECT id FROM rong_clanmember
+                             WHERE clan_id = $1 AND
+                                   user_id = $2;",
+                    &clan_id,
+                    &pilot_info.user_id
+                )
+                .fetch_one(&pool)
+                .await
+                {
+                    Ok(row) => row.id,
+                    Err(_) => {
+                        msg.channel_id
+                            .say(ctx, "There was as error matching pilot info.")
+                            .await?;
+                        return Ok(());
+                    }
+                };
+
+                conflicting_flights = match sqlx::query!(
+                    "SELECT COUNT(*) as count
+                     FROM rongbot.flight
+                     WHERE status = 'in flight' AND
+                           passenger_id = $1;",
+                    &pilot_cm_id
+                )
+                .fetch_one(&pool)
+                .await
+                {
+                    Ok(row) => row.count.unwrap_or(0),
+                    Err(_) => {
+                        msg.channel_id
+                            .say(
+                                ctx,
+                                "There is an error in getting your conflicting flights.",
+                            )
+                            .await?;
+                        return Ok(());
+                    }
+                };
+            }
+
+            if conflicting_flights > 0 {
+                msg.reply_ping(
+                    ctx,
+                    "WARNING!! THERE IS A CONFLICTING FLIGHT BY ANOTHER PILOT!!\n\
+                     I cannot start this flight.",
+                )
+                .await?;
+                return Ok(());
+            }
+
             let m = msg
                 .channel_id
                 .send_message(&ctx, |m| {
@@ -212,14 +316,6 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             let selected_option: StartOptions = StartOptions::from_str(&mci.data.custom_id)?;
             match selected_option {
                 StartOptions::Yes => {
-                    let pool = ctx
-                        .data
-                        .read()
-                        .await
-                        .get::<DatabasePool>()
-                        .cloned()
-                        .unwrap();
-
                     let all_flights = result_or_say_why!(
                         get_all_pilot_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
                         ctx,
