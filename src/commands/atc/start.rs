@@ -1,3 +1,4 @@
+use chrono::Utc;
 use serenity::{
     builder::{
         CreateActionRow,
@@ -129,6 +130,13 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
 
     let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
 
+    let cb_start_epoch = cb_info.start_time.unwrap().timestamp();
+
+    let epoch_now = Utc::now().timestamp();
+    let cb_day: i32 = ((epoch_now - cb_start_epoch) / 86400 + 1)
+        .try_into()
+        .unwrap();
+
     match args.len() {
         0 | 1 => {
             let mut pre_flight_alerts: String = "".to_string();
@@ -257,6 +265,31 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                     }
 
                     if let Some(clanmember_id) = passenger_member_id {
+                        let used_fc: i64 = match sqlx::query!(
+                            "SELECT COUNT (*) as count FROM rongbot.force_quit
+                             WHERE clanmember_id = $1 AND
+                             cb_id = $2 AND
+                             day_used = $3;",
+                            &clanmember_id,
+                            &cb_info.id,
+                            &cb_day
+                        )
+                        .fetch_one(&pool)
+                        .await
+                        {
+                            Ok(row) => row.count.unwrap_or(0),
+                            Err(_) => {
+                                msg.channel_id
+                                    .say(ctx, "There is a problem getting FCs.")
+                                    .await?;
+                                return Ok(());
+                            }
+                        };
+
+                        if used_fc > 0 {
+                            alert_msg += "\n**WARNING, YOUR PASSENGER DOES NOT HAVE FC**";
+                        }
+
                         match result_or_say_why!(
                             get_clanmember_mention_from_id(ctx, &clanmember_id),
                             ctx,
@@ -279,13 +312,13 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                                     None => {
                                         let result = msg
                                             .channel_id
-                                            .say(ctx, "Could not find guild's channel data")
+                                            .say(ctx, "The ATC alert channel is misconfigured.")
                                             .await;
                                         if let Err(why) = result {
                                             println!("Error sending message: {:?}", why);
                                         }
 
-                                        return Ok(());
+                                        ctx.cache.guild_channel(msg.channel_id.0).unwrap()
                                     }
                                 };
                                 let default_no_ign = "No IGN".to_string();
@@ -301,6 +334,53 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                                                         &p_mention, &pilot_name))
                                            .await?;
                             }
+                        }
+                    } else {
+                        let pilot_cm_id = match sqlx::query!(
+                            "SELECT id FROM rong_clanmember
+                             WHERE clan_id = $1 AND
+                                   user_id = $2;",
+                            &clan_id,
+                            &pilot_info.user_id
+                        )
+                        .fetch_one(&pool)
+                        .await
+                        {
+                            Ok(row) => row.id,
+                            Err(_) => {
+                                msg.channel_id
+                                    .say(ctx, "There was as error matching pilot info.")
+                                    .await?;
+                                return Ok(());
+                            }
+                        };
+
+                        let used_fc: i64 = match sqlx::query!(
+                            "SELECT COUNT (*) as count FROM rongbot.force_quit
+                             WHERE clanmember_id = $1 AND
+                             cb_id = $2 AND
+                             day_used = $3;",
+                            &pilot_cm_id,
+                            &cb_info.id,
+                            &cb_day
+                        )
+                        .fetch_one(&pool)
+                        .await
+                        {
+                            Ok(row) => row.count.unwrap_or(0),
+                            Err(_) => {
+                                msg.channel_id
+                                    .say(ctx, "There is a problem getting FCs.")
+                                    .await?;
+                                return Ok(());
+                            }
+                        };
+
+                        if used_fc > 0 {
+                            let out_msg =
+                                format!("{}\n**WARNING!! YOU DO NOT HAVE FC TODAY**", &m.content);
+
+                            let _ = &m.edit(ctx, |nm| nm.content(out_msg)).await?;
                         }
                     }
 

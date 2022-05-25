@@ -374,13 +374,13 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
                     None => {
                         let result = msg
                             .channel_id
-                            .say(ctx, "Could not find guild's channel data")
+                            .say(ctx, "The ATC alert channel is misconfigured.")
                             .await;
                         if let Err(why) = result {
                             println!("Error sending message: {:?}", why);
                         }
 
-                        return Ok(());
+                        ctx.cache.guild_channel(msg.channel_id.0).unwrap()
                     }
                 };
                 let default_no_ign = "No IGN".to_string();

@@ -16,6 +16,7 @@ use commands::{
         award::*,
         call_sign::*,
         end::*,
+        fc::*,
         start::*,
         status::*,
         summary::*,
@@ -60,7 +61,7 @@ use sqlx::postgres::PgPoolOptions;
 use crate::data::*;
 
 #[group]
-#[commands(say, latency, debug_args)]
+#[commands(say, latency, debug_args, force_quit)]
 struct General;
 
 // Rong ATC (Air Traffic Control)
@@ -76,9 +77,9 @@ struct General;
     flight_start,
     set_alert_channel,
     set_call_sign,
-    atc_award
+    atc_award,
+    force_quit
 )]
-#[default_command(flight_status)]
 struct ATC;
 
 // Rong Clan Battle utilities

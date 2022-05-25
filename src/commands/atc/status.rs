@@ -163,7 +163,7 @@ impl<'a> MenuPaginator<'a> {
 }
 
 #[command("atc_status")]
-#[aliases("status")]
+#[aliases("status", "s")]
 #[description("This shows the status of current most important flights.")]
 async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let (clan_id, clan_name) = result_or_say_why!(
