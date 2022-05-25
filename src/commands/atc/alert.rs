@@ -12,15 +12,7 @@ use serenity::{
 use crate::{
     checks::rong_admin::*,
     data::{
-        CbStatus,
-        ChannelPersona,
         DatabasePool,
-    },
-    utils::{
-        atc::*,
-        clan::*,
-        macros::*,
-        rong::*,
     },
 };
 

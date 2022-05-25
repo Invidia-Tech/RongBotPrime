@@ -10,8 +10,6 @@ use chrono::Utc;
 use serenity::{
     builder::{
         CreateActionRow,
-        CreateButton,
-        CreateEmbed,
         CreateSelectMenu,
         CreateSelectMenuOption,
     },
@@ -24,16 +22,12 @@ use serenity::{
     futures::StreamExt,
     model::{
         channel::{
-            Embed,
             Message,
-            ReactionType,
         },
         interactions::{
-            message_component::ButtonStyle,
             InteractionResponseType,
         },
     },
-    utils::MessageBuilder,
 };
 
 use humantime::format_duration;
@@ -45,9 +39,7 @@ use crate::{
         DatabasePool,
         Flight,
         FlightStatus,
-        RongPilot,
     },
-    error::RongError,
     utils::{
         atc::*,
         clan::*,

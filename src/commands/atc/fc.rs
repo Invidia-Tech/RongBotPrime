@@ -1,28 +1,18 @@
 use chrono::Utc;
 use serenity::{
-    builder::{
-        CreateActionRow,
-        CreateButton,
-        CreateComponents,
-    },
     client::Context,
     framework::standard::{
         macros::command,
         Args,
         CommandResult,
     },
-    futures::TryFutureExt,
     model::{
         channel::Message,
-        interactions::message_component::ButtonStyle,
     },
 };
 
-use core::fmt;
-use std::{
-    str::FromStr,
-    time::Duration,
-};
+
+
 
 use crate::{
     data::{
@@ -31,10 +21,8 @@ use crate::{
         DatabasePool,
     },
     utils::{
-        atc::*,
         clan::*,
         macros::*,
-        rong::*,
     },
 };
 
@@ -88,7 +76,7 @@ async fn force_quit(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         .cloned()
         .unwrap();
 
-    let (mut member_id, mut user_id);
+    let (member_id, user_id);
     match args.len() {
         0 | 1 => {
             if !args.is_empty() {

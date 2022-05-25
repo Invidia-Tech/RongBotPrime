@@ -52,7 +52,6 @@ use serenity::{
         macros::group,
         StandardFramework,
     },
-    http::client::Http,
     model::gateway::GatewayIntents,
     prelude::*,
 };

@@ -2,14 +2,12 @@ use std::{
     collections::HashMap,
     error::Error as StdError,
     fmt,
-    str::FromStr,
     time::Duration,
 };
 
 use serenity::{
     builder::{
         CreateActionRow,
-        CreateButton,
         CreateEmbed,
         CreateSelectMenu,
         CreateSelectMenuOption,
@@ -22,13 +20,9 @@ use serenity::{
     },
     model::{
         channel::{
-            Embed,
             Message,
-            ReactionType,
         },
-        interactions::message_component::ButtonStyle,
     },
-    utils::MessageBuilder,
 };
 
 use chrono::Utc;
@@ -38,18 +32,12 @@ use sqlx::Row;
 use crate::{
     checks::rong_admin::*,
     data::{
-        CbStatus,
-        ChannelPersona,
         DatabasePool,
         FlightStatus,
-        RongPilot,
     },
-    error::RongError,
     utils::{
         atc::*,
-        clan::*,
         macros::*,
-        rong::*,
     },
 };
 

@@ -8,13 +8,11 @@ use serenity::{
     model::channel::Message,
 };
 
-use std::time::Duration;
+
 
 use crate::{
     data::{
-        CbStatus,
         ChannelPersona,
-        DatabasePool,
     },
     utils::{
         atc::*,
@@ -41,7 +39,7 @@ async fn set_call_sign(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         return Ok(());
     }
 
-    let (clan_id, clan_name) = result_or_say_why!(
+    let (clan_id, _clan_name) = result_or_say_why!(
         get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb),
         ctx,
         msg

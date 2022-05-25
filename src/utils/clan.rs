@@ -16,7 +16,7 @@ use std::{
     },
 };
 
-use chrono::Timelike;
+
 use serenity::{
     client::Context,
     model::{

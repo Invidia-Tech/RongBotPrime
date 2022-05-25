@@ -3,7 +3,6 @@ use serenity::{
     builder::{
         CreateActionRow,
         CreateButton,
-        CreateComponents,
     },
     client::Context,
     framework::standard::{
@@ -11,7 +10,6 @@ use serenity::{
         Args,
         CommandResult,
     },
-    futures::TryFutureExt,
     model::{
         channel::Message,
         interactions::message_component::ButtonStyle,
@@ -495,7 +493,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                         .await
                         {
                             Ok(row) => Some(row.id),
-                            Err(e) => None,
+                            Err(_e) => None,
                         };
 
                         if res == None {

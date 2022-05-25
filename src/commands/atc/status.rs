@@ -1,16 +1,11 @@
 use std::{
-    fmt,
-    str::FromStr,
     time::Duration,
 };
 
 use serenity::{
     builder::{
         CreateActionRow,
-        CreateButton,
         CreateEmbed,
-        CreateSelectMenu,
-        CreateSelectMenuOption,
     },
     client::Context,
     framework::standard::{
@@ -20,13 +15,11 @@ use serenity::{
     },
     model::{
         channel::{
-            Embed,
             Message,
             ReactionType,
         },
         interactions::message_component::ButtonStyle,
     },
-    utils::MessageBuilder,
 };
 
 use chrono::Utc;
@@ -34,18 +27,14 @@ use humantime::format_duration;
 
 use crate::{
     data::{
-        CbStatus,
         ChannelPersona,
-        DatabasePool,
         FlightStatus,
-        RongPilot,
     },
     error::RongError,
     utils::{
         atc::*,
         clan::*,
         macros::*,
-        rong::*,
     },
 };
 
@@ -188,7 +177,7 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
     }
 
     // Time to output flights.
-    let all_pilot_info_map = result_or_say_why!(get_all_pilot_info_map(ctx, &clan_id), ctx, msg);
+    let _all_pilot_info_map = result_or_say_why!(get_all_pilot_info_map(ctx, &clan_id), ctx, msg);
 
     let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
 
