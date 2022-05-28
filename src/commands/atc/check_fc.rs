@@ -24,7 +24,7 @@ use crate::{
 
 #[command("atc_check_fc")]
 #[aliases("cfc", "check_fc")]
-#[description("Marks a person to have used force quit.")]
+#[description("Check if people have used their FC or not.")]
 async fn check_fc(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // Only allows this command within CB marked channels.
     let (clan_id, clan_name) = result_or_say_why!(

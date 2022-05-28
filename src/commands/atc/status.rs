@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     time::Duration,
 };
 
@@ -184,18 +185,39 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
     let all_clanmember_ign_map =
         result_or_say_why!(get_all_clanmember_ign_map(ctx, &clan_id), ctx, msg);
 
-    // Total flights information
-    let mut in_flight_count: u32 = 0;
-
+    let mut cur_pilot_info: HashMap<String, Vec<(String, String)>> = HashMap::new();
     let mut flight_embeds: Vec<CreateEmbed> = Vec::default();
-    let flights_per_page = 3;
-    let mut flight_output = 0;
     for flight in &all_in_air_flights {
-        if flight.status == FlightStatus::InFlight {
-            in_flight_count += 1;
-        }
-        if flight_output >= flights_per_page || flight_embeds.is_empty() {
-            flight_output = 0;
+        // Add flight information
+        let default_no_ign = "No IGN".to_string();
+        let pilot_output = (all_pilot_ign_map
+            .get(&flight.pilot_id)
+            .unwrap_or(&default_no_ign))
+        .to_string();
+        let passenger_out = (match &flight.passenger_id {
+            Some(p) => all_clanmember_ign_map.get(p).unwrap_or(&default_no_ign),
+            None => "Solo Flight",
+        })
+        .to_string();
+        let duration_readable = match &flight.end_time {
+            Some(t) => format_duration(
+                chrono::Duration::seconds(t.timestamp() - flight.start_time.timestamp())
+                    .to_std()?,
+            )
+            .to_string(),
+            None => format_duration(
+                chrono::Duration::seconds(Utc::now().timestamp() - flight.start_time.timestamp())
+                    .to_std()?,
+            )
+            .to_string(),
+        };
+
+        let info_vec = cur_pilot_info.entry(pilot_output).or_insert(vec![]);
+        info_vec.push((passenger_out, duration_readable));
+    }
+
+    for (pilot_name, pass_info) in cur_pilot_info {
+        if flight_embeds.is_empty() {
             let mut new_flight_page = CreateEmbed::default();
             new_flight_page
                 .title(format!(
@@ -207,47 +229,18 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
             flight_embeds.push(new_flight_page);
         }
 
-        // Add flight information
-        if let Some(f) = flight_embeds.last_mut() {
-            let default_no_ign = "No IGN".to_string();
-            let pilot_output = format!(
-                "Pilot: {}",
-                all_pilot_ign_map
-                    .get(&flight.pilot_id)
-                    .unwrap_or(&default_no_ign)
-            );
-            let passenger_out = format!(
-                "{}",
-                match &flight.passenger_id {
-                    Some(p) => format!(
-                        "Passenger: {}",
-                        all_clanmember_ign_map.get(p).unwrap_or(&default_no_ign)
-                    ),
-                    None => "Solo Flight".to_string(),
-                }
-            );
-            let duration_readable = match &flight.end_time {
-                Some(t) => format_duration(
-                    chrono::Duration::seconds(t.timestamp() - flight.start_time.timestamp())
-                        .to_std()?,
-                )
-                .to_string(),
-                None => format_duration(
-                    chrono::Duration::seconds(
-                        Utc::now().timestamp() - flight.start_time.timestamp(),
-                    )
-                    .to_std()?,
-                )
-                .to_string(),
-            };
-            f.fields(vec![(
-                format!("{} - {}", pilot_output, passenger_out),
-                format!("Duration: {}", duration_readable),
-                false,
-            )]);
+        let mut pass_info_out = "".to_string();
+        for (pass_name, duration) in pass_info {
+            pass_info_out = format!("{}\n{} - {}", pass_info_out, pass_name, duration);
         }
 
-        flight_output += 1;
+        if let Some(f) = flight_embeds.last_mut() {
+            f.fields(vec![(
+                format!("Pilot: {}", pilot_name),
+                pass_info_out,
+                true,
+            )]);
+        }
     }
 
     // Start paginated flights
