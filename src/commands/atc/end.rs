@@ -21,12 +21,8 @@ use serenity::{
     },
     futures::StreamExt,
     model::{
-        channel::{
-            Message,
-        },
-        interactions::{
-            InteractionResponseType,
-        },
+        channel::Message,
+        interactions::InteractionResponseType,
     },
 };
 
@@ -149,7 +145,7 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
                 .say(
                     ctx,
                     format!(
-                        "You cannot take off without an active CB!
+                        "Warning, there is no currently active CB!\n\
                         {clan_name} - {name} is already over. \
                         {name} started <t:{start_epoch}:R> and ended <t:{end_epoch}:R>.",
                         clan_name = clan_name,
@@ -159,7 +155,7 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
                     ),
                 )
                 .await?;
-            return Ok(());
+            // return Ok(());
         }
         _ => (),
     };
