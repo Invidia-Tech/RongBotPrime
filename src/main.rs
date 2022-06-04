@@ -64,7 +64,15 @@ use sqlx::postgres::PgPoolOptions;
 use crate::data::*;
 
 #[group]
-#[commands(say, latency, debug_args, force_quit, check_fc, carry_over_calc)]
+#[commands(
+    say,
+    latency,
+    debug_args,
+    force_quit,
+    check_fc,
+    cot_calc_time,
+    cot_calc_dmg
+)]
 struct General;
 
 // Rong ATC (Air Traffic Control)
@@ -92,7 +100,7 @@ struct ATC;
 #[prefixes("cb")]
 #[description = "These commands help with clan battle utilities, status, hit submission, etc."]
 #[summary = "Rong Clan Battle utilities."]
-#[commands(cb_status, carry_over_calc)]
+#[commands(cb_status, cot_calc_time, cot_calc_dmg)]
 //#[default_command(cb_status)]
 struct CB;
 
