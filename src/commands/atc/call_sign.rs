@@ -8,12 +8,8 @@ use serenity::{
     model::channel::Message,
 };
 
-
-
 use crate::{
-    data::{
-        ChannelPersona,
-    },
+    data::ChannelPersona,
     utils::{
         atc::*,
         clan::*,

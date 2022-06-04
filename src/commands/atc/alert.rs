@@ -11,9 +11,7 @@ use serenity::{
 
 use crate::{
     checks::rong_admin::*,
-    data::{
-        DatabasePool,
-    },
+    data::DatabasePool,
 };
 
 #[command("atc_alert_channel")]

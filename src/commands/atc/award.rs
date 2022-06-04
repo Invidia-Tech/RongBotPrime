@@ -18,11 +18,7 @@ use serenity::{
         Args,
         CommandResult,
     },
-    model::{
-        channel::{
-            Message,
-        },
-    },
+    model::channel::Message,
 };
 
 use chrono::Utc;
