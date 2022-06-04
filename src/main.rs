@@ -22,7 +22,10 @@ use commands::{
         status::*,
         summary::*,
     },
-    cb::status::*,
+    cb::{
+        carry_over_calc::*,
+        status::*,
+    },
     config::set_channel::*,
     general::{
         debug::*,
@@ -61,7 +64,7 @@ use sqlx::postgres::PgPoolOptions;
 use crate::data::*;
 
 #[group]
-#[commands(say, latency, debug_args, force_quit, check_fc)]
+#[commands(say, latency, debug_args, force_quit, check_fc, carry_over_calc)]
 struct General;
 
 // Rong ATC (Air Traffic Control)
@@ -89,7 +92,7 @@ struct ATC;
 #[prefixes("cb")]
 #[description = "These commands help with clan battle utilities, status, hit submission, etc."]
 #[summary = "Rong Clan Battle utilities."]
-#[commands(cb_status)]
+#[commands(cb_status, carry_over_calc)]
 //#[default_command(cb_status)]
 struct CB;
 
