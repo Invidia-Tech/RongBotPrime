@@ -117,11 +117,15 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                 if cot > 90 {
                     cot = 90;
                 }
-                out_msg.push_str(&format!("\nReleased in this order, your COT is: {}s", cot));
+                out_msg.push_str(&format!(
+                    "\nReleased in this order, your COT is: **{}s**",
+                    cot
+                ));
                 if cot < 90 {
                     out_msg.push_str("\nFull COT not achieved, Rong recommends:");
                     out_msg = required_dmg_full_cot(out_msg, boss_hp_left, max_num_hits);
                 }
+                break;
             } else {
                 if triaged_count != 0 {
                     out_msg.push_str("-> ");
@@ -221,7 +225,10 @@ async fn cot_calc_dmg(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                 if cot > 90 {
                     cot = 90;
                 }
-                out_msg.push_str(&format!("\nReleased in this order, your COT is: {}s", cot));
+                out_msg.push_str(&format!(
+                    "\nReleased in this order, your COT is: **{}s**",
+                    cot
+                ));
                 if cot < cot_target {
                     out_msg.push_str(&format!(
                         "\nCOT target (**{}s**) not reached, Rong recommends:",
@@ -230,6 +237,7 @@ async fn cot_calc_dmg(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                     out_msg =
                         required_dmg_target_cot(out_msg, boss_hp_left, cot_target, max_num_hits);
                 }
+                break;
             } else {
                 if triaged_count != 0 {
                     out_msg.push_str("-> ");
