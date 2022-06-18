@@ -1032,6 +1032,8 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "humantime",
+ "rand",
+ "rand_chacha",
  "serenity",
  "sqlx",
  "strum",
