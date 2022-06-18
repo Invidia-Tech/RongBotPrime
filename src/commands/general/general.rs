@@ -45,16 +45,6 @@ async fn say(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 }
 
 #[command]
-// Limit command usage to guilds.
-#[only_in(guilds)]
-// #[checks(Owner)]
-async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.channel_id.say(&ctx.http, "Pong! : )").await?;
-
-    Ok(())
-}
-
-#[command]
 async fn latency(ctx: &Context, msg: &Message) -> CommandResult {
     // The shard manager is an interface for mutating, stopping, restarting, and
     // retrieving information about shards.

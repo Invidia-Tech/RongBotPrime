@@ -27,6 +27,7 @@ use commands::{
         status::*,
     },
     config::set_channel::*,
+    fun::ping_roll::*,
     general::{
         debug::*,
         general::*,
@@ -104,6 +105,16 @@ struct ATC;
 //#[default_command(cb_status)]
 struct CB;
 
+// Rong Clan Battle utilities
+#[group]
+#[only_in(guilds)]
+#[prefixes("ping")]
+#[description = "These commands make up the Rong ping gacha!"]
+#[summary = ">ping to start pinging"]
+#[commands(ping_roll)]
+#[default_command(ping_roll)]
+struct PING;
+
 // Rong configs
 #[group]
 #[only_in(guilds)]
@@ -176,6 +187,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .group(&GENERAL_GROUP)
         .group(&ATC_GROUP)
         .group(&CB_GROUP)
+        .group(&PING_GROUP)
         .group(&CONFIG_GROUP);
 
     let intents =
