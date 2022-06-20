@@ -34,8 +34,8 @@ async fn rong_admin_check(
 
     let user_admin_status = match sqlx::query!(
         "SELECT is_superadmin
-             FROM public.rong_user
-             WHERE platform_id = $1;",
+         FROM public.rong_user
+         WHERE platform_id = $1;",
         msg.author.id.to_string()
     )
     .fetch_one(&pool)
@@ -44,7 +44,8 @@ async fn rong_admin_check(
         Ok(row) => row.is_superadmin,
         Err(_) => {
             return Err(Reason::User(
-                "Hey wait a minute... Who are you? I don't see you in my database. <:Suzunaaaaaaaaa:914426187378466836>".to_string(),
+                "You're definitely not a Rong superadmin! <:Suzunaaaaaaaaa:914426187378466836>"
+                    .to_string(),
             ));
         }
     };
