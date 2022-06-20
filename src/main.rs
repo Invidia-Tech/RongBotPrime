@@ -27,7 +27,10 @@ use commands::{
         status::*,
     },
     config::set_channel::*,
-    fun::ping_roll::*,
+    fun::{
+        ping_rarity_update::*,
+        ping_roll::*,
+    },
     general::{
         debug::*,
         general::*,
@@ -111,7 +114,7 @@ struct CB;
 #[prefixes("ping")]
 #[description = "These commands make up the Rong ping gacha!"]
 #[summary = ">ping to start pinging"]
-#[commands(ping_roll)]
+#[commands(ping_roll, ping_rarity_update)]
 #[default_command(ping_roll)]
 struct PING;
 
