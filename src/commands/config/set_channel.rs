@@ -60,8 +60,8 @@ async fn set_channel(ctx: &Context, msg: &Message, mut args: Args) -> CommandRes
 
     let clan_id = match sqlx::query!(
         "SELECT id
-             FROM public.rong_clan
-             WHERE name ilike $1",
+         FROM public.rong_clan
+         WHERE name ilike $1",
         clan_name
     )
     .fetch_one(&pool)
