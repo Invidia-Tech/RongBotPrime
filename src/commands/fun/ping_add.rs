@@ -34,14 +34,14 @@ use crate::{
      Example: >ping add @Ring 3 1\n\
      This will add ring to [SR] with a weight of 1."
 )]
-#[aliases("add")]
+#[aliases("add", "set")]
 #[checks(RongAdmin)]
 async fn ping_add_loot(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if args.len() != 3 {
         msg.channel_id
             .say(
                 ctx,
-                "Invalid command usage. Please use the help command on `config channel`.",
+                "Invalid command usage. Please use the help command on `ping add`.",
             )
             .await?;
         return Ok(());
