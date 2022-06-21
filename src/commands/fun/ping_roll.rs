@@ -87,10 +87,8 @@ async fn ping_roll(ctx: &Context, msg: &Message) -> CommandResult {
 
     let rarity_text: Vec<&str> = vec!["[N]", "[R]", "[SR]", "[SSR]", "[UR]"];
     let ping_list = match sqlx::query!(
-        "SELECT u.platform_id, weight, nickname
+        "SELECT user_id, weight, nickname
          FROM rongbot.ping_droptable dt
-         JOIN rong_user u
-         ON dt.user_id = u.id
          WHERE server=$1 AND rarity_rank=$2;",
         &guild_id.to_string(),
         &rank_roll
@@ -103,7 +101,7 @@ async fn ping_roll(ctx: &Context, msg: &Message) -> CommandResult {
                 msg.reply(
                     ctx,
                     format!(
-                        "You rolled a {} but I can't find anyone to ping...\
+                        "You rolled a {} but I can't find anyone to ping... \
                          <:KasumiDerp:988300507091189760>",
                         &rarity_text[(rank_roll - 1) as usize]
                     ),
@@ -127,7 +125,7 @@ async fn ping_roll(ctx: &Context, msg: &Message) -> CommandResult {
     for w in ping_list {
         running_total += w.weight;
         if ping_roll <= running_total {
-            chosen_ping = w.platform_id;
+            chosen_ping = w.user_id;
             break;
         }
     }

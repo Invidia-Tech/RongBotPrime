@@ -18,7 +18,7 @@ ALTER TABLE rongbot.ping_rarity OWNER to rongprod;
 CREATE TABLE IF NOT EXISTS rongbot.ping_droptable(
     id SERIAL PRIMARY KEY NOT NULL,
     server character varying(20) NOT NULL,
-    user_id integer REFERENCES rong_user NOT NULL,
+    user_id character varying(20) NOT NULL,
     rarity_rank integer NOT NULL,
     weight integer NOT NULL,
     nickname TEXT,
