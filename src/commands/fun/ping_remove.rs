@@ -25,19 +25,17 @@ use crate::{
     data::DatabasePool,
 };
 
-#[command("ping_add_loot")]
+#[command("ping_remove_loot")]
 // Limit command usage to guilds.
 #[only_in(guilds)]
 #[description(
-    "Add someone to the ping loot table! \
-     >ping add <@Name> <rarity> <weight>\n\
-     Example: >ping add @Ring 3 1\n\
-     This will add ring to [SR] with a weight of 1."
+    "Delete someone from the ping table! \n\
+     >ping remove @Ring"
 )]
-#[aliases("add")]
+#[aliases("remove", "rm", "delete")]
 #[checks(RongAdmin)]
-async fn ping_add_loot(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    if args.len() != 3 {
+async fn ping_remove_loot(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    if args.len() != 1 {
         msg.channel_id
             .say(
                 ctx,
@@ -71,29 +69,10 @@ async fn ping_add_loot(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         }
     };
 
-    let rarity = args.single::<u32>().unwrap_or(0);
-    if rarity == 0 {
-        msg.reply(ctx, "Please enter a valid rarity! ([N] 1 - 5 [UR])")
-            .await?;
-        return Ok(());
-    }
-
-    let weight = args.single::<u32>().unwrap_or(0);
-    if weight == 0 {
-        msg.reply(ctx, "Please enter a valid weight! Anything above 0.")
-            .await?;
-        return Ok(());
-    }
-
     sqlx::query!(
-        "INSERT INTO rongbot.ping_droptable (server, user_id, rarity_rank, weight)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (server, user_id)
-         DO UPDATE SET rarity_rank = $3, weight = $4;",
+        "DELETE FROM rongbot.ping_droptable WHERE server=$1 AND user_id=$2;",
         guild_id.to_string(),
         mentioned_user.to_string(),
-        rarity as i32,
-        weight as i32
     )
     .execute(&pool)
     .await?;
@@ -117,12 +96,7 @@ async fn ping_add_loot(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
     msg.channel_id
         .say(
             ctx,
-            &format!(
-                "{} has been updated to rarity: {} and weight: {}.",
-                &username,
-                rarity_text[(rarity - 1) as usize],
-                weight
-            ),
+            &format!("{} has been removed from the drop table!", &username),
         )
         .await?;
 

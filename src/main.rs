@@ -30,6 +30,7 @@ use commands::{
     fun::{
         ping_add::*,
         ping_rarity_update::*,
+        ping_remove::*,
         ping_roll::*,
     },
     general::{
@@ -115,7 +116,7 @@ struct CB;
 #[prefixes("ping")]
 #[description = "These commands make up the Rong ping gacha!"]
 #[summary = ">ping to start pinging"]
-#[commands(ping_roll, ping_rarity_update, ping_add_loot)]
+#[commands(ping_roll, ping_rarity_update, ping_add_loot, ping_remove_loot)]
 #[default_command(ping_roll)]
 struct PING;
 
