@@ -88,19 +88,23 @@ async fn ping_drop_table(ctx: &Context, msg: &Message, mut args: Args) -> Comman
     let mut out_msg = "The current loot table:".to_string();
     for l in &ping_list {
         let name_from_guild;
-        let user_id = l.user_id.parse::<u64>().unwrap();
-        if let Some(u) = ctx.cache.user(user_id) {
-            name_from_guild = match u.nick_in(ctx, guild_id).await {
-                Some(nick) => nick,
-                None => u.name,
-            };
-        } else if let Ok(u) = UserId(user_id).to_user(ctx).await {
-            name_from_guild = match u.nick_in(ctx, guild_id).await {
-                Some(nick) => nick,
-                None => u.name,
-            };
+        if l.user_id == "self" {
+            name_from_guild = "Self Ping".to_string();
         } else {
-            name_from_guild = format!("Unknown name. {}", l.user_id);
+            let user_id = l.user_id.parse::<u64>().unwrap();
+            if let Some(u) = ctx.cache.user(user_id) {
+                name_from_guild = match u.nick_in(ctx, guild_id).await {
+                    Some(nick) => nick,
+                    None => u.name,
+                };
+            } else if let Ok(u) = UserId(user_id).to_user(ctx).await {
+                name_from_guild = match u.nick_in(ctx, guild_id).await {
+                    Some(nick) => nick,
+                    None => u.name,
+                };
+            } else {
+                name_from_guild = format!("Unknown name. {}", l.user_id);
+            }
         }
         out_msg.push_str(&format!(
             "\n\t- {} {} ({:.2}%)",

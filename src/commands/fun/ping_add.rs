@@ -63,13 +63,25 @@ async fn ping_add_loot(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         .cloned()
         .unwrap();
 
-    let mentioned_user = match parse_username(args.single::<String>().unwrap()) {
-        Some(user) => user,
-        _ => {
-            msg.channel_id.say(&ctx.http, "Please ping a user!").await?;
-            return Ok(());
-        }
-    };
+    let first_arg = args.single::<String>().unwrap();
+    let mentioned_user: String;
+    let mut mentioned_user_id = 0;
+
+    if first_arg != "self" {
+        mentioned_user = match parse_username(&first_arg) {
+            Some(user) => {
+                mentioned_user_id = user;
+                user.to_string()
+            }
+            _ => {
+                msg.reply(ctx, "Please mention an actual user! Ping them ping them!")
+                    .await?;
+                return Ok(());
+            }
+        };
+    } else {
+        mentioned_user = first_arg;
+    }
 
     let rarity = args.single::<u32>().unwrap_or(0);
     if rarity == 0 {
@@ -91,26 +103,25 @@ async fn ping_add_loot(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
          ON CONFLICT (server, user_id)
          DO UPDATE SET rarity_rank = $3, weight = $4;",
         guild_id.to_string(),
-        mentioned_user.to_string(),
+        mentioned_user,
         rarity as i32,
         weight as i32
     )
     .execute(&pool)
     .await?;
 
-    let username;
     let user;
     let rarity_text: Vec<&str> = vec!["[N]", "[R]", "[SR]", "[SSR]", "[UR]"];
 
-    if let Some(u) = ctx.cache.user(mentioned_user) {
+    if let Some(u) = ctx.cache.user(mentioned_user_id) {
         user = u;
-    } else if let Ok(u) = UserId(mentioned_user).to_user(ctx).await {
+    } else if let Ok(u) = UserId(mentioned_user_id).to_user(ctx).await {
         user = u;
     } else {
         user = User::default();
     }
 
-    username = match user.nick_in(ctx, guild_id).await {
+    let username = match user.nick_in(ctx, guild_id).await {
         Some(nick) => nick,
         None => user.name,
     };

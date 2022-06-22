@@ -130,22 +130,27 @@ async fn ping_roll(ctx: &Context, msg: &Message) -> CommandResult {
         }
     }
 
-    let rarity_text: HashMap<i32, &str> = HashMap::from([
-        (1, "[N] Sure, I'll ping you! <@{}>"),
-        (2, "[R] A rare <@{}> ping!"),
-        (3, "[SR] Wow! A super rare <@{}> ping!!"),
-        (
-            4,
-            "[SSR] Incredible!! A super duper rare <@{}> ping! Congrats.",
-        ),
-        (
-            5,
-            "[UR] No way! An ultra rare <@{}> ping... Your gacha luck has been used up today.",
-        ),
-    ]);
+    if chosen_ping == "self" {
+        msg.reply(ctx, format!("[N] Sure, I'll ping you! {}", msg.author.id))
+            .await?;
+    } else {
+        let rarity_text: HashMap<i32, &str> = HashMap::from([
+            (1, "[N] Welp... Just a normal <@{}> ping."),
+            (2, "[R] A rare <@{}> ping!"),
+            (3, "[SR] Wow! A super rare <@{}> ping!!"),
+            (
+                4,
+                "[SSR] Incredible!! A super duper rare <@{}> ping! Congrats.",
+            ),
+            (
+                5,
+                "[UR] No way! An ultra rare <@{}> ping... Your gacha luck has been used up today.",
+            ),
+        ]);
 
-    msg.reply(ctx, rarity_text[&rank_roll].replace("{}", &chosen_ping))
-        .await?;
+        msg.reply(ctx, rarity_text[&rank_roll].replace("{}", &chosen_ping))
+            .await?;
+    }
 
     Ok(())
 }
