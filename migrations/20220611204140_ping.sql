@@ -30,8 +30,10 @@ ALTER TABLE rongbot.ping_droptable OWNER TO rongprod;
 
 CREATE TABLE IF NOT EXISTS rongbot.ping_log(
     id SERIAL PRIMARY KEY NOT NULL,
-    drop_id integer REFERENCES rongbot.ping_droptable NOT NULL,
-    dropped_on timestamptz NOT NULL
+    user_id character varying(20) NOT NULL,
+    rarity_rank integer NOT NULL,
+    dropped_on timestamptz NOT NULL,
+    nickname TEXT
 );
 
 ALTER TABLE rongbot.ping_log OWNER TO rongprod;
