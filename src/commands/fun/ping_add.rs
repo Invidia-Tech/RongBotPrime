@@ -121,10 +121,15 @@ async fn ping_add_loot(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         user = User::default();
     }
 
-    let username = match user.nick_in(ctx, guild_id).await {
-        Some(nick) => nick,
-        None => user.name,
-    };
+    let username;
+    if mentioned_user == "self" {
+        username = "**Self Ping**".to_string();
+    } else {
+        username = match user.nick_in(ctx, guild_id).await {
+            Some(nick) => nick,
+            None => user.name,
+        };
+    }
     msg.channel_id
         .say(
             ctx,

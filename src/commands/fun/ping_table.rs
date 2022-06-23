@@ -52,7 +52,7 @@ async fn ping_drop_table(ctx: &Context, msg: &Message, mut args: Args) -> Comman
             dm.nickname as disc_nick,
             dt.nickname as ping_nick
          FROM rongbot.ping_droptable dt
-         JOIN rongbot.discord_members dm
+         LEFT JOIN rongbot.discord_members dm
             ON dt.user_id = dm.member_id
          WHERE server=$1
          ORDER BY rarity_rank;",
@@ -87,22 +87,26 @@ async fn ping_drop_table(ctx: &Context, msg: &Message, mut args: Args) -> Comman
 
     let mut out_msg = "The current loot table:".to_string();
     for l in &ping_list {
+        println!("Seen {}", l.user_id);
         let name_from_guild;
         if l.user_id == "self" {
-            name_from_guild = "Self Ping".to_string();
+            name_from_guild = "**Self Ping**".to_string();
         } else {
             let user_id = l.user_id.parse::<u64>().unwrap();
             if let Some(u) = ctx.cache.user(user_id) {
+                println!("Seen {} and found within cache.", user_id);
                 name_from_guild = match u.nick_in(ctx, guild_id).await {
                     Some(nick) => nick,
                     None => u.name,
                 };
             } else if let Ok(u) = UserId(user_id).to_user(ctx).await {
+                println!("Seen {} and not found in cache, got from http.", user_id);
                 name_from_guild = match u.nick_in(ctx, guild_id).await {
                     Some(nick) => nick,
                     None => u.name,
                 };
             } else {
+                println!("Seen {} and unknown name.", user_id);
                 name_from_guild = format!("Unknown name. {}", l.user_id);
             }
         }

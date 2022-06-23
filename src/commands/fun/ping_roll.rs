@@ -130,9 +130,23 @@ async fn ping_roll(ctx: &Context, msg: &Message) -> CommandResult {
         }
     }
 
+    sqlx::query!(
+        "INSERT INTO rongbot.ping_log (server, rolled_by, loot, rarity_rank, dropped_on)
+         VALUES ($1, $2, $3, $4, now());",
+        guild_id.to_string(),
+        msg.author.id.to_string(),
+        chosen_ping,
+        rank_roll
+    )
+    .execute(&pool)
+    .await?;
+
     if chosen_ping == "self" {
-        msg.reply(ctx, format!("[N] Sure, I'll ping you! {}", msg.author.id))
-            .await?;
+        msg.reply(
+            ctx,
+            format!("[N] Sure, I'll ping you! <@{}>", msg.author.id),
+        )
+        .await?;
     } else {
         let rarity_text: HashMap<i32, &str> = HashMap::from([
             (1, "[N] Welp... Just a normal <@{}> ping."),
