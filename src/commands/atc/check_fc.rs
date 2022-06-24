@@ -92,7 +92,7 @@ async fn check_fc(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
     let all_clanmember_ign_map =
         result_or_say_why!(get_all_clanmember_ign_map(ctx, &clan_id), ctx, msg);
 
-    let (mut member_id, mut user_id);
+    let mut member_id;
     let mut search_ids: Vec<i32> = Vec::new();
     if args.is_empty() {
         match sqlx::query!(
@@ -116,7 +116,7 @@ async fn check_fc(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
     } else {
         while !args.is_empty() {
             let ign = args.single::<String>().unwrap();
-            (member_id, user_id) =
+            (member_id, _) =
                 result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
             search_ids.push(member_id);
         }

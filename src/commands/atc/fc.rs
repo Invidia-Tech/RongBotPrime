@@ -88,12 +88,12 @@ async fn force_quit(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         .cloned()
         .unwrap();
 
-    let (member_id, user_id);
+    let (member_id, _user_id);
     match args.len() {
         0 | 1 => {
             if !args.is_empty() {
                 let ign = args.single::<String>().unwrap();
-                (member_id, user_id) =
+                (member_id, _user_id) =
                     result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
             } else {
                 member_id = match sqlx::query!(

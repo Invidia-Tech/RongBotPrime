@@ -23,7 +23,7 @@ use crate::{
 #[description("Sets your pilot call sign.")]
 #[bucket = "atc"]
 async fn set_call_sign(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let MAX_CALL_SIGN_SIZE = 4;
+    let max_call_sign_size = 4;
 
     if args.len() != 1 {
         msg.channel_id
@@ -53,12 +53,12 @@ async fn set_call_sign(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
     let mut new_call_sign = args.single_quoted::<String>().unwrap();
     new_call_sign.make_ascii_uppercase();
 
-    if new_call_sign.chars().count() > MAX_CALL_SIGN_SIZE {
+    if new_call_sign.chars().count() > max_call_sign_size {
         msg.reply(
             ctx,
             format!(
                 "Sorry, the max allowed call sign length is {}.",
-                &MAX_CALL_SIGN_SIZE
+                &max_call_sign_size
             ),
         )
         .await?;

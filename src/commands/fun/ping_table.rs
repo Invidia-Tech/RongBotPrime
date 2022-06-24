@@ -1,6 +1,5 @@
 use serenity::{
     client::{
-        bridge::gateway::ShardId,
         Context,
     },
     framework::standard::{
@@ -11,10 +10,6 @@ use serenity::{
     model::{
         channel::Message,
         id::UserId,
-    },
-    utils::{
-        content_safe,
-        ContentSafeOptions,
     },
 };
 
@@ -29,7 +24,7 @@ use crate::{
 #[description("Check the full drop table of pings.")]
 #[aliases("table")]
 #[checks(RongAdmin)]
-async fn ping_drop_table(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+async fn ping_drop_table(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let pool = ctx
         .data
         .read()

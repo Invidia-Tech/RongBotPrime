@@ -1,8 +1,7 @@
-use std::collections::HashMap;
+
 
 use serenity::{
     client::{
-        bridge::gateway::ShardId,
         Context,
     },
     framework::standard::{
@@ -11,10 +10,6 @@ use serenity::{
         CommandResult,
     },
     model::channel::Message,
-    utils::{
-        content_safe,
-        ContentSafeOptions,
-    },
 };
 use sqlx::{
     Postgres,

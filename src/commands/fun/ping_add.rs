@@ -1,6 +1,5 @@
 use serenity::{
     client::{
-        bridge::gateway::ShardId,
         Context,
     },
     framework::standard::{
@@ -14,9 +13,7 @@ use serenity::{
         user::User,
     },
     utils::{
-        content_safe,
         parse_username,
-        ContentSafeOptions,
     },
 };
 

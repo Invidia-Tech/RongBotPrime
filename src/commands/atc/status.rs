@@ -29,7 +29,6 @@ use humantime::format_duration;
 use crate::{
     data::{
         ChannelPersona,
-        FlightStatus,
     },
     error::RongError,
     utils::{

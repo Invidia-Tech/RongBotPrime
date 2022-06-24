@@ -1,14 +1,12 @@
 use crate::{
-    checks::rong_admin::*,
     data::{
-        ChannelPersona,
         DatabasePool,
     },
 };
 
 use crate::checks::owner::*;
 
-use std::str::FromStr;
+
 
 use serenity::{
     client::Context,
@@ -19,7 +17,6 @@ use serenity::{
     },
     model::channel::Message,
     utils::{
-        parse_channel,
         parse_username,
     },
 };

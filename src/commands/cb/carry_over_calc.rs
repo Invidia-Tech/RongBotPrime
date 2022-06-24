@@ -1,16 +1,6 @@
-use std::cmp::Reverse;
 
-use crate::{
-    data::{
-        CbStatus,
-        ChannelPersona,
-        DatabasePool,
-    },
-    utils::{
-        clan::*,
-        macros::*,
-    },
-};
+
+
 
 use serenity::{
     client::Context,
@@ -20,7 +10,6 @@ use serenity::{
         CommandResult,
     },
     model::channel::Message,
-    utils::Color,
 };
 
 fn required_dmg_full_cot(mut out_msg: String, boss_hp_left: f32, max_num_hits: i32) -> String {
