@@ -1,5 +1,71 @@
 {
   "db": "PostgreSQL",
+  "064ac81d0ffa199b07af85fb485c46c40c22800d876191b64ee417a87c833dac": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "UPDATE rong_user\n         SET is_superadmin=False\n         WHERE platform_id=$1;"
+  },
+  "07cbf5df6582ef530416e7f4c24c5c25f4a4a04482ed0c6d694eab15a8f4d1af": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO rongbot.ping_log (server, rolled_by, loot, rarity_rank, dropped_on)\n         VALUES ($1, $2, $3, $4, now());"
+  },
+  "0b2b5e1997f6ae5fe43487a241d28df387d042e92a621340ad56b9d677783b78": {
+    "describe": {
+      "columns": [
+        {
+          "name": "rank",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "weight",
+          "ordinal": 1,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT rank, weight FROM rongbot.ping_rarity\n             WHERE server=$1\n             ORDER BY rank;"
+  },
+  "0b7d245c66592ded36fd689ad5d627cf2ef33650536f6705f3b2311039d123cb": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "DELETE FROM rongbot.ping_droptable WHERE server=$1 AND user_id=$2;"
+  },
   "0ee93b64c7380f7c130391de2bc776e2fd797ca61a7e9f0dff789f32d1a155aa": {
     "describe": {
       "columns": [
@@ -541,13 +607,77 @@
     },
     "query": "INSERT INTO rongbot.flight\n                                (call_sign, pilot_id, clan_id, cb_id,\n                                 passenger_id, start_time, status)\n                             VALUES ($1, $2, $3, $4, $5, now(), 'in flight') RETURNING id;"
   },
-  "57947c687aba05d7b007011e3a56570b8e3829e57b42f30df880fc3bec2f7bcf": {
+  "4e976d8f78bba4812c31adece831ba64375206dc323f328b69fbd1db8a9694d3": {
     "describe": {
       "columns": [
         {
-          "name": "is_superadmin",
+          "name": "user_id",
           "ordinal": 0,
-          "type_info": "Bool"
+          "type_info": "Varchar"
+        },
+        {
+          "name": "weight",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "rarity_rank",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "disc_nick",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "ping_nick",
+          "ordinal": 4,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT\n            user_id, weight, rarity_rank,\n            dm.nickname as disc_nick,\n            dt.nickname as ping_nick\n         FROM rongbot.ping_droptable dt\n         LEFT JOIN rongbot.discord_members dm\n            ON dt.user_id = dm.member_id\n         WHERE server=$1\n         ORDER BY rarity_rank;"
+  },
+  "517efbdaaac45840ada353335825eb28e210b1b7f47e7b07ad51ff25608061c0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "c",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT COUNT(*) AS c\n         FROM rongbot.ping_log\n         WHERE\n            rolled_by=$1 AND\n            dropped_on > (current_date + interval '13:00') -\n            ((interval '24:00') *\n            CAST((EXTRACT(HOUR FROM NOW()) < 13) as int));"
+  },
+  "5450e41358ea427571a8820c1d13547e018817c87b2776681d150442c95b0ac0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
         }
       ],
       "nullable": [
@@ -559,7 +689,7 @@
         ]
       }
     },
-    "query": "SELECT is_superadmin\n             FROM public.rong_user\n             WHERE platform_id = $1;"
+    "query": "SELECT id\n         FROM public.rong_clan\n         WHERE name ilike $1"
   },
   "586c250477c9233b76ae7c1c8cf773882ae8dcf76b683668a64fac4cb4ec9c0f": {
     "describe": {
@@ -926,6 +1056,26 @@
     },
     "query": "SELECT cb.id, cb.name AS cb_name\n            FROM rong_clanbattle AS cb\n            JOIN rong_clan AS clan\n            ON cb.clan_id = clan.id\n            WHERE start_time = (SELECT start_time\n                                FROM public.rong_clanbattle AS cb\n                                JOIN rong_clan AS clan\n                                ON cb.clan_id = clan.id\n                                WHERE clan.id = $1\n                                ORDER BY abs(EXTRACT(EPOCH FROM start_time) - EXTRACT(EPOCH FROM now()))\n                                LIMIT 1)\n                  AND clan.id = $1\n            LIMIT 1;"
   },
+  "a21f6bb9db99a3fd279b48ae7aa02a4e1c855a831e5f42ea83ad7e948d6d5f28": {
+    "describe": {
+      "columns": [
+        {
+          "name": "is_superadmin",
+          "ordinal": 0,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT is_superadmin\n         FROM public.rong_user\n         WHERE platform_id = $1;"
+  },
   "b001d37d323ac6f009ce7817ace56d88b0271d619f8a72283fa22a5a1af9ad94": {
     "describe": {
       "columns": [
@@ -947,6 +1097,18 @@
     },
     "query": "SELECT COUNT(*) as count\n                     FROM rongbot.flight\n                     WHERE status = 'in flight' AND\n                           ((pilot_id = $1 AND\n                             passenger_id is NULL) OR\n                            (passenger_id = $2));"
   },
+  "c5e57a5d7184dd1ecf36026f3dddcecd9456b8f8b84018e94fc76ca71d518002": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "UPDATE rong_user\n         SET is_superadmin=True\n         WHERE platform_id=$1;"
+  },
   "c8c080bef9b25ae8b3f4c94b4d4c9d4b732dcd80dcefe305c87aefd837938da1": {
     "describe": {
       "columns": [
@@ -967,6 +1129,32 @@
     },
     "query": "SELECT COUNT(*) as count\n                     FROM rongbot.flight\n                     WHERE status = 'in flight' AND\n                           passenger_id = $1;"
   },
+  "dae289d5a90412c50c97064e044c3096b31984acbdc6e4944ee03c0940cc03a3": {
+    "describe": {
+      "columns": [
+        {
+          "name": "rank",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "weight",
+          "ordinal": 1,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT rank, weight FROM rongbot.ping_rarity\n         WHERE server=$1\n         ORDER BY rank;"
+  },
   "de21a693fd7d31e4013bfcc71c348b7af03d92ca370be2d65db8631f15331c18": {
     "describe": {
       "columns": [
@@ -986,6 +1174,21 @@
       }
     },
     "query": "SELECT id FROM rong_user WHERE platform_id = $1;"
+  },
+  "df31fa0e9ad6030048468d8a72b20a0d221ea0973c3f67f3bb3a54559cefcb06": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO rongbot.ping_droptable (server, user_id, rarity_rank, weight)\n         VALUES ($1, $2, $3, $4)\n         ON CONFLICT (server, user_id)\n         DO UPDATE SET rarity_rank = $3, weight = $4;"
   },
   "eecebc1ebbc269ce60efc074392d96f2da5bb09c50eb3d97af5476be41e96002": {
     "describe": {
@@ -1124,6 +1327,51 @@
       }
     },
     "query": "SELECT id, name, clan_id, start_time, end_time,\n                current_boss, current_hp, current_lap\n         FROM public.rong_clanbattle\n         WHERE id = $1;"
+  },
+  "f95c96d0237077106759d0d7bd2b9986d66345d186915282b038e163bd94b5bb": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "DELETE FROM rongbot.ping_rarity\n         WHERE server=$1;"
+  },
+  "fa8f6e41497809fe6b1ac988a2745f4c43384be0846d9c4b64b0ec3399e80b34": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "weight",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "nickname",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT user_id, weight, nickname\n         FROM rongbot.ping_droptable dt\n         WHERE server=$1 AND rarity_rank=$2;"
   },
   "fade133e12740ea1f72a06d4137b990232d90108b2d03a5f8db674367d7091e9": {
     "describe": {
