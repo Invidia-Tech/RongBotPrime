@@ -26,7 +26,10 @@ use commands::{
         carry_over_calc::*,
         status::*,
     },
-    config::set_channel::*,
+    config::{
+        set_channel::*,
+        superadmin::*,
+    },
     fun::{
         ping_add::*,
         ping_rarity_update::*,
@@ -77,6 +80,8 @@ use crate::data::*;
     debug_args,
     force_quit,
     check_fc,
+    add_superadmin,
+    remove_superadmin,
     cot_calc_time,
     cot_calc_dmg
 )]
