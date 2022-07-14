@@ -1,7 +1,3 @@
-
-
-
-
 use serenity::{
     client::Context,
     framework::standard::{
@@ -12,24 +8,34 @@ use serenity::{
     model::channel::Message,
 };
 
-fn required_dmg_full_cot(mut out_msg: String, boss_hp_left: f32, max_num_hits: i32) -> String {
+fn required_dmg_full_cot(mut out_msg: String, boss_hp_left: f64, max_num_hits: i32) -> String {
     for i in 0..max_num_hits {
-        let mut dmg_needed = boss_hp_left / (i as f32 + (11.0 / 90.0));
+        let mut dmg_needed = boss_hp_left / (i as f64 + (11.0 / 90.0));
         dmg_needed = (dmg_needed * 1000.0 + 1.0).ceil() / 1000.0;
         out_msg.push_str(&format!("\n {} hit(s) avg dmg: {}", i + 1, dmg_needed));
     }
     out_msg
 }
 
+fn avg_dmg_needed_full_cot(boss_hp_left: f64, max_num_hits: i32) -> Vec<f64> {
+    let mut v: Vec<f64> = Vec::new();
+    for i in 0..max_num_hits {
+        let mut dmg_needed = boss_hp_left / (i as f64 + (11.0 / 90.0));
+        dmg_needed = (dmg_needed * 1000.0 + 1.0).ceil() / 1000.0;
+        v.push(dmg_needed)
+    }
+    v
+}
+
 fn required_dmg_target_cot(
     mut out_msg: String,
-    boss_hp_left: f32,
-    cot_target: u32,
-    max_num_hits: i32,
+    boss_hp_left: f64,
+    cot_target: u64,
+    max_num_hits: i64,
 ) -> String {
     for i in 1..=max_num_hits {
         // =CEILING(I39/(I40-(I41-11)/90))
-        let mut dmg_needed = boss_hp_left / (i as f32 - ((cot_target - 11) as f32) / 90.0);
+        let mut dmg_needed = boss_hp_left / (i as f64 - ((cot_target - 11) as f64) / 90.0);
         dmg_needed = (dmg_needed * 1000.0 + 1.0).ceil() / 1000.0;
         out_msg.push_str(&format!("\n\t{} hit(s) avg dmg: {}", i, dmg_needed));
     }
@@ -59,7 +65,7 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         return Ok(());
     }
 
-    let mut boss_hp_left = match args.single::<f32>() {
+    let boss_hp = match args.single::<f64>() {
         Ok(hp) => hp,
         _ => {
             msg.reply(
@@ -70,39 +76,120 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
             return Ok(());
         }
     };
-    let mut triaged_dmgs: Vec<f32> = Vec::new();
+
+    let mut boss_hp_left = boss_hp;
+    let mut dmg_inputs: Vec<f64> = Vec::new();
     let max_num_hits = 3;
 
     let mut out_msg = "Rong's recommendations for full 90s COT:".to_string();
     if args.is_empty() {
         out_msg = required_dmg_full_cot(out_msg, boss_hp_left, max_num_hits);
-    } else {
-        for arg in args.iter::<f32>() {
-            // Zero troubles, zero worries.
-            let new_dmg = arg.unwrap_or(0.0);
-            if new_dmg == 0.0 {
-                continue;
+        msg.reply(ctx, out_msg).await?;
+        return Ok(());
+    }
+
+    for arg in args.iter::<f64>() {
+        // Zero troubles, zero worries.
+        let new_dmg = arg.unwrap_or(0.0);
+        if new_dmg == 0.0 {
+            continue;
+        }
+        dmg_inputs.push(new_dmg);
+    }
+    if dmg_inputs.is_empty() {
+        msg.reply(ctx, "I don't recognize any dmg numbers you sent")
+            .await?;
+        return Ok(());
+    }
+
+    dmg_inputs.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
+
+    out_msg.push_str("\nTriaged damage: ");
+    let mut triaged_count = 0;
+    let mut triaged_dmg: Vec<f64> = Vec::new();
+    let mut full_cot_reached = true;
+    for dmg in &dmg_inputs {
+        triaged_dmg.push(*dmg);
+        if triaged_count != 0 {
+            out_msg.push_str("-> ");
+        }
+
+        if dmg > &boss_hp_left {
+            out_msg.push_str(&format!("**{}**", &dmg));
+
+            let mut cot = (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as u64;
+            if cot > 90 {
+                cot = 90;
             }
-            triaged_dmgs.push(new_dmg);
+            out_msg.push_str(&format!(
+                "\nReleased in this order, your COT is: **{}s**",
+                cot
+            ));
+            if cot < 90 {
+                full_cot_reached = false;
+                // out_msg = required_dmg_full_cot(out_msg, boss_hp_left, max_num_hits);
+            }
+            break;
+        } else {
+            if triaged_count + 1 >= dmg_inputs.len() {
+                out_msg.push_str(&format!("**{}**", &dmg));
+            } else {
+                out_msg.push_str(&format!("{} ", &dmg));
+            }
+            triaged_count += 1;
+            boss_hp_left -= dmg;
         }
-        if triaged_dmgs.is_empty() {
-            msg.reply(ctx, "I don't recognize any dmg numbers you sent")
-                .await?;
-            return Ok(());
+    }
+
+    let avg_dmg: f64 = triaged_dmg.iter().sum::<f64>() / triaged_dmg.len() as f64;
+    let triaged_dmg_sum = triaged_dmg.iter().sum::<f64>();
+    let triaged_hits: f64 = triaged_dmg.len() as f64;
+    let avg_hits_needed = (boss_hp / avg_dmg).ceil();
+    let dmg_range_limit = 0.3;
+    if triaged_count == dmg_inputs.len() {
+        out_msg.push_str(&format!(
+            "\nNot enough total dmg to kill. Rong recommends:\n\
+                 Remaining boss HP - **{:.3}**",
+            &boss_hp_left
+        ));
+
+        // [BOSS HP] * 90 / ([Hits Desired] x 90 + 10) = [Average Damage needed]
+        let avg_dmg_needed = boss_hp * 90.0 / ((avg_hits_needed - 1.0) * 90.0 + 11.0);
+        let new_hits_needed = avg_hits_needed - triaged_hits;
+        out_msg.push_str(&format!("\nNew avg dmg needed: {:.3}", &avg_dmg_needed));
+        println!(
+            "Triaged_dmg_sum: {}, avg_hits_needed: {}, triaged_hits: {} new_hits_needed: {}",
+            &triaged_dmg_sum, &avg_hits_needed, &triaged_hits, &new_hits_needed
+        );
+
+        out_msg.push_str("\nThe average damage of triaged hits is lacking.\n");
+        let mut avg_new_dmg_per_hit =
+            (avg_dmg_needed * avg_hits_needed - triaged_dmg_sum) / new_hits_needed;
+        avg_new_dmg_per_hit *= 1000.0;
+        avg_new_dmg_per_hit = avg_new_dmg_per_hit.round();
+        avg_new_dmg_per_hit /= 1000.0;
+        out_msg.push_str(&format!(
+            "\nNew hits needed: {} x {}\n",
+            &avg_new_dmg_per_hit, &new_hits_needed
+        ));
+
+        for _ in 0..(new_hits_needed as usize) {
+            triaged_dmg.push(avg_new_dmg_per_hit);
         }
-
-        triaged_dmgs.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
-
-        out_msg.push_str("\nTriaged damage: ");
+        triaged_dmg.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
+        println!("new triaged dmg: {:?}", triaged_dmg);
+        out_msg.push_str("\nNew Triaged dmg: ");
+        let mut boss_hp_left = boss_hp;
         let mut triaged_count = 0;
-        for dmg in &triaged_dmgs {
+        for dmg in &triaged_dmg {
+            if triaged_count != 0 {
+                out_msg.push_str("-> ");
+            }
+
             if dmg > &boss_hp_left {
-                if triaged_count != 0 {
-                    out_msg.push_str("-> ");
-                }
                 out_msg.push_str(&format!("**{}**", &dmg));
 
-                let mut cot = (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as u32;
+                let mut cot = (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as u64;
                 if cot > 90 {
                     cot = 90;
                 }
@@ -110,16 +197,9 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                     "\nReleased in this order, your COT is: **{}s**",
                     cot
                 ));
-                if cot < 90 {
-                    out_msg.push_str("\nFull COT not achieved, Rong recommends:");
-                    out_msg = required_dmg_full_cot(out_msg, boss_hp_left, max_num_hits);
-                }
                 break;
             } else {
-                if triaged_count != 0 {
-                    out_msg.push_str("-> ");
-                }
-                if triaged_count + 1 >= triaged_dmgs.len() {
+                if triaged_count + 1 >= triaged_dmg.len() {
                     out_msg.push_str(&format!("**{}**", &dmg));
                 } else {
                     out_msg.push_str(&format!("{} ", &dmg));
@@ -128,15 +208,11 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                 boss_hp_left -= dmg;
             }
         }
+    } else {
+        // if !full_cot_reached {
+        // out_msg.push_str("\nFull COT not achieved, Rong recommends:");
 
-        if triaged_count == triaged_dmgs.len() {
-            out_msg.push_str(&format!(
-                "\nNot enough total dmg to kill. Rong recommends:\n\
-                 Remaining boss HP - **{:.3}**",
-                &boss_hp_left
-            ));
-            out_msg = required_dmg_full_cot(out_msg, boss_hp_left, max_num_hits);
-        }
+        // }
     }
 
     msg.reply(ctx, out_msg).await?;
@@ -163,7 +239,7 @@ async fn cot_calc_dmg(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         return Ok(());
     }
 
-    let mut boss_hp_left = match args.single::<f32>() {
+    let mut boss_hp_left = match args.single::<f64>() {
         Ok(hp) => hp,
         _ => {
             msg.reply(
@@ -174,8 +250,8 @@ async fn cot_calc_dmg(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             return Ok(());
         }
     };
-    let mut cot_target = args.single::<u32>()?;
-    let mut triaged_dmgs: Vec<f32> = Vec::new();
+    let mut cot_target = args.single::<u64>()?;
+    let mut dmg_inputs: Vec<f64> = Vec::new();
 
     if cot_target > 90 {
         cot_target = 90;
@@ -185,32 +261,32 @@ async fn cot_calc_dmg(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
     if args.is_empty() {
         out_msg = required_dmg_target_cot(out_msg, boss_hp_left, cot_target, max_num_hits);
     } else {
-        for arg in args.iter::<f32>() {
+        for arg in args.iter::<f64>() {
             // Zero troubles, zero worries.
             let new_dmg = arg.unwrap_or(0.0);
             if new_dmg == 0.0 {
                 continue;
             }
-            triaged_dmgs.push(new_dmg);
+            dmg_inputs.push(new_dmg);
         }
-        if triaged_dmgs.is_empty() {
+        if dmg_inputs.is_empty() {
             msg.reply(ctx, "I don't recognize any dmg numbers you sent")
                 .await?;
             return Ok(());
         }
 
-        triaged_dmgs.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
+        dmg_inputs.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
 
         out_msg.push_str("\nTriaged damage: ");
         let mut triaged_count = 0;
-        for dmg in &triaged_dmgs {
+        for dmg in &dmg_inputs {
             if dmg > &boss_hp_left {
                 if triaged_count != 0 {
                     out_msg.push_str("-> ");
                 }
                 out_msg.push_str(&format!("**{}**", &dmg));
 
-                let mut cot = (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as u32;
+                let mut cot = (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as u64;
                 if cot > 90 {
                     cot = 90;
                 }
@@ -231,7 +307,7 @@ async fn cot_calc_dmg(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                 if triaged_count != 0 {
                     out_msg.push_str("-> ");
                 }
-                if triaged_count + 1 >= triaged_dmgs.len() {
+                if triaged_count + 1 >= dmg_inputs.len() {
                     out_msg.push_str(&format!("**{}**", &dmg));
                 } else {
                     out_msg.push_str(&format!("{} ", &dmg));
@@ -241,7 +317,7 @@ async fn cot_calc_dmg(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             }
         }
 
-        if triaged_count == triaged_dmgs.len() {
+        if triaged_count == dmg_inputs.len() {
             out_msg.push_str(&format!(
                 "\nNot enough total dmg to kill. Rong recommends:\n\
                  Remaining boss HP - **{:.3}**",
@@ -253,6 +329,5 @@ async fn cot_calc_dmg(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
 
     msg.reply(ctx, out_msg).await?;
 
-    // let boss_hp_left: f64 = args.parse
     Ok(())
 }
