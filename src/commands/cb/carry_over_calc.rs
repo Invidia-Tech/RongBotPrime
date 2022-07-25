@@ -523,16 +523,34 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
     }
 
     if cot_reached && cot < 89 {
+        out_msg.push_str(&format!("\n\nTo reach {}s COT:", cot + 1));
         let mut triaged_dmg_copy = triaged_dmg.clone();
         let lowest_dmg = triaged_dmg_copy.pop().unwrap_or(0.0);
         let required_dmg =
             reach_target_cot(boss_hp - triaged_dmg_copy.iter().sum::<f64>(), cot + 1);
         out_msg.push_str(&format!(
-            "\n\nTo reach {}s COT. You need an additional {:.4} dmg on the last hit, making it {}.",
-            cot + 1,
+            "\nReplacing the last hit: need an additional {:.4} dmg, making it **{}**.",
             required_dmg - lowest_dmg,
             required_dmg
         ));
+
+        if triaged_dmg.len() > 1 {
+            let len = triaged_dmg.len();
+            // Calculate desired hp remaining.
+            let hp_remaining_before_last_2 =
+                boss_hp - (triaged_dmg[..(len - 2)].iter().sum::<f64>());
+            // last_hit_dmg - last_hit_dmg(cot_target-10)/90
+            let want_hp_remaining = lowest_dmg - lowest_dmg * (cot - 10) as f64 / 90.0;
+            let mut second_to_last_hit = hp_remaining_before_last_2 - want_hp_remaining;
+            second_to_last_hit *= 10000.0;
+            second_to_last_hit = second_to_last_hit.ceil();
+            second_to_last_hit /= 10000.0;
+            out_msg.push_str(&format!(
+                "\nReplacing the 2nd to last hit: need an additional {:.4} dmg, making it **{}**.",
+                second_to_last_hit - triaged_dmg[len - 2],
+                second_to_last_hit
+            ));
+        }
     }
 
     msg.reply(ctx, out_msg).await?;
