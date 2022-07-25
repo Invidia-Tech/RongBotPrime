@@ -36,6 +36,25 @@ fn avg_dmg_for_given_hits(boss_hp_left: f64, dmg_already_in: f64, hits_needed: f
     (boss_hp_left - dmg_already_in / 8.2) / hits_needed
 }
 
+fn calc_cot(mut boss_hp_left: f64, triaged_dmg: &Vec<f64>) -> i32 {
+    let mut cot = 0;
+    for dmg in triaged_dmg {
+        if dmg > &boss_hp_left {
+            cot = (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as i32;
+            if cot > 90 {
+                cot = 90;
+            }
+            if cot < 0 {
+                cot = 0;
+            }
+            return cot;
+        } else {
+            boss_hp_left -= dmg;
+        }
+    }
+    cot
+}
+
 fn output_dmg_triage(mut boss_hp_left: f64, triaged_dmg: &Vec<f64>, mut out_msg: String) -> String {
     let mut triaged_count = 0;
     for dmg in triaged_dmg {
@@ -68,6 +87,58 @@ fn output_dmg_triage(mut boss_hp_left: f64, triaged_dmg: &Vec<f64>, mut out_msg:
     out_msg
 }
 
+fn calculate_best_new_hits_needed(
+    triaged_dmg: &Vec<f64>,
+    boss_hp: f64,
+    boss_hp_left: f64,
+    new_hits_needed: f64,
+) -> f64 {
+    let avg_dmg: f64 = triaged_dmg.iter().sum::<f64>() / triaged_dmg.len() as f64;
+    let triaged_dmg_sum = triaged_dmg.iter().sum::<f64>();
+    let triaged_hits: f64 = triaged_dmg.len() as f64;
+    let avg_hits_needed = (boss_hp / avg_dmg).ceil();
+    let avg_dmg_needed = boss_hp * 90.0 / ((avg_hits_needed - 1.0) * 90.0 + 11.0);
+
+    let mut avg_new_dmg_per_hit =
+        (avg_dmg_needed * avg_hits_needed - triaged_dmg_sum) / new_hits_needed;
+    avg_new_dmg_per_hit *= 1000.0;
+    avg_new_dmg_per_hit = avg_new_dmg_per_hit.round();
+    avg_new_dmg_per_hit /= 1000.0;
+
+    // Compare against a potential smaller hit if all other hits are larger.
+    let potential_smaller_hit = dmg_for_full_cot_in_n(boss_hp_left, new_hits_needed);
+    if potential_smaller_hit < avg_new_dmg_per_hit {
+        avg_new_dmg_per_hit = potential_smaller_hit;
+    }
+
+    // Calculate case when using the lowest triaged hit as the scam janny hit.
+    let mut triaged_dmg_copy = triaged_dmg.clone();
+    let last_hit_dmg = triaged_dmg_copy.pop().unwrap_or(0.0);
+    let mut boss_hp_left_after_triage = boss_hp;
+    for n in triaged_dmg_copy {
+        boss_hp_left_after_triage -= n;
+    }
+    let max_front_hits = 3;
+    if new_hits_needed > max_front_hits as f64 {
+        return 0.0;
+    }
+    let mut front_dmg: f64 = 0.0;
+    for i in new_hits_needed as usize..=max_front_hits {
+        let potential_front_dmg =
+            avg_dmg_for_given_hits(boss_hp_left_after_triage, last_hit_dmg, i as f64);
+        if potential_front_dmg < last_hit_dmg {
+            break;
+        }
+        front_dmg = potential_front_dmg;
+    }
+
+    if front_dmg != 0.0 && front_dmg < avg_new_dmg_per_hit {
+        avg_new_dmg_per_hit = front_dmg;
+    }
+
+    avg_new_dmg_per_hit
+}
+
 fn required_dmg_target_cot(
     mut out_msg: String,
     boss_hp_left: f64,
@@ -81,6 +152,11 @@ fn required_dmg_target_cot(
         out_msg.push_str(&format!("\n\t{} hit(s) avg dmg: {}", i, dmg_needed));
     }
     out_msg
+}
+
+fn reach_target_cot(boss_hp_left: f64, cot_target: i32) -> f64 {
+    let dmg_needed = boss_hp_left / (1.0 - ((cot_target - 11) as f64) / 90.0);
+    (dmg_needed * 10000.0 + 1.0).ceil() / 10000.0
 }
 
 #[command("cot_calc_time")]
@@ -148,7 +224,8 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
     out_msg.push_str("\nTriaged damage: ");
     let mut triaged_count = 0;
     let mut triaged_dmg: Vec<f64> = Vec::new();
-    let mut full_cot_reached = true;
+    let mut cot_reached = false;
+    let mut cot = 0;
     for dmg in &dmg_inputs {
         triaged_dmg.push(*dmg);
         if triaged_count != 0 {
@@ -158,18 +235,18 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         if dmg > &boss_hp_left {
             out_msg.push_str(&format!("**{}**", &dmg));
 
-            let mut cot = (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as u64;
+            cot = (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as i32;
             if cot > 90 {
                 cot = 90;
+            }
+            if cot < 0 {
+                cot = 0;
             }
             out_msg.push_str(&format!(
                 "\nReleased in this order, your COT is: **{}s**",
                 cot
             ));
-            if cot < 90 {
-                full_cot_reached = false;
-                // out_msg = required_dmg_full_cot(out_msg, boss_hp_left, max_num_hits);
-            }
+            cot_reached = true;
             break;
         } else {
             if triaged_count + 1 >= dmg_inputs.len() {
@@ -186,7 +263,6 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
     let triaged_dmg_sum = triaged_dmg.iter().sum::<f64>();
     let triaged_hits: f64 = triaged_dmg.len() as f64;
     let avg_hits_needed = (boss_hp / avg_dmg).ceil();
-    let dmg_range_limit = 0.3;
     let avg_dmg_needed = boss_hp * 90.0 / ((avg_hits_needed - 1.0) * 90.0 + 11.0);
     let new_hits_needed = avg_hits_needed - triaged_hits;
 
@@ -208,9 +284,6 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         // Calculate underflow, need hits that is larger on average.
         let mut avg_new_dmg_per_hit =
             (avg_dmg_needed * avg_hits_needed - triaged_dmg_sum) / new_hits_needed;
-        avg_new_dmg_per_hit *= 1000.0;
-        avg_new_dmg_per_hit = avg_new_dmg_per_hit.round();
-        avg_new_dmg_per_hit /= 1000.0;
 
         // Compare against a potential smaller hit if all other hits are larger.
         let potential_smaller_hit = dmg_for_full_cot_in_n(boss_hp_left, new_hits_needed);
@@ -287,7 +360,12 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                 "Answer was: {}",
                 avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64)
             );
-            replacement_needs.push((i, avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64)));
+            let mut avg_dmg_for_replacement =
+                avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64);
+            avg_dmg_for_replacement *= 10000.0;
+            avg_dmg_for_replacement = avg_dmg_for_replacement.round();
+            avg_dmg_for_replacement /= 10000.0;
+            replacement_needs.push((i, avg_dmg_for_replacement));
         }
 
         // let mut dmg_not_replaced = boss_hp;
@@ -339,6 +417,10 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                 triaged_dmg_copy.push(n);
             }
             triaged_dmg_copy.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
+            if calc_cot(boss_hp, &triaged_dmg_copy) != 90 {
+                // Rong is stupid
+                continue;
+            }
             if new_hits_needed > 0.0 {
                 out_msg.push_str(&format!(
                     "\nReplacing {} low hit and adding {} new hit, results in:\n",
@@ -352,18 +434,24 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
             out_msg = output_dmg_triage(boss_hp, &triaged_dmg_copy, out_msg);
         }
 
+        avg_new_dmg_per_hit *= 10000.0;
+        avg_new_dmg_per_hit = avg_new_dmg_per_hit.round();
+        avg_new_dmg_per_hit /= 10000.0;
         out_msg.push_str(&format!(
-            "\nNew hits needed: {} x {}\n",
-            &avg_new_dmg_per_hit, &new_hits_needed
+            "\nAdding {} new hits: *{}*",
+            &new_hits_needed, &avg_new_dmg_per_hit
         ));
 
         for _ in 0..(new_hits_needed as usize) {
             triaged_dmg.push(avg_new_dmg_per_hit);
         }
         triaged_dmg.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
-        println!("new triaged dmg: {:?}", triaged_dmg);
-        out_msg.push_str("\nNew Triaged dmg: ");
-        out_msg = output_dmg_triage(boss_hp, &triaged_dmg, out_msg);
+
+        if calc_cot(boss_hp, &triaged_dmg) == 90 {
+            println!("new triaged dmg: {:?}", triaged_dmg);
+            out_msg.push_str("\nNew Triaged dmg: ");
+            out_msg = output_dmg_triage(boss_hp, &triaged_dmg, out_msg);
+        }
     } else {
         // Calculate hits replacement.
         let max_replacement = 2;
@@ -391,24 +479,17 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                 "Answer was: {}",
                 avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64)
             );
-            // let triaged_dmg_sum = triaged_dmg_copy.iter().sum::<f64>();
-            // let avg_dmg_needed = boss_hp * 90.0 / ((i as f64 - 1.0) * 90.0 + 11.0);
-            // Calculate underflow, need hits that is larger on average.
-            // let mut avg_new_dmg_per_hit = (avg_dmg_needed * i as f64 - triaged_dmg_sum) / i as f64;
-            // avg_new_dmg_per_hit *= 1000.0;
-            // avg_new_dmg_per_hit = avg_new_dmg_per_hit.ceil();
-            // avg_new_dmg_per_hit /= 1000.0;
+            let mut avg_new_dmg_per_hit = avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64);
+            let boss_hp_left = boss_hp - triaged_dmg_copy.iter().sum::<f64>();
+            let potential_smaller_avg =
+                calculate_best_new_hits_needed(&triaged_dmg_copy, boss_hp, boss_hp_left, i as f64);
+            if potential_smaller_avg < avg_new_dmg_per_hit {
+                avg_new_dmg_per_hit = potential_smaller_avg;
+            }
 
-            // // Compare against a potential smaller hit if all other hits are larger.
-            // let potential_smaller_hit = dmg_for_full_cot_in_n(boss_hp_left, i as f64);
-            // if potential_smaller_hit < avg_new_dmg_per_hit {
-            //     avg_new_dmg_per_hit = potential_smaller_hit;
-            // }
-            let avg_new_dmg_per_hit = avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64);
-            // if potential_smaller_avg < avg_new_dmg_per_hit {
-            //     avg_new_dmg_per_hit = potential_smaller_avg;
-            // }
-
+            avg_new_dmg_per_hit *= 10000.0;
+            avg_new_dmg_per_hit = avg_new_dmg_per_hit.round();
+            avg_new_dmg_per_hit /= 10000.0;
             replacement_needs.push((i, avg_new_dmg_per_hit));
         }
         println!("Replacement needs: {:?}", &replacement_needs);
@@ -423,18 +504,35 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                 triaged_dmg_copy.push(n);
             }
             triaged_dmg_copy.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
+            if calc_cot(boss_hp, &triaged_dmg_copy) != 90 {
+                // Rong is stupid
+                continue;
+            }
             if new_hits_needed > 0.0 {
                 out_msg.push_str(&format!(
-                    "\nReplacing {} low hit and adding {} new hit, results in:\n",
+                    "\n\nReplacing {} low hit and adding {} new hit, results in:\n",
                     i - 1,
                     new_hits_needed
                 ));
             } else {
-                out_msg.push_str(&format!("\nReplacing {} low hit, results in:\n", i));
+                out_msg.push_str(&format!("\n\nReplacing {} low hit, results in:\n", i));
             }
 
             out_msg = output_dmg_triage(boss_hp, &triaged_dmg_copy, out_msg);
         }
+    }
+
+    if cot_reached && cot < 89 {
+        let mut triaged_dmg_copy = triaged_dmg.clone();
+        let lowest_dmg = triaged_dmg_copy.pop().unwrap_or(0.0);
+        let required_dmg =
+            reach_target_cot(boss_hp - triaged_dmg_copy.iter().sum::<f64>(), cot + 1);
+        out_msg.push_str(&format!(
+            "\n\nTo reach {}s COT. You need an additional {:.4} dmg on the last hit, making it {}.",
+            cot + 1,
+            required_dmg - lowest_dmg,
+            required_dmg
+        ));
     }
 
     msg.reply(ctx, out_msg).await?;
