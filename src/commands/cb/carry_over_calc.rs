@@ -17,14 +17,9 @@ fn required_dmg_full_cot(mut out_msg: String, boss_hp_left: f64, max_num_hits: i
     out_msg
 }
 
-fn avg_dmg_needed_full_cot(boss_hp_left: f64, max_num_hits: i32) -> Vec<f64> {
-    let mut v: Vec<f64> = Vec::new();
-    for i in 0..max_num_hits {
-        let mut dmg_needed = boss_hp_left / (i as f64 + (11.0 / 90.0));
-        dmg_needed = (dmg_needed * 1000.0 + 1.0).ceil() / 1000.0;
-        v.push(dmg_needed)
-    }
-    v
+fn avg_dmg_needed_full_cot(boss_hp_left: f64, hits_needed: f64) -> f64 {
+    let dmg_needed = boss_hp_left / (hits_needed - 1.0 + (11.0 / 90.0));
+    (dmg_needed * 10000.0).ceil() / 10000.0
 }
 
 fn dmg_for_full_cot_in_n(boss_hp_left: f64, hits: f64) -> f64 {
@@ -101,9 +96,9 @@ fn calculate_best_new_hits_needed(
 
     let mut avg_new_dmg_per_hit =
         (avg_dmg_needed * avg_hits_needed - triaged_dmg_sum) / new_hits_needed;
-    avg_new_dmg_per_hit *= 1000.0;
-    avg_new_dmg_per_hit = avg_new_dmg_per_hit.round();
-    avg_new_dmg_per_hit /= 1000.0;
+    avg_new_dmg_per_hit *= 10000.0;
+    avg_new_dmg_per_hit = avg_new_dmg_per_hit.ceil();
+    avg_new_dmg_per_hit /= 10000.0;
 
     // Compare against a potential smaller hit if all other hits are larger.
     let potential_smaller_hit = dmg_for_full_cot_in_n(boss_hp_left, new_hits_needed);
@@ -275,10 +270,10 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
 
         // [BOSS HP] * 90 / ([Hits Desired] x 90 + 10) = [Average Damage needed]
         // out_msg.push_str(&format!("\nNew avg dmg needed: {:.3}", &avg_dmg_needed));
-        println!(
-            "Triaged_dmg_sum: {}, avg_hits_needed: {}, triaged_hits: {} new_hits_needed: {}",
-            &triaged_dmg_sum, &avg_hits_needed, &triaged_hits, &new_hits_needed
-        );
+        // println!(
+        //     "Triaged_dmg_sum: {}, avg_hits_needed: {}, triaged_hits: {} new_hits_needed: {}",
+        //     &triaged_dmg_sum, &avg_hits_needed, &triaged_hits, &new_hits_needed
+        // );
 
         // out_msg.push_str("\nThe average damage of triaged hits is lacking.\n");
         // Calculate underflow, need hits that is larger on average.
@@ -321,24 +316,6 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
             avg_new_dmg_per_hit = front_dmg;
         }
 
-        // for (i, n) in front_dmg {
-        //     let mut new_triaged_dmg = triaged_dmg.clone();
-        //     for _ in 0..i {
-        //         new_triaged_dmg.push(n);
-        //     }
-        //     new_triaged_dmg.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
-        //     out_msg.push_str("\nAssuming new hits in the front:\n");
-        //     out_msg = output_dmg_triage(boss_hp, &new_triaged_dmg, out_msg);
-        // }
-
-        // let mut filled_triaged_dmg = triaged_dmg.clone();
-        // This means that we got some giga weird dmg and we're no longer getting 90s.
-        // if (boss_hp / avg_new_dmg_per_hit).ceil() < avg_hits_needed {
-        //     for _ in 0..(new_hits_needed as usize) {
-        //         filled_triaged_dmg.push(avg_dmg);
-        //     }
-        // }
-
         // Consider n hits replacement
         let max_replacement = 2;
         let mut replacement_needs: Vec<(usize, f64)> = Vec::new();
@@ -348,69 +325,32 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
             }
             let mut triaged_dmg_copy = triaged_dmg.clone();
             for _ in (0)..(i - new_hits_needed as usize) {
-                println!("Replacing {} hits", i);
+                // println!("Replacing {} hits", i);
                 triaged_dmg_copy.pop();
             }
             let total_dmg_kept = triaged_dmg_copy.iter().sum();
-            println!(
-                "Boss_hp_left: {}, dmg_not_replaced: {}, hits_needed: {}",
-                &boss_hp, &total_dmg_kept, i as f64
-            );
-            println!(
-                "Answer was: {}",
-                avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64)
-            );
+            // println!(
+            //     "Boss_hp_left: {}, dmg_not_replaced: {}, hits_needed: {}",
+            //     &boss_hp, &total_dmg_kept, i as f64
+            // );
+            // println!(
+            //     "Answer was: {}",
+            //     avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64)
+            // );
             let mut avg_dmg_for_replacement =
                 avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64);
             avg_dmg_for_replacement *= 10000.0;
-            avg_dmg_for_replacement = avg_dmg_for_replacement.round();
+            avg_dmg_for_replacement = avg_dmg_for_replacement.ceil();
             avg_dmg_for_replacement /= 10000.0;
             replacement_needs.push((i, avg_dmg_for_replacement));
         }
 
-        // let mut dmg_not_replaced = boss_hp;
-        // let mut replacement_needs: Vec<f64> = Vec::new();
-        // for (i, n) in filled_triaged_dmg.iter().rev().enumerate() {
-        //     if i >= max_replacement {
-        //         break;
-        //     }
-        //     dmg_not_replaced -= n;
-        //     println!(
-        //         "Boss_hp_left: {}, dmg_not_replaced: {}, hits_needed: {}",
-        //         &boss_hp,
-        //         &dmg_not_replaced,
-        //         i as f64 + 1.0
-        //     );
-        //     println!(
-        //         "Answer was: {}",
-        //         avg_dmg_for_given_hits(boss_hp, dmg_not_replaced, i as f64 + 1.0)
-        //     );
-        //     replacement_needs.push(avg_dmg_for_given_hits(
-        //         boss_hp,
-        //         dmg_not_replaced,
-        //         i as f64 + 1.0,
-        //     ));
-        // }
-
-        println!("Replacement needs: {:?}", &replacement_needs);
-        // let l = filled_triaged_dmg.len() - 1;
-        // for (i, n) in replacement_needs.iter().enumerate() {
-        //     if i + 1 < new_hits_needed as usize {
-        //         continue;
-        //     }
-        //     let mut replacement_triaged_dmg = filled_triaged_dmg.clone();
-        //     for j in 0..(i + 1) {
-        //         replacement_triaged_dmg[l - j] = *n;
-        //     }
-        //     replacement_triaged_dmg.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
-        //     out_msg.push_str(&format!("\nReplacing {} low hit, results in:\n", i + 1));
-        //     out_msg = output_dmg_triage(boss_hp, &replacement_triaged_dmg, out_msg);
-        // }
+        // println!("Replacement needs: {:?}", &replacement_needs);
 
         for (i, n) in replacement_needs {
             let mut triaged_dmg_copy = triaged_dmg.clone();
             for _ in (0)..(i - new_hits_needed as usize) {
-                println!("Replacing {} hits", i);
+                // println!("Replacing {} hits", i);
                 triaged_dmg_copy.pop();
             }
             for _ in 0..i {
@@ -423,22 +363,22 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
             }
             if new_hits_needed > 0.0 {
                 out_msg.push_str(&format!(
-                    "\nReplacing {} low hit and adding {} new hit, results in:\n",
+                    "\n\nReplacing {} low hit and adding {} new hit, results in:\n",
                     i - 1,
                     new_hits_needed
                 ));
             } else {
-                out_msg.push_str(&format!("\nReplacing {} low hit, results in:\n", i));
+                out_msg.push_str(&format!("\n\nReplacing {} low hit, results in:\n", i));
             }
 
             out_msg = output_dmg_triage(boss_hp, &triaged_dmg_copy, out_msg);
         }
 
         avg_new_dmg_per_hit *= 10000.0;
-        avg_new_dmg_per_hit = avg_new_dmg_per_hit.round();
+        avg_new_dmg_per_hit = avg_new_dmg_per_hit.ceil();
         avg_new_dmg_per_hit /= 10000.0;
         out_msg.push_str(&format!(
-            "\nAdding {} new hits: *{}*",
+            "\n\nAdding {} new hits: *{}*",
             &new_hits_needed, &avg_new_dmg_per_hit
         ));
 
@@ -448,7 +388,7 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
         triaged_dmg.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
 
         if calc_cot(boss_hp, &triaged_dmg) == 90 {
-            println!("new triaged dmg: {:?}", triaged_dmg);
+            // println!("new triaged dmg: {:?}", triaged_dmg);
             out_msg.push_str("\nNew Triaged dmg: ");
             out_msg = output_dmg_triage(boss_hp, &triaged_dmg, out_msg);
         }
@@ -462,41 +402,53 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
                 continue;
             }
             let mut triaged_dmg_copy = triaged_dmg.clone();
-            println!(
-                "new hits needed: {} and i is {}",
-                new_hits_needed as usize, i
-            );
-            println!("Replacing {} hits in calcs", i - new_hits_needed as usize);
+            // println!(
+            //     "new hits needed: {} and i is {}",
+            //     new_hits_needed as usize, i
+            // );
+            // println!("Replacing {} hits in calcs", i - new_hits_needed as usize);
             for _ in (0)..(i - new_hits_needed as usize) {
                 triaged_dmg_copy.pop();
             }
             let total_dmg_kept = triaged_dmg_copy.iter().sum();
-            println!(
-                "Boss_hp_left: {}, dmg_not_replaced: {}, hits_needed: {}",
-                &boss_hp, &total_dmg_kept, i as f64
-            );
-            println!(
-                "Answer was: {}",
-                avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64)
-            );
+            // println!(
+            //     "Boss_hp_left: {}, dmg_not_replaced: {}, hits_needed: {}",
+            //     &boss_hp, &total_dmg_kept, i as f64
+            // );
+            // println!(
+            //     "Answer was: {}",
+            //     avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64)
+            // );
             let mut avg_new_dmg_per_hit = avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64);
+            // println!("Avg dmg for given hits answer: {}", avg_new_dmg_per_hit);
             let boss_hp_left = boss_hp - triaged_dmg_copy.iter().sum::<f64>();
             let potential_smaller_avg =
                 calculate_best_new_hits_needed(&triaged_dmg_copy, boss_hp, boss_hp_left, i as f64);
+            // println!("potential_smaller_avg answer: {}", potential_smaller_avg);
             if potential_smaller_avg < avg_new_dmg_per_hit {
                 avg_new_dmg_per_hit = potential_smaller_avg;
             }
 
+            // println!("i is: {}, triaged_dmg length is: {}", i, triaged_dmg.len());
+            if i == triaged_dmg.len() {
+                avg_new_dmg_per_hit = avg_dmg_needed_full_cot(boss_hp, i as f64);
+                // println!(
+                //     "avg_dmg_needed for boss_hp: {}, hits: {} is {}",
+                //     boss_hp,
+                //     i,
+                //     avg_dmg_needed_full_cot(boss_hp, i as f64)
+                // );
+            }
             avg_new_dmg_per_hit *= 10000.0;
-            avg_new_dmg_per_hit = avg_new_dmg_per_hit.round();
+            avg_new_dmg_per_hit = avg_new_dmg_per_hit.ceil();
             avg_new_dmg_per_hit /= 10000.0;
             replacement_needs.push((i, avg_new_dmg_per_hit));
         }
-        println!("Replacement needs: {:?}", &replacement_needs);
+        // println!("Replacement needs: {:?}", &replacement_needs);
 
         for (i, n) in replacement_needs {
             let mut triaged_dmg_copy = triaged_dmg.clone();
-            println!("Replacing {} hits in output", i - new_hits_needed as usize);
+            // println!("Replacing {} hits in output", i - new_hits_needed as usize);
             for _ in (0)..(i - new_hits_needed as usize) {
                 triaged_dmg_copy.pop();
             }
