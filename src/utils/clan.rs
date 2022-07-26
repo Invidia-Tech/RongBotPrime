@@ -82,7 +82,7 @@ pub async fn get_clan_from_channel_context(
     let member = {
         match cache.member(guild_id, msg.author.id) {
             Some(member) => member,
-            None => return Err(RongError::Custom("Error finding member data".to_string())),
+            None => msg.member(ctx).await?,
         }
     };
 
