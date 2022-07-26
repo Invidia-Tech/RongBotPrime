@@ -138,9 +138,8 @@ dependencies = [
 
 [[package]]
 name = "command_attr"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8862b532587a5efe6f20a750a0d01f390111f3570870581c13374024affc46dc"
+version = "0.4.1"
+source = "git+https://github.com/bumblepie/serenity?branch=dev/fix-selectmenu-deserialization#1fba7ba6bcf0a9fd4f645c265b42fe9bf8c45bc4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1119,9 +1118,8 @@ dependencies = [
 
 [[package]]
 name = "serenity"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "246008828de84241202b092316c4729da36c3edd8f0c17ed6893df8e414c3c9b"
+version = "0.11.4"
+source = "git+https://github.com/bumblepie/serenity?branch=dev/fix-selectmenu-deserialization#1fba7ba6bcf0a9fd4f645c265b42fe9bf8c45bc4"
 dependencies = [
  "async-trait",
  "async-tungstenite",
@@ -1140,6 +1138,7 @@ dependencies = [
  "parking_lot 0.12.1",
  "percent-encoding",
  "reqwest",
+ "rustversion",
  "serde",
  "serde-value",
  "serde_json",

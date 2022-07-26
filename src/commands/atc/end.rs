@@ -389,11 +389,11 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         ) {
             None => return Ok(()),
             Some(p_mention) => {
-                let out_msg = format!(
-                    "{}\n{}\nTime to ping them... <:KyoukaGiggle:968707085212745819>",
-                    &nm.content, &alert_msg
-                );
-                nm.edit(ctx, |nm| nm.content(out_msg)).await?;
+                // let out_msg = format!(
+                //     "{}\n{}\nTime to ping them... <:KyoukaGiggle:968707085212745819>",
+                //     &nm.content, &alert_msg
+                // );
+                // nm.edit(ctx, |nm| nm.content(out_msg)).await?;
                 let channel = match ctx.cache.guild_channel(mention_ch) {
                     Some(channel) => channel,
                     None => {
