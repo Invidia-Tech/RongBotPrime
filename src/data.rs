@@ -100,9 +100,13 @@ impl FlightStatus {
         }
     }
 
-    fn button(&self, label: &str) -> CreateButton {
+    fn button(&self, label: &str, special_id: &str) -> CreateButton {
         let mut b = CreateButton::default();
-        b.custom_id(self);
+        if special_id == "none" {
+            b.custom_id(self);
+        } else {
+            b.custom_id(special_id);
+        }
         b.emoji(self.emoji());
         b.label(label);
         b.style(ButtonStyle::Primary);
@@ -112,10 +116,11 @@ impl FlightStatus {
     pub fn action_row() -> CreateActionRow {
         let mut ar = CreateActionRow::default();
         // We can add up to 5 buttons per action row
-        ar.add_button(FlightStatus::Amb.button("Ambulanced"));
-        ar.add_button(FlightStatus::Crashed.button("BB'd"));
-        ar.add_button(FlightStatus::Landed.button("Landed Safely"));
-        ar.add_button(FlightStatus::Canceled.button("Canceled"));
+        ar.add_button(FlightStatus::Amb.button("Ambulanced", "none"));
+        ar.add_button(FlightStatus::Crashed.button("Used FC", "used fc"));
+        ar.add_button(FlightStatus::Crashed.button("BB'd", "none"));
+        ar.add_button(FlightStatus::Landed.button("Landed Safely", "none"));
+        ar.add_button(FlightStatus::Canceled.button("Canceled", "none"));
         ar
     }
 }

@@ -128,7 +128,7 @@ impl<'a> PassengerOptions<'a> {
 #[aliases("end")]
 #[description("End a flight.")]
 #[bucket = "atc"]
-async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // Only allows this command within CB marked channels.
     let (clan_id, clan_name) = result_or_say_why!(
         get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb),
@@ -186,6 +186,31 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
         result_or_say_why!(get_all_clanmember_ign_map(ctx, &clan_id), ctx, msg);
 
     let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
+
+    // Get passenger or determine solo flight
+    // let passenger_member_id: Option<i32>;
+    // let mut selected_passenger = false;
+    // let mut pre_flight_alerts: String = "".to_string();
+    // let mut ign = "Self Flight".to_string();
+    // if !args.is_empty() {
+    //     ign = args.single::<String>().unwrap();
+    //     let (member_id, passenger_user_id) =
+    //         result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
+    //     // msg.channel_id
+    //     //    .say(ctx, format!("Passenger_member_id is: {:?}", passenger_member_id))
+    //     //    .await?;
+    //     passenger_member_id = Some(member_id);
+    //     selected_passenger = true;
+    //     if passenger_user_id == pilot_user_id {
+    //         pre_flight_alerts.push_str(
+    //             "Warning! You mentioned yourself! \
+    //              This flight will start assuming this is not a solo flight. \
+    //              This may mess up pilot stats.\n",
+    //         );
+    //     }
+    // }
+
+    // Ensure that the passenger_member_id is within the same guild as the pilot.
 
     let passenger_options = PassengerOptions::new(&all_clanmember_ign_map);
     let m = msg
@@ -274,23 +299,31 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
         .await_component_interactions(&ctx)
         .timeout(Duration::from_secs(20))
         .build();
+    let mut fc_used = false;
 
     if let Some(mci) = cib.next().await {
-        end_flight_status = FlightStatus::from_str(&mci.data.custom_id)?;
-    // Acknowledge the interaction and send a reply
-    // mci.create_interaction_response(&ctx, |r| {
-    // 	// This time we dont edit the message but reply to it
-    // 	r.kind(InteractionResponseType::ChannelMessageWithSource)
-    // 		.interaction_response_data(|d| {
-    // 			// Make the message hidden for other users by setting `ephemeral(true)`.
-    // 			d.ephemeral(true).content(format!(
-    // 				"Your flight will end with status {}",
-    // 				&end_flight_status
-    // 			))
-    // 		})
-    // })
-    // .await
-    // .unwrap();
+        let custom_id = &mci.data.custom_id;
+        if custom_id == "used fc" {
+            end_flight_status = FlightStatus::Crashed;
+            fc_used = true;
+        } else {
+            end_flight_status = FlightStatus::from_str(custom_id)?;
+        }
+
+        // Acknowledge the interaction and send a reply
+        // mci.create_interaction_response(&ctx, |r| {
+        // 	// This time we dont edit the message but reply to it
+        // 	r.kind(InteractionResponseType::ChannelMessageWithSource)
+        // 		.interaction_response_data(|d| {
+        // 			// Make the message hidden for other users by setting `ephemeral(true)`.
+        // 			d.ephemeral(true).content(format!(
+        // 				"Your flight will end with status {}",
+        // 				&end_flight_status
+        // 			))
+        // 		})
+        // })
+        // .await
+        // .unwrap();
     } else {
         msg.reply(ctx, "Timed out!").await?;
         m.delete(&ctx).await?;
@@ -314,14 +347,18 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
     .await
     {
         Ok(_) => {
-            msg.reply_mention(
-                ctx,
-                format!(
-                    "Your flight: **{}** (Started {} ago) will end with status: {}",
-                    &passenger_text, &humantime_ago, &end_flight_status,
-                ),
-            )
-            .await?
+            let mut reply = format!(
+                "Your flight: **{}** (Started {} ago) will end with status: {}",
+                &passenger_text, &humantime_ago, &end_flight_status
+            );
+            if fc_used {
+                reply = format!(
+                    "Your flight: **{}** (Started {} ago) will end with status: crashed and used FC\n\
+                     **PLEASE REMEMBER TO >fc AND TRACK THIS!**",
+                    &passenger_text, &humantime_ago
+                );
+            }
+            msg.reply_mention(ctx, reply).await?
         }
         Err(e) => {
             msg.reply_mention(ctx, format!("Something's wrong! {}", e))
@@ -331,8 +368,8 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
             return Ok(());
         }
     };
-
     let mut alert_msg = String::default();
+
     // Alert the passenger if exists;
     let mention_ch = match result_or_say_why!(get_alert_channel_for_clan(ctx, &clan_id), ctx, msg) {
         None => {
