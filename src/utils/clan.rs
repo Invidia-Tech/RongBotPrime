@@ -202,7 +202,8 @@ pub async fn get_clan_member_id_by_ign(
     match sqlx::query!(
         "SELECT id, user_id FROM rong_clanmember
          WHERE  clan_id = $1
-            AND ign ilike $2",
+            AND ign ilike $2
+            AND active = True",
         clan_id,
         ign
     )
@@ -211,8 +212,8 @@ pub async fn get_clan_member_id_by_ign(
     {
         Ok(row) => Ok((row.id, row.user_id.unwrap_or(0))),
         Err(_) => Err(RongError::Custom(format!(
-            "Who is {}? <:ReiThink:924146816151351366>",
-            ign
+            "Who is {}? <:ReiThink:924146816151351366>, or maybe {} is not an active member!",
+            ign, ign
         ))),
     }
 }

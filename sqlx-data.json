@@ -282,6 +282,33 @@
     },
     "query": "SELECT * FROM rongbot.flight\n         WHERE  clan_id  = $1\n            AND cb_id    = $2\n            AND status   = 'in flight'\n         ORDER BY CASE status\n                    WHEN 'in flight' THEN 0\n                  END,\n            start_time DESC;"
   },
+  "32046a09c0ebccc0fb34f28c97bb83e8ae7994a49f65e1093f2987f469afbc14": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT id, user_id FROM rong_clanmember\n         WHERE  clan_id = $1\n            AND ign ilike $2\n            AND active = True"
+  },
   "35a56d83db65ea95f09925a094003c3354d7b46a367a5b140feadec741411101": {
     "describe": {
       "columns": [
@@ -555,33 +582,6 @@
       }
     },
     "query": "SELECT p.id FROM rongbot.pilot p\n                     JOIN rong_clanmember cm\n                        ON p.clan_id = cm.clan_id AND\n                           p.user_id = cm.user_id\n                     WHERE cm.id = $1;"
-  },
-  "475bc174498f7430fbc685095c59e4952d6cbc540bf003f90dc0516c127f4f80": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "user_id",
-          "ordinal": 1,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Text"
-        ]
-      }
-    },
-    "query": "SELECT id, user_id FROM rong_clanmember\n         WHERE  clan_id = $1\n            AND ign ilike $2"
   },
   "48dbabd9e13b7f755308a462ca114b2bc01636bbbe8aa969d005ff7bf5f887f6": {
     "describe": {
