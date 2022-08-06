@@ -1,10 +1,6 @@
 use serenity::{
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
 };
 
@@ -90,7 +86,7 @@ fn calculate_best_new_hits_needed(
 ) -> f64 {
     let avg_dmg: f64 = triaged_dmg.iter().sum::<f64>() / triaged_dmg.len() as f64;
     let triaged_dmg_sum = triaged_dmg.iter().sum::<f64>();
-    let triaged_hits: f64 = triaged_dmg.len() as f64;
+    let _triaged_hits: f64 = triaged_dmg.len() as f64;
     let avg_hits_needed = (boss_hp / avg_dmg).ceil();
     let avg_dmg_needed = boss_hp * 90.0 / ((avg_hits_needed - 1.0) * 90.0 + 11.0);
 
@@ -395,7 +391,7 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
     } else {
         // Calculate hits replacement.
         let max_replacement = 2;
-        let mut hit_replacement = false;
+        let _hit_replacement = false;
         let mut replacement_needs: Vec<(usize, f64)> = Vec::new();
         for i in 1..=max_replacement {
             if i <= new_hits_needed as usize {

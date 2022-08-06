@@ -1,47 +1,19 @@
-use std::{
-    collections::HashMap,
-    error::Error as StdError,
-    fmt,
-    str::FromStr,
-    time::Duration,
-};
+use std::{collections::HashMap, error::Error as StdError, fmt, str::FromStr, time::Duration};
 
 use chrono::Utc;
 use serenity::{
-    builder::{
-        CreateActionRow,
-        CreateSelectMenu,
-        CreateSelectMenuOption,
-    },
+    builder::{CreateActionRow, CreateSelectMenu, CreateSelectMenuOption},
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     futures::StreamExt,
-    model::{
-        channel::Message,
-        interactions::InteractionResponseType,
-    },
+    model::{application::interaction::InteractionResponseType, channel::Message},
 };
 
 use humantime::format_duration;
 
 use crate::{
-    data::{
-        CbStatus,
-        ChannelPersona,
-        DatabasePool,
-        Flight,
-        FlightStatus,
-    },
-    utils::{
-        atc::*,
-        clan::*,
-        macros::*,
-        rong::*,
-    },
+    data::{CbStatus, ChannelPersona, DatabasePool, Flight, FlightStatus},
+    utils::{atc::*, clan::*, macros::*, rong::*},
 };
 
 #[derive(Debug)]
@@ -67,7 +39,9 @@ impl<'a> fmt::Display for PassengerOptions<'a> {
 }
 
 impl<'a> PassengerOptions<'a> {
-    pub fn new(ign_map: &'a HashMap<i32, String>) -> Self { Self { ign_map } }
+    pub fn new(ign_map: &'a HashMap<i32, String>) -> Self {
+        Self { ign_map }
+    }
 
     fn menu_option(&self, flight: &Flight) -> CreateSelectMenuOption {
         let mut opt = CreateSelectMenuOption::default();
@@ -128,7 +102,7 @@ impl<'a> PassengerOptions<'a> {
 #[aliases("end")]
 #[description("End a flight.")]
 #[bucket = "atc"]
-async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     // Only allows this command within CB marked channels.
     let (clan_id, clan_name) = result_or_say_why!(
         get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb),
@@ -337,7 +311,7 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         .get::<DatabasePool>()
         .cloned()
         .unwrap();
-    let mut nm = match sqlx::query_unchecked!(
+    match sqlx::query_unchecked!(
         "UPDATE rongbot.flight SET (end_time, status) =
 		 (now(), $1) WHERE id = $2",
         &end_flight_status,

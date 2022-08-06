@@ -1,25 +1,12 @@
-use std::{
-    collections::HashMap,
-    time::Duration,
-};
+use std::{collections::HashMap, time::Duration};
 
 use serenity::{
-    builder::{
-        CreateActionRow,
-        CreateEmbed,
-    },
+    builder::{CreateActionRow, CreateEmbed},
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::{
-        channel::{
-            Message,
-            ReactionType,
-        },
-        interactions::message_component::ButtonStyle,
+        application::component::ButtonStyle,
+        channel::{Message, ReactionType},
     },
 };
 
@@ -27,15 +14,9 @@ use chrono::Utc;
 use humantime::format_duration;
 
 use crate::{
-    data::{
-        ChannelPersona,
-    },
+    data::ChannelPersona,
     error::RongError,
-    utils::{
-        atc::*,
-        clan::*,
-        macros::*,
-    },
+    utils::{atc::*, clan::*, macros::*},
 };
 
 struct MenuPaginator<'a> {
