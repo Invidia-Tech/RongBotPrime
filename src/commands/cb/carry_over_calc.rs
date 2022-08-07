@@ -187,8 +187,12 @@ fn required_dmg_target_cot(
     out_msg
 }
 
-fn reach_target_cot(boss_hp_left: f64, cot_target: i32) -> f64 {
-    let dmg_needed = boss_hp_left / (1.0 - ((cot_target - 11) as f64) / 90.0);
+fn reach_target_cot(boss_hp_left: f64, cot_target: i32, new_calc: bool) -> f64 {
+    let dmg_needed = if new_calc {
+        boss_hp_left / (1.0 - ((cot_target - 21) as f64) / 90.0)
+    } else {
+        boss_hp_left / (1.0 - ((cot_target - 11) as f64) / 90.0)
+    };
     (dmg_needed * 10000.0 + 1.0).ceil() / 10000.0
 }
 
@@ -496,8 +500,11 @@ fn process_cot(mut args: Args, new_calc: bool) -> Result<String, CommandError> {
         out_msg.push_str(&format!("\n\nTo reach {}s COT:", cot + 1));
         let mut triaged_dmg_copy = triaged_dmg.clone();
         let lowest_dmg = triaged_dmg_copy.pop().unwrap_or(0.0);
-        let required_dmg =
-            reach_target_cot(boss_hp - triaged_dmg_copy.iter().sum::<f64>(), cot + 1);
+        let required_dmg = reach_target_cot(
+            boss_hp - triaged_dmg_copy.iter().sum::<f64>(),
+            cot + 1,
+            new_calc,
+        );
         out_msg.push_str(&format!(
             "\nReplacing the last hit: need an additional {:.4} dmg, making it **{}**.",
             required_dmg - lowest_dmg,
