@@ -2,7 +2,9 @@
     "rust-analyzer.diagnostics.disabled": [
         "macro-error"
     ],
-    "rust-analyzer.server.extraEnv": { "SQLX_OFFLINE": "true" }
+    "rust-analyzer.server.extraEnv": {
+        "SQLX_OFFLINE": "true"
+    },
     "rust-analyzer.runnableEnv": {
         "SQLX_OFFLINE": "true"
     }

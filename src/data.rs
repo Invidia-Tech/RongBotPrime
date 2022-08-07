@@ -1,13 +1,22 @@
-use chrono::{DateTime, Utc};
+use chrono::{
+    DateTime,
+    Utc,
+};
 use core::fmt;
 use serenity::{
-    builder::{CreateActionRow, CreateButton},
+    builder::{
+        CreateActionRow,
+        CreateButton,
+    },
     client::bridge::gateway::ShardManager,
     model::application::component::ButtonStyle,
     prelude::TypeMapKey,
 };
 use sqlx::PgPool;
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    sync::Arc,
+};
 use tokio::sync::Mutex;
 
 pub struct DatabasePool;

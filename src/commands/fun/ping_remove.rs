@@ -1,7 +1,5 @@
 use serenity::{
-    client::{
-        Context,
-    },
+    client::Context,
     framework::standard::{
         macros::command,
         Args,
@@ -12,9 +10,7 @@ use serenity::{
         id::UserId,
         user::User,
     },
-    utils::{
-        parse_username,
-    },
+    utils::parse_username,
 };
 
 use crate::{

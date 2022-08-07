@@ -1,12 +1,6 @@
-use crate::{
-    data::{
-        DatabasePool,
-    },
-};
+use crate::data::DatabasePool;
 
 use crate::checks::owner::*;
-
-
 
 use serenity::{
     client::Context,
@@ -16,9 +10,7 @@ use serenity::{
         CommandResult,
     },
     model::channel::Message,
-    utils::{
-        parse_username,
-    },
+    utils::parse_username,
 };
 
 #[command("add_superadmin")]

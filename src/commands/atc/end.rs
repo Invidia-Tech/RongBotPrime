@@ -1,19 +1,47 @@
-use std::{collections::HashMap, error::Error as StdError, fmt, str::FromStr, time::Duration};
+use std::{
+    collections::HashMap,
+    error::Error as StdError,
+    fmt,
+    str::FromStr,
+    time::Duration,
+};
 
 use chrono::Utc;
 use serenity::{
-    builder::{CreateActionRow, CreateSelectMenu, CreateSelectMenuOption},
+    builder::{
+        CreateActionRow,
+        CreateSelectMenu,
+        CreateSelectMenuOption,
+    },
     client::Context,
-    framework::standard::{macros::command, Args, CommandResult},
+    framework::standard::{
+        macros::command,
+        Args,
+        CommandResult,
+    },
     futures::StreamExt,
-    model::{application::interaction::InteractionResponseType, channel::Message},
+    model::{
+        application::interaction::InteractionResponseType,
+        channel::Message,
+    },
 };
 
 use humantime::format_duration;
 
 use crate::{
-    data::{CbStatus, ChannelPersona, DatabasePool, Flight, FlightStatus},
-    utils::{atc::*, clan::*, macros::*, rong::*},
+    data::{
+        CbStatus,
+        ChannelPersona,
+        DatabasePool,
+        Flight,
+        FlightStatus,
+    },
+    utils::{
+        atc::*,
+        clan::*,
+        macros::*,
+        rong::*,
+    },
 };
 
 #[derive(Debug)]
@@ -39,9 +67,7 @@ impl<'a> fmt::Display for PassengerOptions<'a> {
 }
 
 impl<'a> PassengerOptions<'a> {
-    pub fn new(ign_map: &'a HashMap<i32, String>) -> Self {
-        Self { ign_map }
-    }
+    pub fn new(ign_map: &'a HashMap<i32, String>) -> Self { Self { ign_map } }
 
     fn menu_option(&self, flight: &Flight) -> CreateSelectMenuOption {
         let mut opt = CreateSelectMenuOption::default();

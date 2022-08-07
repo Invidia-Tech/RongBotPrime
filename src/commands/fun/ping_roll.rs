@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
 use serenity::{
-    client::{
-        Context,
-    },
+    client::Context,
     framework::standard::{
         macros::command,
         CommandResult,

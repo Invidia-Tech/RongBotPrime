@@ -139,7 +139,7 @@ dependencies = [
 [[package]]
 name = "command_attr"
 version = "0.4.1"
-source = "git+https://github.com/bumblepie/serenity?branch=dev/fix-selectmenu-deserialization#1fba7ba6bcf0a9fd4f645c265b42fe9bf8c45bc4"
+source = "git+https://github.com/serenity-rs/serenity#ca6028b30d47ec6df3631db74c5a969e8ad78998"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1001,7 +1001,7 @@ dependencies = [
 
 [[package]]
 name = "rongbotprime"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "humantime",
@@ -1118,8 +1118,8 @@ dependencies = [
 
 [[package]]
 name = "serenity"
-version = "0.11.4"
-source = "git+https://github.com/bumblepie/serenity?branch=dev/fix-selectmenu-deserialization#1fba7ba6bcf0a9fd4f645c265b42fe9bf8c45bc4"
+version = "0.11.5"
+source = "git+https://github.com/serenity-rs/serenity#ca6028b30d47ec6df3631db74c5a969e8ad78998"
 dependencies = [
  "async-trait",
  "async-tungstenite",

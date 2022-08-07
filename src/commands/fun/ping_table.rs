@@ -1,7 +1,5 @@
 use serenity::{
-    client::{
-        Context,
-    },
+    client::Context,
     framework::standard::{
         macros::command,
         Args,
