@@ -47,10 +47,28 @@ fn avg_dmg_for_given_hits(
     new_calc: bool,
 ) -> f64 {
     if new_calc {
-        (boss_hp_left - dmg_already_in / (90.0 / 20.99)) / hits_needed
+        (boss_hp_left - dmg_already_in / (90.0 / 20.99999)) / hits_needed
     } else {
-        (boss_hp_left - dmg_already_in / (90.0 / 10.99)) / hits_needed
+        (boss_hp_left - dmg_already_in / (90.0 / 10.99999)) / hits_needed
     }
+}
+
+fn get_2nd_to_last_replacement(
+    hp_remaining_before_last_2: f64,
+    lowest_dmg: f64,
+    cot: i32,
+    new_calc: bool,
+) -> f64 {
+    let want_hp_remaining = if new_calc {
+        lowest_dmg - lowest_dmg * (cot - 20) as f64 / 90.0
+    } else {
+        lowest_dmg - lowest_dmg * (cot - 10) as f64 / 90.0
+    };
+    let mut second_to_last_hit = hp_remaining_before_last_2 - want_hp_remaining;
+    second_to_last_hit *= 10000.0;
+    second_to_last_hit = second_to_last_hit.ceil();
+    second_to_last_hit /= 10000.0;
+    second_to_last_hit
 }
 
 fn calc_cot(mut boss_hp_left: f64, triaged_dmg: &Vec<f64>, new_calc: bool) -> i32 {
@@ -517,11 +535,9 @@ fn process_cot(mut args: Args, new_calc: bool) -> Result<String, CommandError> {
             let hp_remaining_before_last_2 =
                 boss_hp - (triaged_dmg[..(len - 2)].iter().sum::<f64>());
             // last_hit_dmg - last_hit_dmg(cot_target-10)/90
-            let want_hp_remaining = lowest_dmg - lowest_dmg * (cot - 10) as f64 / 90.0;
-            let mut second_to_last_hit = hp_remaining_before_last_2 - want_hp_remaining;
-            second_to_last_hit *= 10000.0;
-            second_to_last_hit = second_to_last_hit.ceil();
-            second_to_last_hit /= 10000.0;
+            // Update for new +20s calc
+            let second_to_last_hit =
+                get_2nd_to_last_replacement(hp_remaining_before_last_2, lowest_dmg, cot, new_calc);
             out_msg.push_str(&format!(
                 "\nReplacing the 2nd to last hit: need an additional {:.4} dmg, making it **{}**.",
                 second_to_last_hit - triaged_dmg[len - 2],
