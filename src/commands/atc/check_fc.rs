@@ -23,7 +23,7 @@ use crate::{
 };
 
 #[command("atc_check_fc")]
-#[aliases("cfc", "check_fc")]
+#[aliases("cfc", "check_fc", "creset", "check_reset")]
 #[description("Check if people have used their FC or not.")]
 async fn check_fc(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // Only allows this command within CB marked channels.

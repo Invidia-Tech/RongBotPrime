@@ -22,7 +22,7 @@ use crate::{
 };
 
 #[command("atc_fc")]
-#[aliases("fc")]
+#[aliases("fc", "reset")]
 #[description("Marks a person to have used force quit.")]
 async fn force_quit(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // Only allows this command within CB marked channels.
