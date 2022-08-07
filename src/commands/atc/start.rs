@@ -392,7 +392,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                             None => return Ok(()),
                             Some(p_mention) => {
                                 let out_msg = format!(
-                                    "{}\n{}\nTime to ping them... <:KyoukaGiggle:968707085212745819>",
+                                    "{}\n{}Time to ping them... <:KyoukaGiggle:968707085212745819>",
                                     &m.content, &alert_msg
                                 );
 

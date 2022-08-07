@@ -128,7 +128,7 @@ impl<'a> PassengerOptions<'a> {
 #[aliases("end")]
 #[description("End a flight.")]
 #[bucket = "atc"]
-async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // Only allows this command within CB marked channels.
     let (clan_id, clan_name) = result_or_say_why!(
         get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb),
@@ -188,61 +188,103 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
     let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
 
     // Get passenger or determine solo flight
-    // let passenger_member_id: Option<i32>;
-    // let mut selected_passenger = false;
-    // let mut pre_flight_alerts: String = "".to_string();
-    // let mut ign = "Self Flight".to_string();
-    // if !args.is_empty() {
-    //     ign = args.single::<String>().unwrap();
-    //     let (member_id, passenger_user_id) =
-    //         result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
-    //     // msg.channel_id
-    //     //    .say(ctx, format!("Passenger_member_id is: {:?}", passenger_member_id))
-    //     //    .await?;
-    //     passenger_member_id = Some(member_id);
-    //     selected_passenger = true;
-    //     if passenger_user_id == pilot_user_id {
-    //         pre_flight_alerts.push_str(
-    //             "Warning! You mentioned yourself! \
-    //              This flight will start assuming this is not a solo flight. \
-    //              This may mess up pilot stats.\n",
-    //         );
-    //     }
-    // }
-
-    // Ensure that the passenger_member_id is within the same guild as the pilot.
-
-    let passenger_options = PassengerOptions::new(&all_clanmember_ign_map);
-    let m = msg
-        .channel_id
-        .send_message(&ctx, |m| {
-            m.content(format!(
-                "Which flight would you like to land <@{}>?",
-                msg.author.id
-            ))
-            .components(|c| c.add_action_row(passenger_options.action_row(&pilot_ongoing_flights)))
-        })
-        .await
-        .unwrap();
-
-    // Wait for the user to make a selection
-    let mci = match m
-        .await_component_interaction(&ctx)
-        .timeout(Duration::from_secs(20))
-        .await
-    {
-        Some(ci) => ci,
-        None => {
-            msg.reply(&ctx, "Timed out.").await.unwrap();
-            m.delete(&ctx).await.unwrap();
-            return Ok(());
+    let passenger_clan_member_id: Option<i32>;
+    let mut mentioned_flight_id: Option<i32> = None;
+    let mut mentioned_passenger = false;
+    let mut ign = "No IGN".to_string();
+    if !args.is_empty() {
+        mentioned_passenger = true;
+        ign = args.single::<String>().unwrap();
+        if ign.to_ascii_lowercase() == "self" {
+            for flight in &pilot_ongoing_flights {
+                if flight.passenger_id == None {
+                    mentioned_flight_id = Some(flight.id);
+                }
+            }
+        } else {
+            let (clan_member_id, _passenger_clan_user_id) =
+                result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
+            // msg.channel_id
+            //    .say(ctx, format!("Passenger_member_id is: {:?}", passenger_member_id))
+            //    .await?;
+            passenger_clan_member_id = Some(clan_member_id);
+            for flight in &pilot_ongoing_flights {
+                if flight.passenger_id == passenger_clan_member_id {
+                    mentioned_flight_id = Some(flight.id);
+                }
+            }
         }
-    };
+    }
 
-    // data.custom_id contains the id of the component (here "Passenger_select")
-    // and should be used to identify if a message has multiple components.
-    // data.values contains the selected values from the menu
-    let end_flight_id: i32 = mci.data.values.get(0).unwrap().parse::<i32>()?;
+    if mentioned_passenger && mentioned_flight_id == None {
+        let out_msg = if ign.to_ascii_lowercase() == "self" {
+            "You do not have an active self flight!".to_string()
+        } else {
+            format!("{} does not have an active flight with you!", ign)
+        };
+        msg.reply(ctx, out_msg).await?;
+        return Ok(());
+    }
+
+    let end_flight_id: i32;
+    let mut m;
+    let mut mci = None;
+    if mentioned_flight_id != None {
+        end_flight_id = mentioned_flight_id.unwrap_or(0);
+        m = msg
+            .channel_id
+            .send_message(&ctx, |m| {
+                m.content(format!(
+                    "<@{}> Landing your flight with {}. Please hold.",
+                    msg.author.id, ign
+                ))
+            })
+            .await
+            .unwrap();
+    } else {
+        // Ensure that the passenger_member_id is within the same guild as the pilot.
+        let passenger_options = PassengerOptions::new(&all_clanmember_ign_map);
+        m = msg
+            .channel_id
+            .send_message(&ctx, |m| {
+                m.content(format!(
+                    "Which flight would you like to land <@{}>?",
+                    msg.author.id
+                ))
+                .components(|c| {
+                    c.add_action_row(passenger_options.action_row(&pilot_ongoing_flights))
+                })
+            })
+            .await
+            .unwrap();
+
+        // Wait for the user to make a selection
+        mci = match m
+            .await_component_interaction(&ctx)
+            .timeout(Duration::from_secs(20))
+            .await
+        {
+            Some(ci) => Some(ci),
+            None => {
+                msg.reply(&ctx, "Timed out.").await.unwrap();
+                m.delete(&ctx).await.unwrap();
+                return Ok(());
+            }
+        };
+
+        // data.custom_id contains the id of the component (here "Passenger_select")
+        // and should be used to identify if a message has multiple components.
+        // data.values contains the selected values from the menu
+        end_flight_id = mci
+            .clone()
+            .unwrap()
+            .data
+            .values
+            .get(0)
+            .unwrap()
+            .parse::<i32>()?;
+    }
+
     let mut end_flight: &Flight = &pilot_ongoing_flights[0];
     for f in &pilot_ongoing_flights {
         if f.id == end_flight_id {
@@ -278,19 +320,35 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
     // 	.await?;
 
     // Acknowledge the interaction and edit the message
-    mci.create_interaction_response(&ctx, |r| {
-        r.kind(InteractionResponseType::UpdateMessage)
-            .interaction_response_data(|d| {
-                d.content(format!(
-                    "What happened to your flight? (**{}** - {} ago)",
-                    passenger_text, humantime_ago
+
+    if let Some(mci) = mci {
+        mci.create_interaction_response(&ctx, |r| {
+            r.kind(InteractionResponseType::UpdateMessage)
+                .interaction_response_data(|d| {
+                    d.content(format!(
+                        "What happened to your flight? (**{}** - {} ago)",
+                        passenger_text, humantime_ago
+                    ))
+                    .ephemeral(true)
+                    .components(|c| c.add_action_row(FlightStatus::action_row()))
+                })
+        })
+        .await
+        .unwrap();
+    } else {
+        m.delete(ctx).await?;
+        m = msg
+            .channel_id
+            .send_message(&ctx, |m| {
+                m.content(format!(
+                    "<@{}> What happened to your flight? (**{}** - {} ago)",
+                    msg.author.id, passenger_text, humantime_ago
                 ))
-                .ephemeral(true)
                 .components(|c| c.add_action_row(FlightStatus::action_row()))
             })
-    })
-    .await
-    .unwrap();
+            .await
+            .unwrap();
+    }
 
     // Wait for multiple interactions
 
@@ -389,11 +447,6 @@ async fn flight_end(ctx: &Context, msg: &Message, _args: Args) -> CommandResult 
         ) {
             None => return Ok(()),
             Some(p_mention) => {
-                // let out_msg = format!(
-                //     "{}\n{}\nTime to ping them... <:KyoukaGiggle:968707085212745819>",
-                //     &nm.content, &alert_msg
-                // );
-                // nm.edit(ctx, |nm| nm.content(out_msg)).await?;
                 let channel = match ctx.cache.guild_channel(mention_ch) {
                     Some(channel) => channel,
                     None => {
