@@ -9,8 +9,6 @@ use serenity::{
     model::channel::Message,
 };
 
-use crate::error;
-
 fn required_dmg_full_cot(
     mut out_msg: String,
     boss_hp_left: f64,
@@ -18,12 +16,12 @@ fn required_dmg_full_cot(
     new_calc: bool,
 ) -> String {
     for i in 0..max_num_hits {
-        let dmg_needed;
-        if new_calc {
-            dmg_needed = boss_hp_left / (i as f64 + (21.0 / 90.0));
+        let dmg_needed = if new_calc {
+            boss_hp_left / (i as f64 + (21.0 / 90.0))
         } else {
-            dmg_needed = boss_hp_left / (i as f64 + (11.0 / 90.0));
-        }
+            boss_hp_left / (i as f64 + (11.0 / 90.0))
+        };
+
         out_msg.push_str(&format!(
             "\n {} hit(s) avg dmg: {}",
             i + 1,
@@ -34,12 +32,11 @@ fn required_dmg_full_cot(
 }
 
 fn avg_dmg_needed_full_cot(boss_hp_left: f64, hits_needed: f64, new_calc: bool) -> f64 {
-    let dmg_needed;
-    if new_calc {
-        dmg_needed = boss_hp_left / (hits_needed - 1.0 + (21.0 / 90.0));
+    let dmg_needed = if new_calc {
+        boss_hp_left / (hits_needed - 1.0 + (21.0 / 90.0))
     } else {
-        dmg_needed = boss_hp_left / (hits_needed - 1.0 + (11.0 / 90.0));
-    }
+        boss_hp_left / (hits_needed - 1.0 + (11.0 / 90.0))
+    };
     (dmg_needed * 10000.0).ceil() / 10000.0
 }
 
@@ -94,13 +91,12 @@ fn output_dmg_triage(
         if dmg > &boss_hp_left {
             out_msg.push_str(&format!("**{}**", &dmg));
 
-            let mut cot;
             // Priconne update to COT calculation +20 instead of +10.
-            if new_calc {
-                cot = (((dmg - boss_hp_left) / dmg * 90.0) + 20.0).ceil() as u64;
+            let mut cot = if new_calc {
+                (((dmg - boss_hp_left) / dmg * 90.0) + 20.0).ceil() as u64
             } else {
-                cot = (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as u64;
-            }
+                (((dmg - boss_hp_left) / dmg * 90.0) + 10.0).ceil() as u64
+            };
 
             if cot > 90 {
                 cot = 90;
@@ -124,7 +120,7 @@ fn output_dmg_triage(
 }
 
 fn calculate_best_new_hits_needed(
-    triaged_dmg: &Vec<f64>,
+    triaged_dmg: Vec<f64>,
     boss_hp: f64,
     boss_hp_left: f64,
     new_hits_needed: f64,
@@ -149,7 +145,7 @@ fn calculate_best_new_hits_needed(
     }
 
     // Calculate case when using the lowest triaged hit as the scam janny hit.
-    let mut triaged_dmg_copy = triaged_dmg.clone();
+    let mut triaged_dmg_copy = triaged_dmg;
     let last_hit_dmg = triaged_dmg_copy.pop().unwrap_or(0.0);
     let mut boss_hp_left_after_triage = boss_hp;
     for n in triaged_dmg_copy {
@@ -349,7 +345,6 @@ fn process_cot(mut args: Args, new_calc: bool) -> Result<String, CommandError> {
         for (i, n) in replacement_needs {
             let mut triaged_dmg_copy = triaged_dmg.clone();
             for _ in (0)..(i - new_hits_needed as usize) {
-                // println!("Replacing {} hits", i);
                 triaged_dmg_copy.pop();
             }
             for _ in 0..i {
@@ -408,7 +403,7 @@ fn process_cot(mut args: Args, new_calc: bool) -> Result<String, CommandError> {
                 avg_dmg_for_given_hits(boss_hp, total_dmg_kept, i as f64, new_calc);
             let boss_hp_left = boss_hp - triaged_dmg_copy.iter().sum::<f64>();
             let potential_smaller_avg = calculate_best_new_hits_needed(
-                &triaged_dmg_copy,
+                triaged_dmg_copy,
                 boss_hp,
                 boss_hp_left,
                 i as f64,
@@ -437,12 +432,6 @@ fn process_cot(mut args: Args, new_calc: bool) -> Result<String, CommandError> {
             }
             triaged_dmg_copy.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
             if calc_cot(boss_hp, &triaged_dmg_copy, new_calc) != 90 {
-                println!(
-                    "Rong is skipping damage replacement at {} replacements.\n\
-                          Boss HP: {}\n\
-                          triaged dmg copy: {:?}",
-                    i, boss_hp, triaged_dmg_copy
-                );
                 // Rong is stupid
                 continue;
             }
@@ -506,7 +495,7 @@ fn process_cot(mut args: Args, new_calc: bool) -> Result<String, CommandError> {
      \t`>cot 4000000`\n\
      \t`>ct 4.2 3.7 3.8 2.7`"
 )]
-async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+async fn cot_calc_time(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     if args.is_empty() {
         msg.reply(
             ctx,
@@ -539,7 +528,7 @@ async fn cot_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandR
      \t`>cot_old 4000000`\n\
      \t`>ct_old 4.2 3.7 3.8 2.7`"
 )]
-async fn cot_old_calc_time(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+async fn cot_old_calc_time(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     if args.is_empty() {
         msg.reply(
             ctx,
