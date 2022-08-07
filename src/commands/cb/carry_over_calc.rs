@@ -224,9 +224,52 @@ fn process_cot(mut args: Args, new_calc: bool) -> Result<String, CommandError> {
         return Ok("I don't recognize any dmg numbers you sent".to_string());
     }
 
+    // Do one layer of unsorted dmg
+    if dmg_inputs.iter().sum::<f64>() > boss_hp {
+        out_msg.push_str("\nMonkey order: ");
+        let mut raw_boss_hp_left = boss_hp;
+        let mut raw_triaged_count = 0;
+        let mut raw_cot;
+        for dmg in &dmg_inputs {
+            if raw_triaged_count != 0 {
+                out_msg.push_str("-> ");
+            }
+
+            if dmg > &raw_boss_hp_left {
+                out_msg.push_str(&format!("**{}**", &dmg));
+
+                if new_calc {
+                    raw_cot = (((dmg - raw_boss_hp_left) / dmg * 90.0) + 20.0).ceil() as i32;
+                } else {
+                    raw_cot = (((dmg - raw_boss_hp_left) / dmg * 90.0) + 10.0).ceil() as i32;
+                }
+                if raw_cot > 90 {
+                    raw_cot = 90;
+                }
+                if raw_cot < 0 {
+                    raw_cot = 0;
+                }
+                out_msg.push_str(&format!(
+                    "\nReleased in this order, your COT is: **{}s**",
+                    raw_cot
+                ));
+                break;
+            } else {
+                if raw_triaged_count + 1 >= dmg_inputs.len() {
+                    out_msg.push_str(&format!("**{}**", &dmg));
+                } else {
+                    out_msg.push_str(&format!("{} ", &dmg));
+                }
+                raw_triaged_count += 1;
+                raw_boss_hp_left -= dmg;
+            }
+        }
+        out_msg.push('\n');
+    }
+
     dmg_inputs.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
 
-    out_msg.push_str("\nTriaged damage: ");
+    out_msg.push_str("\nTriaged order: ");
     let mut triaged_count = 0;
     let mut triaged_dmg: Vec<f64> = Vec::new();
     let mut cot_reached = false;
