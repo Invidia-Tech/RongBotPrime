@@ -920,6 +920,32 @@
     },
     "query": "SELECT alert_channel\n         FROM rongbot.atc_config\n         WHERE clan_id = $1;"
   },
+  "8c20b7b9b09714365d336e316afefbc36f904a7cdfbe8a77bc45793a2895607e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "platform_id",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT p.id, u.platform_id\n         FROM rongbot.pilot p\n         JOIN rong_user u\n            ON p.user_id=u.id\n         JOIN rong_clanmember cm\n            ON cm.user_id = u.id\n         WHERE cm.clan_id = $1;"
+  },
   "8e74f948b71be64bbc6975354dc86e3f2f16603179ef479b453ea8879c3570de": {
     "describe": {
       "columns": [
