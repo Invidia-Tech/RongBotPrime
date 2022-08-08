@@ -65,6 +65,40 @@ pub async fn get_all_pilot_info_map(
     }
 }
 
+pub async fn get_all_pilot_discord_map(
+    ctx: &Context,
+    clan_id: &i32,
+) -> Result<HashMap<i32, String>, RongError> {
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    match sqlx::query!(
+        "SELECT p.id, u.platform_id
+         FROM rongbot.pilot p
+         JOIN rong_user u
+            ON p.user_id=u.id
+         JOIN rong_clanmember cm
+            ON cm.user_id = u.id
+         WHERE cm.clan_id = $1;",
+        clan_id
+    )
+    .fetch_all(&pool)
+    .await
+    {
+        Ok(rows) => {
+            let mut names_hashmap: HashMap<i32, String> = HashMap::default();
+            for row in rows {
+                names_hashmap.insert(row.id, row.platform_id);
+            }
+            Ok(names_hashmap)
+        }
+        Err(e) => Err(RongError::Database(e)),
+    }
+}
 pub async fn get_all_pilot_ign_map(
     ctx: &Context,
     clan_id: &i32,

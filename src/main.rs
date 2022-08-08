@@ -18,6 +18,7 @@ use commands::{
         check_fc::*,
         end::*,
         fc::*,
+        hounds::*,
         start::*,
         status::*,
         summary::*,
@@ -103,7 +104,8 @@ struct General;
     set_call_sign,
     atc_award,
     check_fc,
-    force_quit
+    force_quit,
+    atc_hounds
 )]
 struct ATC;
 
