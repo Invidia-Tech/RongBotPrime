@@ -71,6 +71,7 @@ async fn atc_hounds(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         out_msg.push_str(&format!("<@{}> ", ping));
     }
 
+    out_msg.push_str("\nPLEASE REMEMBER TO **>updatecb**");
     msg.channel_id
         .send_message(&ctx, |m| {
             m.content(out_msg).add_embed(|e| {
