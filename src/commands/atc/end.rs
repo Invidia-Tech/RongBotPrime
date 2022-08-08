@@ -239,8 +239,7 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
                     msg.author.id, ign
                 ))
             })
-            .await
-            .unwrap();
+            .await?;
     } else {
         // Ensure that the passenger_member_id is within the same guild as the pilot.
         let passenger_options = PassengerOptions::new(&all_clanmember_ign_map);
@@ -255,8 +254,7 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
                     c.add_action_row(passenger_options.action_row(&pilot_ongoing_flights))
                 })
             })
-            .await
-            .unwrap();
+            .await?;
 
         // Wait for the user to make a selection
         mci = match m
@@ -266,8 +264,8 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         {
             Some(ci) => Some(ci),
             None => {
-                msg.reply(&ctx, "Timed out.").await.unwrap();
-                m.delete(&ctx).await.unwrap();
+                msg.reply(&ctx, "Timed out.").await?;
+                m.delete(&ctx).await?;
                 return Ok(());
             }
         };
@@ -333,8 +331,7 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
                     .components(|c| c.add_action_row(FlightStatus::action_row()))
                 })
         })
-        .await
-        .unwrap();
+        .await?;
     } else {
         m.delete(ctx).await?;
         m = msg
@@ -346,8 +343,7 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
                 ))
                 .components(|c| c.add_action_row(FlightStatus::action_row()))
             })
-            .await
-            .unwrap();
+            .await?;
     }
 
     // Wait for multiple interactions

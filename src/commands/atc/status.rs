@@ -161,9 +161,6 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
 
     let (cb_info, _) = result_or_say_why!(get_latest_cb(ctx, &clan_id, &clan_name), ctx, msg);
 
-    // let pilot_user_id =
-    //     result_or_say_why!(get_user_id(ctx, msg, &msg.author.id.to_string()), ctx, msg);
-
     let all_in_air_flights =
         result_or_say_why!(get_all_in_air_flights(ctx, &clan_id, &cb_info.id), ctx, msg);
 
@@ -175,8 +172,6 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
     }
 
     // Time to output flights.
-    let _all_pilot_info_map = result_or_say_why!(get_all_pilot_info_map(ctx, &clan_id), ctx, msg);
-
     let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
 
     let all_clanmember_ign_map =
