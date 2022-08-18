@@ -31,7 +31,3 @@ jobs:
           tags: registry.thebell.dev/rong/rongbotprime:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # cache-from:
-          #   type=registry,ref=registry.thebell.dev/rong/rongbotprime:buildcache
-          # cache-to:
-          #   type=registry,ref=registry.thebell.dev/rong/rongbotprime:buildcache,mode=max
