@@ -253,7 +253,16 @@ fn process_cot(mut args: Args, new_calc: bool) -> Result<String, CommandError> {
     }
 
     // Do one layer of unsorted dmg
-    if dmg_inputs.iter().sum::<f64>() > boss_hp {
+    let mut is_sorted = true;
+    if dmg_inputs.len() > 1 {
+        for i in 0..(&dmg_inputs.len() - 1) {
+            if dmg_inputs[i] < dmg_inputs[i + 1] {
+                is_sorted = false;
+                break;
+            }
+        }
+    }
+    if dmg_inputs.iter().sum::<f64>() > boss_hp && !is_sorted {
         out_msg.push_str("\nMonkey order: ");
         let mut raw_boss_hp_left = boss_hp;
         let mut raw_triaged_count = 0;
