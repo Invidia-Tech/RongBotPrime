@@ -84,6 +84,7 @@ use crate::data::*;
     add_superadmin,
     remove_superadmin,
     cot_calc_time,
+    cot_calc_dmg,
     cot_old_calc_time,
     cot_old_calc_dmg
 )]
@@ -115,7 +116,13 @@ struct ATC;
 #[prefixes("cb")]
 #[description = "These commands help with clan battle utilities, status, hit submission, etc."]
 #[summary = "Rong Clan Battle utilities."]
-#[commands(cb_status, cot_calc_time, cot_old_calc_time, cot_old_calc_dmg)]
+#[commands(
+    cb_status,
+    cot_calc_time,
+    cot_calc_dmg,
+    cot_old_calc_time,
+    cot_old_calc_dmg
+)]
 //#[default_command(cb_status)]
 struct CB;
 
