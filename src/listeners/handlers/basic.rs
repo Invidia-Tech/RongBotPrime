@@ -1,9 +1,6 @@
 use serenity::{
     async_trait,
-    client::{
-        Context,
-        EventHandler,
-    },
+    client::{Context, EventHandler},
     model::prelude::Ready,
 };
 

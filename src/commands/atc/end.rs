@@ -1,128 +1,19 @@
-use std::{
-    collections::HashMap,
-    error::Error as StdError,
-    fmt,
-    str::FromStr,
-    time::Duration,
-};
+use std::{str::FromStr, time::Duration};
 
 use chrono::Utc;
 use serenity::{
-    builder::{
-        CreateActionRow,
-        CreateSelectMenu,
-        CreateSelectMenuOption,
-    },
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     futures::StreamExt,
-    model::{
-        application::interaction::InteractionResponseType,
-        channel::Message,
-    },
+    model::{application::interaction::InteractionResponseType, channel::Message},
 };
 
 use humantime::format_duration;
 
 use crate::{
-    data::{
-        CbStatus,
-        ChannelPersona,
-        DatabasePool,
-        Flight,
-        FlightStatus,
-    },
-    utils::{
-        atc::*,
-        clan::*,
-        macros::*,
-        rong::*,
-    },
+    data::{CbStatus, ChannelPersona, DatabasePool, Flight, FlightStatus, PassengerOptions},
+    utils::{atc::*, clan::*, macros::*, rong::*},
 };
-
-#[derive(Debug)]
-struct PassengerOptions<'a> {
-    ign_map: &'a HashMap<i32, String>,
-}
-
-#[derive(Debug)]
-struct ParseComponentError(String);
-
-impl fmt::Display for ParseComponentError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Failed to parse {} as component", self.0)
-    }
-}
-
-impl StdError for ParseComponentError {}
-
-impl<'a> fmt::Display for PassengerOptions<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Map length: {}", self.ign_map.len())
-    }
-}
-
-impl<'a> PassengerOptions<'a> {
-    pub fn new(ign_map: &'a HashMap<i32, String>) -> Self { Self { ign_map } }
-
-    fn menu_option(&self, flight: &Flight) -> CreateSelectMenuOption {
-        let mut opt = CreateSelectMenuOption::default();
-        let default_no_ign = "No IGN".to_string();
-        // This is what will be shown to the user
-        let passenger_text = match &flight.passenger_id {
-            Some(p) => format!(
-                "Passenger: {}",
-                self.ign_map.get(p).unwrap_or(&default_no_ign)
-            ),
-            None => "Solo Flight".to_string(),
-        };
-        let humantime_ago = match &flight.end_time {
-            Some(t) => format_duration(
-                chrono::Duration::seconds(t.timestamp() - flight.start_time.timestamp())
-                    .to_std()
-                    .unwrap(),
-            )
-            .to_string(),
-            None => format_duration(
-                chrono::Duration::seconds(Utc::now().timestamp() - flight.start_time.timestamp())
-                    .to_std()
-                    .unwrap(),
-            )
-            .to_string(),
-        };
-        opt.label(format!(
-            "{} - Took off: {} ago",
-            passenger_text, humantime_ago
-        ));
-        // This is used to identify the selected value
-        opt.value(flight.id);
-        opt
-    }
-
-    fn select_menu(&self, flights: &Vec<Flight>) -> CreateSelectMenu {
-        let mut menu = CreateSelectMenu::default();
-        menu.custom_id("Passenger_select");
-        menu.placeholder("No Passenger selected");
-        menu.options(|f| {
-            for flight in flights {
-                f.add_option(self.menu_option(flight));
-            }
-            f
-        });
-        menu
-    }
-
-    fn action_row(&self, flights: &Vec<Flight>) -> CreateActionRow {
-        let mut ar = CreateActionRow::default();
-        // A select menu must be the only thing in an action row!
-        ar.add_select_menu(self.select_menu(flights));
-        ar
-    }
-}
 
 #[command("atc_end")]
 #[aliases("end")]

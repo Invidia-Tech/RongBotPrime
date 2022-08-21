@@ -1,20 +1,10 @@
 use serenity::{
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
-    model::{
-        channel::Message,
-        id::UserId,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
+    model::{channel::Message, id::UserId},
 };
 
-use crate::{
-    checks::rong_admin::*,
-    data::DatabasePool,
-};
+use crate::{checks::rong_admin::*, data::DatabasePool};
 
 #[command("ping_drop_table")]
 // Limit command usage to guilds.

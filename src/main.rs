@@ -12,60 +12,27 @@ mod utils;
 
 use commands::{
     atc::{
-        alert::*,
-        award::*,
-        call_sign::*,
-        check_fc::*,
-        end::*,
-        fc::*,
-        hounds::*,
-        start::*,
-        status::*,
-        summary::*,
+        alert::*, award::*, call_sign::*, check_fc::*, end::*, fc::*, hounds::*, start::*,
+        status::*, summary::*,
     },
-    cb::{
-        carry_over_calc::*,
-        status::*,
-    },
-    config::{
-        set_channel::*,
-        superadmin::*,
-    },
-    fun::{
-        ping_add::*,
-        ping_rarity_update::*,
-        ping_remove::*,
-        ping_roll::*,
-        ping_table::*,
-    },
-    general::{
-        debug::*,
-        general::*,
-    },
+    cb::{carry_over_calc::*, status::*},
+    config::{set_channel::*, superadmin::*},
+    fun::{ping_add::*, ping_rarity_update::*, ping_remove::*, ping_roll::*, ping_table::*},
+    general::{debug::*, general::*},
     help::help::*,
 };
 
-use listeners::{
-    handlers::basic::*,
-    hooks::general::*,
-};
+use listeners::{handlers::basic::*, hooks::general::*};
 
 use std::{
-    collections::{
-        HashMap,
-        HashSet,
-    },
+    collections::{HashMap, HashSet},
     env,
     error::Error,
     sync::Arc,
 };
 
 use serenity::{
-    framework::standard::{
-        buckets::LimitedFor,
-        macros::group,
-        StandardFramework,
-    },
+    framework::standard::{buckets::LimitedFor, macros::group, StandardFramework},
     model::gateway::GatewayIntents,
     prelude::*,
 };

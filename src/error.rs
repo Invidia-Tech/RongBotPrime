@@ -1,10 +1,6 @@
 use std::{
     error::Error,
-    fmt::{
-        Display,
-        Formatter,
-        Result,
-    },
+    fmt::{Display, Formatter, Result},
     num::ParseIntError,
 };
 

@@ -1,23 +1,9 @@
-use std::{
-    collections::HashMap,
-    error::Error as StdError,
-    fmt,
-    time::Duration,
-};
+use std::{collections::HashMap, error::Error as StdError, fmt, time::Duration};
 
 use serenity::{
-    builder::{
-        CreateActionRow,
-        CreateEmbed,
-        CreateSelectMenu,
-        CreateSelectMenuOption,
-    },
+    builder::{CreateActionRow, CreateEmbed, CreateSelectMenu, CreateSelectMenuOption},
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
 };
 
@@ -26,14 +12,8 @@ use humantime::format_duration;
 
 use crate::{
     checks::rong_admin::*,
-    data::{
-        DatabasePool,
-        FlightStatus,
-    },
-    utils::{
-        atc::*,
-        macros::*,
-    },
+    data::{DatabasePool, FlightStatus},
+    utils::{atc::*, macros::*},
 };
 
 #[derive(Debug)]

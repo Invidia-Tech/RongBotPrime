@@ -1,21 +1,12 @@
 use serenity::{
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
 };
 
 use crate::{
     data::ChannelPersona,
-    utils::{
-        atc::*,
-        clan::*,
-        macros::*,
-        rong::*,
-    },
+    utils::{atc::*, clan::*, macros::*, rong::*},
 };
 
 #[command("atc_call_sign")]

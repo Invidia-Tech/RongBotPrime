@@ -1,9 +1,5 @@
 use crate::{
-    data::{
-        DatabasePool,
-        Flight,
-        RongPilot,
-    },
+    data::{DatabasePool, Flight, RongPilot},
     error::RongError,
 };
 

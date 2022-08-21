@@ -1,39 +1,17 @@
 use chrono::Utc;
 use serenity::{
-    builder::{
-        CreateActionRow,
-        CreateButton,
-    },
+    builder::{CreateActionRow, CreateButton},
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
-    model::{
-        application::component::ButtonStyle,
-        channel::Message,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
+    model::{application::component::ButtonStyle, channel::Message},
 };
 
 use core::fmt;
-use std::{
-    str::FromStr,
-    time::Duration,
-};
+use std::{str::FromStr, time::Duration};
 
 use crate::{
-    data::{
-        CbStatus,
-        ChannelPersona,
-        DatabasePool,
-    },
-    utils::{
-        atc::*,
-        clan::*,
-        macros::*,
-        rong::*,
-    },
+    data::{CbStatus, ChannelPersona, DatabasePool},
+    utils::{atc::*, clan::*, macros::*, rong::*},
 };
 
 #[derive(Debug, strum_macros::EnumString)]

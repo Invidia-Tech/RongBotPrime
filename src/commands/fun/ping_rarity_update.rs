@@ -1,21 +1,11 @@
 use serenity::{
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
 };
-use sqlx::{
-    Postgres,
-    QueryBuilder,
-};
+use sqlx::{Postgres, QueryBuilder};
 
-use crate::{
-    checks::rong_admin::*,
-    data::DatabasePool,
-};
+use crate::{checks::rong_admin::*, data::DatabasePool};
 
 #[command("ping_rarity_update")]
 // Limit command usage to guilds.

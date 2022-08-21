@@ -1,20 +1,13 @@
 use crate::{
     checks::rong_admin::*,
-    data::{
-        ChannelPersona,
-        DatabasePool,
-    },
+    data::{ChannelPersona, DatabasePool},
 };
 
 use std::str::FromStr;
 
 use serenity::{
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
     utils::parse_channel,
 };

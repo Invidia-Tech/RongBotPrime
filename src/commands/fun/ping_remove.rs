@@ -1,22 +1,11 @@
 use serenity::{
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
-    model::{
-        channel::Message,
-        id::UserId,
-        user::User,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
+    model::{channel::Message, id::UserId, user::User},
     utils::parse_username,
 };
 
-use crate::{
-    checks::rong_admin::*,
-    data::DatabasePool,
-};
+use crate::{checks::rong_admin::*, data::DatabasePool};
 
 #[command("ping_remove_loot")]
 // Limit command usage to guilds.

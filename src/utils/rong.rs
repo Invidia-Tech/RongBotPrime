@@ -1,12 +1,6 @@
-use crate::{
-    data::DatabasePool,
-    error::RongError,
-};
+use crate::{data::DatabasePool, error::RongError};
 
-use serenity::{
-    client::Context,
-    model::channel::Message,
-};
+use serenity::{client::Context, model::channel::Message};
 
 pub async fn get_user_id(
     ctx: &Context,

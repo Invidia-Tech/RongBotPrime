@@ -1,27 +1,16 @@
 use crate::{
-    data::{
-        CbInfo,
-        CbStatus,
-        ChannelPersona,
-        DatabasePool,
-    },
+    data::{CbInfo, CbStatus, ChannelPersona, DatabasePool},
     error::RongError,
 };
 
 use std::{
     collections::HashMap,
-    time::{
-        SystemTime,
-        UNIX_EPOCH,
-    },
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use serenity::{
     client::Context,
-    model::{
-        channel::Message,
-        id::RoleId,
-    },
+    model::{channel::Message, id::RoleId},
 };
 
 pub async fn get_clan_from_channel_context(

@@ -2,21 +2,13 @@ use std::collections::HashSet;
 
 use serenity::{
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
 };
 
 use crate::{
     data::ChannelPersona,
-    utils::{
-        atc::*,
-        clan::*,
-        macros::*,
-    },
+    utils::{atc::*, clan::*, macros::*},
 };
 
 #[command("atc_hounds")]

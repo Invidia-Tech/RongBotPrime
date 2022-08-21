@@ -1,22 +1,12 @@
 use std::time::Duration;
 
 use serenity::{
-    builder::{
-        CreateActionRow,
-        CreateEmbed,
-    },
+    builder::{CreateActionRow, CreateEmbed},
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::{
         application::component::ButtonStyle,
-        channel::{
-            Message,
-            ReactionType,
-        },
+        channel::{Message, ReactionType},
     },
 };
 
@@ -24,16 +14,9 @@ use chrono::Utc;
 use humantime::format_duration;
 
 use crate::{
-    data::{
-        ChannelPersona,
-        FlightStatus,
-    },
+    data::{ChannelPersona, FlightStatus},
     error::RongError,
-    utils::{
-        atc::*,
-        clan::*,
-        macros::*,
-    },
+    utils::{atc::*, clan::*, macros::*},
 };
 
 struct MenuPaginator<'a> {

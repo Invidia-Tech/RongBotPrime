@@ -1,22 +1,16 @@
-use chrono::{
-    DateTime,
-    Utc,
-};
+use std::error::Error as StdError;
+
+use chrono::{DateTime, Utc};
 use core::fmt;
+use humantime::format_duration;
 use serenity::{
-    builder::{
-        CreateActionRow,
-        CreateButton,
-    },
+    builder::{CreateActionRow, CreateButton, CreateSelectMenu, CreateSelectMenuOption},
     client::bridge::gateway::ShardManager,
     model::application::component::ButtonStyle,
     prelude::TypeMapKey,
 };
 use sqlx::PgPool;
-use std::{
-    collections::HashMap,
-    sync::Arc,
-};
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 
 pub struct DatabasePool;
@@ -79,12 +73,12 @@ pub enum FlightStatus {
 
 impl fmt::Display for FlightStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            &FlightStatus::Amb => write!(f, "ambulanced"),
-            &FlightStatus::Canceled => write!(f, "canceled"),
-            &FlightStatus::Crashed => write!(f, "crashed"),
-            &FlightStatus::InFlight => write!(f, "in flight"),
-            &FlightStatus::Landed => write!(f, "landed"),
+        match *self {
+            FlightStatus::Amb => write!(f, "ambulanced"),
+            FlightStatus::Canceled => write!(f, "canceled"),
+            FlightStatus::Crashed => write!(f, "crashed"),
+            FlightStatus::InFlight => write!(f, "in flight"),
+            FlightStatus::Landed => write!(f, "landed"),
         }
     }
 }
@@ -166,4 +160,84 @@ pub struct Flight {
     pub passenger_id: Option<i32>,
     pub status: FlightStatus,
     pub team_id: Option<i32>,
+}
+
+#[derive(Debug)]
+pub struct PassengerOptions<'a> {
+    ign_map: &'a HashMap<i32, String>,
+}
+
+#[derive(Debug)]
+pub struct ParseComponentError(String);
+
+impl fmt::Display for ParseComponentError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Failed to parse {} as component", self.0)
+    }
+}
+
+impl StdError for ParseComponentError {}
+
+impl<'a> fmt::Display for PassengerOptions<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Map length: {}", self.ign_map.len())
+    }
+}
+
+impl<'a> PassengerOptions<'a> {
+    pub fn new(ign_map: &'a HashMap<i32, String>) -> Self { Self { ign_map } }
+
+    pub fn menu_option(&self, flight: &Flight) -> CreateSelectMenuOption {
+        let mut opt = CreateSelectMenuOption::default();
+        let default_no_ign = "No IGN".to_string();
+        // This is what will be shown to the user
+        let passenger_text = match &flight.passenger_id {
+            Some(p) => format!(
+                "Passenger: {}",
+                self.ign_map.get(p).unwrap_or(&default_no_ign)
+            ),
+            None => "Solo Flight".to_string(),
+        };
+        let humantime_ago = match &flight.end_time {
+            Some(t) => format_duration(
+                chrono::Duration::seconds(t.timestamp() - flight.start_time.timestamp())
+                    .to_std()
+                    .unwrap(),
+            )
+            .to_string(),
+            None => format_duration(
+                chrono::Duration::seconds(Utc::now().timestamp() - flight.start_time.timestamp())
+                    .to_std()
+                    .unwrap(),
+            )
+            .to_string(),
+        };
+        opt.label(format!(
+            "{} - Took off: {} ago",
+            passenger_text, humantime_ago
+        ));
+        // This is used to identify the selected value
+        opt.value(flight.id);
+        opt
+    }
+
+    pub fn select_menu(&self, flights: &Vec<Flight>) -> CreateSelectMenu {
+        let mut menu = CreateSelectMenu::default();
+        menu.custom_id("Passenger_select");
+        menu.placeholder("No Passenger selected");
+        menu.options(|f| {
+            for flight in flights {
+                f.add_option(self.menu_option(flight));
+            }
+            f
+        });
+        menu
+    }
+
+    pub fn action_row(&self, flights: &Vec<Flight>) -> CreateActionRow {
+        let mut ar = CreateActionRow::default();
+        // A select menu must be the only thing in an action row!
+        ar.add_select_menu(self.select_menu(flights));
+        ar
+    }
 }

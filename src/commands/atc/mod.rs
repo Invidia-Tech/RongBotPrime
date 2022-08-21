@@ -2,6 +2,7 @@ pub mod alert;
 pub mod award;
 pub mod call_sign;
 pub mod check_fc;
+pub mod crash;
 pub mod end;
 pub mod fc;
 pub mod hounds;

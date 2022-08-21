@@ -2,24 +2,13 @@ use chrono::Utc;
 use serenity::{
     builder::CreateEmbed,
     client::Context,
-    framework::standard::{
-        macros::command,
-        Args,
-        CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
 };
 
 use crate::{
-    data::{
-        CbStatus,
-        ChannelPersona,
-        DatabasePool,
-    },
-    utils::{
-        clan::*,
-        macros::*,
-    },
+    data::{CbStatus, ChannelPersona, DatabasePool},
+    utils::{clan::*, macros::*},
 };
 
 #[command("atc_check_fc")]

@@ -2,12 +2,7 @@ use crate::data::DatabasePool;
 
 use serenity::{
     client::Context,
-    framework::standard::{
-        macros::check,
-        Args,
-        CommandOptions,
-        Reason,
-    },
+    framework::standard::{macros::check, Args, CommandOptions, Reason},
     model::channel::Message,
 };
 
