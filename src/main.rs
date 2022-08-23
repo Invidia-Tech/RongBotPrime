@@ -12,8 +12,8 @@ mod utils;
 
 use commands::{
     atc::{
-        alert::*, award::*, call_sign::*, check_fc::*, end::*, fc::*, hounds::*, start::*,
-        status::*, summary::*,
+        alert::*, award::*, call_sign::*, check_fc::*, crash::*, end::*, fc::*, hounds::*,
+        start::*, status::*, summary::*,
     },
     cb::{carry_over_calc::*, status::*},
     config::{set_channel::*, superadmin::*},
@@ -67,6 +67,7 @@ struct General;
     flight_status,
     flight_summary,
     flight_end,
+    flight_crash,
     flight_start,
     set_alert_channel,
     set_call_sign,
