@@ -18,7 +18,7 @@ use commands::{
     cb::{carry_over_calc::*, status::*},
     config::{set_channel::*, superadmin::*},
     fun::{ping_add::*, ping_rarity_update::*, ping_remove::*, ping_roll::*, ping_table::*},
-    general::{debug::*, general::*},
+    general::{debug::*, general::*, threads::*},
     help::help::*,
 };
 
@@ -46,6 +46,7 @@ use crate::data::*;
     say,
     latency,
     debug_args,
+    make_threads,
     force_quit,
     check_fc,
     add_superadmin,
