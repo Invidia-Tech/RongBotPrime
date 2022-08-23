@@ -42,7 +42,7 @@ pub enum CbStatus {
     Past,
 }
 
-#[derive(Debug, sqlx::Type, strum_macros::EnumString)]
+#[derive(Debug, sqlx::Type, strum_macros::EnumString, strum_macros::Display)]
 #[sqlx(type_name = "channel_persona", rename_all = "lowercase")]
 pub enum ChannelPersona {
     #[strum(ascii_case_insensitive)]
@@ -185,7 +185,9 @@ impl<'a> fmt::Display for PassengerOptions<'a> {
 }
 
 impl<'a> PassengerOptions<'a> {
-    pub fn new(ign_map: &'a HashMap<i32, String>) -> Self { Self { ign_map } }
+    pub fn new(ign_map: &'a HashMap<i32, String>) -> Self {
+        Self { ign_map }
+    }
 
     pub fn menu_option(&self, flight: &Flight) -> CreateSelectMenuOption {
         let mut opt = CreateSelectMenuOption::default();

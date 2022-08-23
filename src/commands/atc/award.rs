@@ -31,7 +31,9 @@ impl fmt::Display for ParseComponentError {
 impl StdError for ParseComponentError {}
 
 impl fmt::Display for CBSelection {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "There is nothing here.") }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "There is nothing here.")
+    }
 }
 
 impl CBSelection {

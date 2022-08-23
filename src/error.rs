@@ -28,17 +28,25 @@ impl Display for RongError {
 impl Error for RongError {}
 
 impl From<sqlx::Error> for RongError {
-    fn from(err: sqlx::Error) -> RongError { RongError::Database(err) }
+    fn from(err: sqlx::Error) -> RongError {
+        RongError::Database(err)
+    }
 }
 
 impl From<ParseIntError> for RongError {
-    fn from(err: ParseIntError) -> RongError { RongError::Parsing(err) }
+    fn from(err: ParseIntError) -> RongError {
+        RongError::Parsing(err)
+    }
 }
 
 impl From<String> for RongError {
-    fn from(err: String) -> RongError { RongError::Custom(err) }
+    fn from(err: String) -> RongError {
+        RongError::Custom(err)
+    }
 }
 
 impl From<serenity::Error> for RongError {
-    fn from(err: serenity::Error) -> RongError { RongError::Serenity(err) }
+    fn from(err: serenity::Error) -> RongError {
+        RongError::Serenity(err)
+    }
 }

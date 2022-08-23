@@ -49,9 +49,10 @@ pub async fn get_clan_from_channel_context(
     };
 
     if clans_info.is_empty() {
-        return Err(RongError::Custom(
-            "This channel does not allow cb commands.".to_string(),
-        ));
+        return Err(RongError::Custom(format!(
+            "This channel does not allow {} commands.",
+            persona
+        )));
     }
 
     let mut clan_lookup = HashMap::new();
@@ -93,6 +94,51 @@ pub async fn get_clan_from_channel_context(
     }
 
     Ok((clan_info.clan_id, clan_info.clan_name.to_owned()))
+}
+
+pub async fn is_channel_persona(
+    ctx: &Context,
+    msg: &Message,
+    persona: ChannelPersona,
+) -> Result<(), RongError> {
+    let cache = &ctx.cache;
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+    let clans_info = match sqlx::query_unchecked!(
+        "SELECT clan_id, name AS clan_name, platform_id
+             FROM rongbot.channel_type channel
+             JOIN public.rong_clan clan
+               ON channel.clan_id = clan.id
+             WHERE persona = $1
+                   AND channel_id = $2
+                   AND platform_id != 'unset'",
+        persona,
+        msg.channel_id.to_string()
+    )
+    .fetch_all(&pool)
+    .await
+    {
+        Ok(rows) => rows,
+        Err(_) => {
+            return Err(RongError::Custom(
+                "There are no clans within Rong.".to_string(),
+            ))
+        }
+    };
+
+    if clans_info.is_empty() {
+        return Err(RongError::Custom(format!(
+            "This channel does not allow {} commands.",
+            persona
+        )));
+    }
+
+    Ok(())
 }
 
 pub async fn get_latest_cb(
