@@ -812,6 +812,27 @@
     },
     "query": "SELECT id, name\n         FROM rong_clanbattle\n         WHERE clan_id = $1\n         ORDER BY start_time DESC;"
   },
+  "8136eb643f3fea3f80f22fe048ba1b224f60d7178efb14e215714805b702bbc9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "is_lead",
+          "ordinal": 0,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT is_lead\n         FROM rong_clanmember cm\n         JOIN rong_user u ON cm.user_id = u.id\n         WHERE cm.active = true\n           AND clan_id = $1\n           AND platform_id = $2"
+  },
   "822360875cca15ea5ac6cb6321c34d48d7e2b92ffe1976d97a9f2f925b4002e0": {
     "describe": {
       "columns": [
