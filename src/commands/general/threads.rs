@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::checks::owner::*;
 
 use serenity::{
@@ -35,6 +33,8 @@ async fn make_threads(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             .await?;
         thread.say(ctx, &inner_message).await?;
     }
+
+    msg.delete(ctx).await?;
 
     Ok(())
 }

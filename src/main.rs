@@ -17,7 +17,10 @@ use commands::{
     },
     cb::{carry_over_calc::*, status::*},
     config::{set_channel::*, superadmin::*},
-    fun::{ping_add::*, ping_rarity_update::*, ping_remove::*, ping_roll::*, ping_table::*},
+    fun::{
+        ping_add::*, ping_rarity_update::*, ping_remove::*, ping_roll::*, ping_table::*,
+        shadow_ping::*,
+    },
     general::{debug::*, general::*, threads::*},
     help::help::*,
 };
@@ -54,7 +57,8 @@ use crate::data::*;
     cot_calc_time,
     cot_calc_dmg,
     cot_old_calc_time,
-    cot_old_calc_dmg
+    cot_old_calc_dmg,
+    shadow_ping
 )]
 struct General;
 
