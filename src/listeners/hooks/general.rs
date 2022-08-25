@@ -104,3 +104,8 @@ pub async fn dispatch_error(
     }
     let _ = msg.channel_id.say(ctx, error_response).await;
 }
+
+#[hook]
+pub async fn kyouka_delay(ctx: &Context, msg: &Message) {
+    let _ = msg.reply(ctx, "Please use >kyouka in moderation.").await;
+}

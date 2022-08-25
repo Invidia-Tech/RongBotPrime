@@ -18,7 +18,7 @@ use commands::{
     cb::{carry_over_calc::*, status::*},
     config::{set_channel::*, superadmin::*},
     fun::{
-        ping_add::*, ping_rarity_update::*, ping_remove::*, ping_roll::*, ping_table::*,
+        kyouka::*, ping_add::*, ping_rarity_update::*, ping_remove::*, ping_roll::*, ping_table::*,
         shadow_ping::*,
     },
     general::{debug::*, general::*, threads::*},
@@ -58,6 +58,7 @@ use crate::data::*;
     cot_calc_dmg,
     cot_old_calc_time,
     cot_old_calc_dmg,
+    kyouka,
     shadow_ping
 )]
 struct General;
@@ -124,6 +125,12 @@ struct PING;
 #[commands(set_channel)]
 struct Config;
 
+// Rong super fun
+// #[group]
+// #[only_in(guilds)]
+// #[summary = "KyoukaSmile"]
+// struct Kyouka;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let token = env::var("DISCORD_TOKEN").expect("Expect DISCORD_TOKEN in environment.");
@@ -182,6 +189,13 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
         .await
         .bucket("config", |b| b.delay(3))
+        .await
+        .bucket("kyouka", |b| {
+            b.limit(1)
+                .time_span(1800)
+                .limit_for(LimitedFor::User)
+                .delay_action(kyouka_delay)
+        })
         .await
         .help(&MY_HELP)
         .group(&GENERAL_GROUP)
