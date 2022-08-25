@@ -161,6 +161,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 .on_mention(Some(bot_id))
                 .prefix(">")
                 .delimiters(vec![", ", " ", ","])
+                .case_insensitivity(true)
                 .owners(owners)
         })
         .before(before)
