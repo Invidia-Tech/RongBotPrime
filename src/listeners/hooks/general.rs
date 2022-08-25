@@ -80,7 +80,10 @@ pub async fn dispatch_error(
             error_response = format!("Max arguments allowed is {}, but got {}.", max, given);
         }
         DispatchError::Ratelimited(secs) => {
-            error_response = format!("Stop the spaaaaaam, I'm rate limiting you! Try again in {} second(s). <:Angry:964436597909127169>", secs.as_secs());
+            error_response = format!(
+                "Please use in moderation! Try again in {} second(s). <:Angry:964436597909127169>",
+                secs.as_secs()
+            );
         }
         DispatchError::CheckFailed(check, reason) => match reason {
             Reason::User(why) => error_response = format!("User error: {}. {}", check, why),
