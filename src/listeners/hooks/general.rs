@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use humantime::format_duration;
 use serenity::{
     client::Context,
     framework::standard::{macros::hook, CommandResult, DispatchError, Reason},
@@ -81,8 +84,8 @@ pub async fn dispatch_error(
         }
         DispatchError::Ratelimited(secs) => {
             error_response = format!(
-                "Please use in moderation! Try again in {} second(s). <:Angry:964436597909127169>",
-                secs.as_secs()
+                "Please use in moderation! Try again in {}. <:Angry:964436597909127169>",
+                format_duration(Duration::from_secs(secs.as_secs()))
             );
         }
         DispatchError::CheckFailed(check, reason) => match reason {
