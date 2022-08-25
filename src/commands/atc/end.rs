@@ -73,6 +73,7 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         return Ok(());
     }
 
+    let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
     let all_clanmember_ign_map =
         result_or_say_why!(get_all_clanmember_ign_map(ctx, &clan_id), ctx, msg);
 
@@ -133,7 +134,8 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
             .await?;
     } else {
         // Ensure that the passenger_member_id is within the same guild as the pilot.
-        let passenger_options = PassengerOptions::new(&all_clanmember_ign_map);
+        let passenger_options =
+            PassengerOptions::new(&all_clanmember_ign_map, &all_pilot_ign_map, false);
         m = msg
             .channel_id
             .send_message(&ctx, |m| {

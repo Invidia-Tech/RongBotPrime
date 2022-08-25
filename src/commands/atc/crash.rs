@@ -144,12 +144,13 @@ async fn flight_crash(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
     };
 
     // Ensure that the passenger_member_id is within the same guild as the pilot.
-    let passenger_options = PassengerOptions::new(&all_clanmember_ign_map);
-    let mut m = msg
+    let passenger_options =
+        PassengerOptions::new(&all_clanmember_ign_map, &all_pilot_ign_map, true);
+    let m = msg
         .channel_id
         .send_message(&ctx, |m| {
             m.content(format!(
-                "Which flight would you like to land <@{}>?",
+                "Which flight would you like to **CRASH** <@{}>?",
                 msg.author.id
             ))
             .components(|c| c.add_action_row(passenger_options.action_row(&all_in_air_flights)))
@@ -162,7 +163,7 @@ async fn flight_crash(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         .timeout(Duration::from_secs(20))
         .await
     {
-        Some(ci) => Some(ci),
+        Some(ci) => ci,
         None => {
             msg.reply(&ctx, "Timed out.").await?;
             m.delete(&ctx).await?;
@@ -173,14 +174,7 @@ async fn flight_crash(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
     // data.custom_id contains the id of the component (here "Passenger_select")
     // and should be used to identify if a message has multiple components.
     // data.values contains the selected values from the menu
-    let end_flight_id = mci
-        .clone()
-        .unwrap()
-        .data
-        .values
-        .get(0)
-        .unwrap()
-        .parse::<i32>()?;
+    let end_flight_id = mci.clone().data.values.get(0).unwrap().parse::<i32>()?;
 
     let mut end_flight: &Flight = &all_in_air_flights[0];
     for f in &all_in_air_flights {
@@ -190,6 +184,13 @@ async fn flight_crash(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         }
     }
     let default_no_ign = "No IGN".to_string();
+
+    let pilot_text = format!(
+        "Pilot: {}",
+        &all_pilot_ign_map
+            .get(&end_flight.pilot_id)
+            .unwrap_or(&default_no_ign)
+    );
     let passenger_text = match &end_flight.passenger_id {
         Some(p) => format!(
             "Passenger: {}",
@@ -214,33 +215,18 @@ async fn flight_crash(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
 
     // Acknowledge the interaction and edit the message
 
-    if let Some(mci) = mci {
-        mci.create_interaction_response(&ctx, |r| {
-            r.kind(InteractionResponseType::UpdateMessage)
-                .interaction_response_data(|d| {
-                    d.content(format!(
-                        "What happened to your flight? (**{}** - {} ago)",
-                        passenger_text, humantime_ago
-                    ))
-                    .ephemeral(true)
-                    .components(|c| c.add_action_row(FlightStatus::action_row()))
-                })
-        })
-        .await?;
-    } else {
-        m.delete(ctx).await?;
-        m = msg
-            .channel_id
-            .send_message(&ctx, |m| {
-                m.content(format!(
-                    "<@{}> What happened to your flight? (**{}** - {} ago)",
-                    msg.author.id, passenger_text, humantime_ago
+    mci.create_interaction_response(&ctx, |r| {
+        r.kind(InteractionResponseType::UpdateMessage)
+            .interaction_response_data(|d| {
+                d.content(format!(
+                    "What happened to this flight? (**{} {}** - {} ago)",
+                    pilot_text, passenger_text, humantime_ago
                 ))
+                .ephemeral(true)
                 .components(|c| c.add_action_row(FlightStatus::action_row()))
             })
-            .await?;
-    }
-
+    })
+    .await?;
     // Wait for multiple interactions
 
     let end_flight_status;
@@ -275,14 +261,14 @@ async fn flight_crash(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
     {
         Ok(_) => {
             let mut reply = format!(
-                "Your flight: **{}** (Started {} ago) will end with status: {}",
-                &passenger_text, &humantime_ago, &end_flight_status
+                "You have FORCED DOWN: **{} {}** (Started {} ago) will end with status: {}",
+                &pilot_text, &passenger_text, &humantime_ago, &end_flight_status
             );
             if fc_used {
                 reply = format!(
-                    "Your flight: **{}** (Started {} ago) will end with status: crashed and used FC\n\
+                    "You have FORCED DOWN: **{} {}** (Started {} ago) will end with status: crashed and used FC\n\
                      **PLEASE REMEMBER TO >fc AND TRACK THIS!**",
-                    &passenger_text, &humantime_ago
+                    &pilot_text, &passenger_text, &humantime_ago
                 );
             }
             msg.reply_mention(ctx, reply).await?

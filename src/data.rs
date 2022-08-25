@@ -165,6 +165,8 @@ pub struct Flight {
 #[derive(Debug)]
 pub struct PassengerOptions<'a> {
     ign_map: &'a HashMap<i32, String>,
+    pilot_map: &'a HashMap<i32, String>,
+    pilot_name_on: bool,
 }
 
 #[derive(Debug)]
@@ -185,14 +187,32 @@ impl<'a> fmt::Display for PassengerOptions<'a> {
 }
 
 impl<'a> PassengerOptions<'a> {
-    pub fn new(ign_map: &'a HashMap<i32, String>) -> Self {
-        Self { ign_map }
+    pub fn new(
+        ign_map: &'a HashMap<i32, String>,
+        pilot_map: &'a HashMap<i32, String>,
+        pilot_name_on: bool,
+    ) -> Self {
+        Self {
+            ign_map,
+            pilot_map,
+            pilot_name_on,
+        }
     }
 
     pub fn menu_option(&self, flight: &Flight) -> CreateSelectMenuOption {
         let mut opt = CreateSelectMenuOption::default();
         let default_no_ign = "No IGN".to_string();
         // This is what will be shown to the user
+        let pilot_text = if self.pilot_name_on {
+            format!(
+                "Pilot: {}",
+                self.pilot_map
+                    .get(&flight.pilot_id)
+                    .unwrap_or(&default_no_ign)
+            )
+        } else {
+            "none".to_string()
+        };
         let passenger_text = match &flight.passenger_id {
             Some(p) => format!(
                 "Passenger: {}",
@@ -214,10 +234,17 @@ impl<'a> PassengerOptions<'a> {
             )
             .to_string(),
         };
-        opt.label(format!(
-            "{} - Took off: {} ago",
-            passenger_text, humantime_ago
-        ));
+        if self.pilot_name_on {
+            opt.label(format!(
+                "{} {} - Took off: {} ago",
+                pilot_text, passenger_text, humantime_ago
+            ));
+        } else {
+            opt.label(format!(
+                "{} - Took off: {} ago",
+                passenger_text, humantime_ago
+            ));
+        }
         // This is used to identify the selected value
         opt.value(flight.id);
         opt
