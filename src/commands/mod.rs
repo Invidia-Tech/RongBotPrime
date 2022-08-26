@@ -1,3 +1,4 @@
+pub mod admin;
 pub mod atc;
 pub mod cb;
 pub mod config;

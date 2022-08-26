@@ -11,6 +11,7 @@ mod listeners;
 mod utils;
 
 use commands::{
+    admin::help_yon::*,
     atc::{
         alert::*, award::*, call_sign::*, check_fc::*, crash::*, end::*, fc::*, hounds::*,
         start::*, status::*, summary::*,
@@ -62,6 +63,13 @@ use crate::data::*;
     shadow_ping
 )]
 struct General;
+
+// Admin group for admin stuffs
+#[group]
+#[description = "Admins only please"]
+#[summary = "Admin secret stuffs"]
+#[commands(help_yon)]
+struct Admin;
 
 // Rong ATC (Air Traffic Control)
 #[group]
@@ -199,6 +207,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         })
         .await
         .help(&MY_HELP)
+        .group(&ADMIN_GROUP)
         .group(&GENERAL_GROUP)
         .group(&ATC_GROUP)
         .group(&CB_GROUP)
