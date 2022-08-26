@@ -967,6 +967,16 @@
     },
     "query": "SELECT p.id, u.platform_id\n         FROM rongbot.pilot p\n         JOIN rong_user u\n            ON p.user_id=u.id\n         JOIN rong_clanmember cm\n            ON cm.user_id = u.id\n         WHERE cm.clan_id = $1;"
   },
+  "8dc53739f73424fef86396fbe64e66d26a5ad833a23b5ca8a8c866eef6bc1d9a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "GRANT SELECT                                                  \n         ON ALL TABLES IN SCHEMA redive_en\n         TO yon;"
+  },
   "8e74f948b71be64bbc6975354dc86e3f2f16603179ef479b453ea8879c3570de": {
     "describe": {
       "columns": [
@@ -1076,6 +1086,16 @@
       }
     },
     "query": "SELECT * FROM rongbot.flight\n         WHERE  pilot_id = $1\n            AND clan_id  = $2\n            AND cb_id    = $3\n            AND status   = 'in flight'"
+  },
+  "9859b9a8166d0b42568002fae0a4fa16b5dce651609b935598a2cdfc30ef486c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "GRANT SELECT                                                  \n         ON ALL TABLES IN SCHEMA redive_cn \n         TO yon;"
   },
   "9e50c8dbd5c0cae13e04290854587fe7b1901ad1e61fd55395e8d7243c117008": {
     "describe": {
@@ -1470,5 +1490,15 @@
       }
     },
     "query": "SELECT * FROM rongbot.pilot WHERE user_id = $1 AND clan_id = $2;"
+  },
+  "fd33a1537c977b4e5cd0d1a4db12b91f179364b6b08872079b897469426cbef6": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "GRANT SELECT                                                  \n         ON ALL TABLES IN SCHEMA redive_jp\n         TO yon;"
   }
 }
