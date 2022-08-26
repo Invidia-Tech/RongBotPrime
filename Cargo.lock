@@ -148,7 +148,7 @@ dependencies = [
 [[package]]
 name = "command_attr"
 version = "0.4.1"
-source = "git+https://github.com/serenity-rs/serenity#6787b9cd53b39adffc181768eede68852b64eba4"
+source = "git+https://github.com/serenity-rs/serenity#3e8c12d21a887aec392751bf03d3c8618e08036f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -163,9 +163,9 @@ checksum = "5827cebf4670468b8772dd191856768aedcb1b0278a04f989f7766351917b9dc"
 
 [[package]]
 name = "cpufeatures"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1079fb8528d9f9c888b1e8aa651e6e079ade467323d58f75faf1d30b1808f540"
+checksum = "dc948ebb96241bb40ab73effeb80d9f93afaad49359d159a5e61be51619fe813"
 dependencies = [
  "libc",
 ]
@@ -270,9 +270,9 @@ dependencies = [
 
 [[package]]
 name = "dotenvy"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e851a83c30366fd01d75b913588e95e74a1705c1ecc5d58b1f8e1a6d556525f"
+checksum = "d14217f19387ebd26b24ff4ecf93de2dbe68bab13957e43732127f19ca21a6d3"
 dependencies = [
  "dirs",
 ]
@@ -1096,9 +1096,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.143"
+version = "1.0.144"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53e8e5d5b70924f74ff5c6d64d9a5acd91422117c60f48c4e07855238a254553"
+checksum = "0f747710de3dcd43b88c9168773254e809d8ddbdf9653b84e2554ab219f17860"
 dependencies = [
  "serde_derive",
 ]
@@ -1115,9 +1115,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.143"
+version = "1.0.144"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3d8e8de557aee63c26b85b947f5e59b690d0454c753f3adeb5cd7835ab88391"
+checksum = "94ed3a816fb1d101812f83e789f888322c34e291f894f19590dc310963e87a00"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1126,9 +1126,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.83"
+version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38dd04e3c8279e75b31ef29dbdceebfe5ad89f4d0937213c53f7d49d01b3d5a7"
+checksum = "e55a28e3aaef9d5ce0506d0a14dbba8054ddc7e499ef522dd8b26859ec9d4a44"
 dependencies = [
  "itoa",
  "ryu",
@@ -1150,7 +1150,7 @@ dependencies = [
 [[package]]
 name = "serenity"
 version = "0.11.5"
-source = "git+https://github.com/serenity-rs/serenity#6787b9cd53b39adffc181768eede68852b64eba4"
+source = "git+https://github.com/serenity-rs/serenity#3e8c12d21a887aec392751bf03d3c8618e08036f"
 dependencies = [
  "async-trait",
  "async-tungstenite",
@@ -1260,7 +1260,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.6.1"
-source = "git+https://github.com/launchbadge/sqlx#0e5b9a1bea2263f2f93c3290bade729ba3bb5c5c"
+source = "git+https://github.com/launchbadge/sqlx#3f7111f05de2984aa00ad00fe6a670bca9db0aa0"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -1269,7 +1269,7 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.6.1"
-source = "git+https://github.com/launchbadge/sqlx#0e5b9a1bea2263f2f93c3290bade729ba3bb5c5c"
+source = "git+https://github.com/launchbadge/sqlx#3f7111f05de2984aa00ad00fe6a670bca9db0aa0"
 dependencies = [
  "ahash",
  "atoi",
@@ -1324,7 +1324,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.6.1"
-source = "git+https://github.com/launchbadge/sqlx#0e5b9a1bea2263f2f93c3290bade729ba3bb5c5c"
+source = "git+https://github.com/launchbadge/sqlx#3f7111f05de2984aa00ad00fe6a670bca9db0aa0"
 dependencies = [
  "dotenvy",
  "either",
@@ -1345,7 +1345,7 @@ dependencies = [
 [[package]]
 name = "sqlx-rt"
 version = "0.6.1"
-source = "git+https://github.com/launchbadge/sqlx#0e5b9a1bea2263f2f93c3290bade729ba3bb5c5c"
+source = "git+https://github.com/launchbadge/sqlx#3f7111f05de2984aa00ad00fe6a670bca9db0aa0"
 dependencies = [
  "once_cell",
  "tokio",
@@ -1426,9 +1426,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.13"
+version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db76ff9fa4b1458b3c7f077f3ff9887394058460d21e634355b273aaf11eea45"
+checksum = "3c3f9a28b618c3a6b9251b6908e9c99e04b9e5c02e6581ccbb67d59c34ef7f9b"
 dependencies = [
  "itoa",
  "libc",
