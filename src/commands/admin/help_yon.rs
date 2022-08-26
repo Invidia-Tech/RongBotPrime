@@ -20,15 +20,15 @@ async fn help_yon(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         .unwrap();
 
     sqlx::query!(
-        "GRANT SELECT                                                  
-         ON ALL TABLES IN SCHEMA redive_cn 
+        "GRANT SELECT
+         ON ALL TABLES IN SCHEMA redive_cn
          TO yon;",
     )
     .execute(&pool)
     .await?;
 
     sqlx::query!(
-        "GRANT SELECT                                                  
+        "GRANT SELECT
          ON ALL TABLES IN SCHEMA redive_jp
          TO yon;",
     )
@@ -36,7 +36,7 @@ async fn help_yon(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     .await?;
 
     sqlx::query!(
-        "GRANT SELECT                                                  
+        "GRANT SELECT
          ON ALL TABLES IN SCHEMA redive_en
          TO yon;",
     )

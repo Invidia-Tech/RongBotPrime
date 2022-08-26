@@ -227,7 +227,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     {
         let mut data = client.data.write().await;
         let pgpool = PgPoolOptions::new()
-            .max_connections(20)
+            .max_connections(50)
             .connect(&dburl)
             .await?;
         println!("Rong database is connected.");
