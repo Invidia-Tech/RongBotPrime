@@ -33,5 +33,4 @@ features         = ["runtime-tokio-rustls", "macros", "postgres", "chrono", "big
 
 [profile.release]
 lto = true
-codegen-units = 1
-# strip = true # Strip is not a stable feature
+strip = true # Strip is not a stable feature
