@@ -12,29 +12,39 @@ impl EventHandler for Handler {
         println!("{} is connected to Discord!", ready.user.name);
         const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-        let status_channel = match ctx.cache.guild_channel(1010093749969371187) {
+        let status_channel = match ctx.cache.channel(1010093749969371187) {
             Some(channel) => channel,
-            None => {
-                println!("Cannot find the status channel to give an update to.");
-                return;
-            }
+            None => match ctx.http.get_channel(1010093749969371187).await {
+                Ok(ch) => ch,
+                Err(e) => {
+                    println!(
+                        "Cannot find the status channel to give an update to. Error: {:?}",
+                        e
+                    );
+                    return;
+                }
+            },
         };
 
-        match status_channel
-            .send_message(ctx, |m| {
-                m.add_embed(|e| {
-                    e.title("RongPrime is now online!")
-                        .field("**Version**", VERSION, false)
+        if let Some(ch) = status_channel.guild() {
+            match ch
+                .send_message(ctx, |m| {
+                    m.add_embed(|e| {
+                        e.title("RongPrime is now online!")
+                            .field("**Version**", VERSION, false)
+                    })
                 })
-            })
-            .await
-        {
-            Ok(_) => {
-                println!("Updated status channel.")
-            }
-            Err(e) => {
-                println!("Could not update status channel due to {:?}", e)
-            }
-        };
+                .await
+            {
+                Ok(_) => {
+                    println!("Updated status channel.");
+                }
+                Err(e) => {
+                    println!("Could not update status channel due to {:?}", e);
+                }
+            };
+        } else {
+            println!("Somehow got a channel that's not a guild channel???");
+        }
     }
 }
