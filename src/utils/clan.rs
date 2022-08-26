@@ -101,7 +101,7 @@ pub async fn is_channel_persona(
     msg: &Message,
     persona: ChannelPersona,
 ) -> Result<(), RongError> {
-    let cache = &ctx.cache;
+    let _cache = &ctx.cache;
     let pool = ctx
         .data
         .read()

@@ -14,7 +14,7 @@ use crate::{
 #[command("atc_hounds")]
 #[aliases("hounds")]
 #[description("Calls for all active pilots to release their flights.")]
-async fn atc_hounds(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+async fn atc_hounds(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     // Only allow this command to be called within cb clan contexts.
     let (clan_id, clan_name) = result_or_say_why!(
         get_clan_from_channel_context(ctx, msg, ChannelPersona::Cb),
@@ -22,7 +22,7 @@ async fn atc_hounds(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         msg
     );
 
-    let (cb_info, cb_status) =
+    let (cb_info, _cb_status) =
         result_or_say_why!(get_latest_cb(ctx, &clan_id, &clan_name), ctx, msg);
 
     let all_in_air_flights =

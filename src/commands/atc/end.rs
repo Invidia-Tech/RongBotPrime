@@ -73,7 +73,7 @@ async fn flight_end(ctx: &Context, msg: &Message, mut args: Args) -> CommandResu
         return Ok(());
     }
 
-    let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
+    let _all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
     let all_clanmember_ign_map =
         result_or_say_why!(get_all_clanmember_ign_map(ctx, &clan_id), ctx, msg);
 

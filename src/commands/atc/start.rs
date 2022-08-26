@@ -82,7 +82,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                     ctx,
                     format!(
                         "Warning, there is no currently active CB!\n\
-                        {clan_name} - {name} is already over. \
+                        {clan_name} - {name}. \
                         {name} started <t:{start_epoch}:R> and ended <t:{end_epoch}:R>.",
                         clan_name = clan_name,
                         name = cb_info.name,

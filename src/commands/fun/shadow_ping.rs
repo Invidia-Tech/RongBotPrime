@@ -30,13 +30,10 @@ async fn shadow_ping(ctx: &Context, msg: &Message, _args: Args) -> CommandResult
     let collected: Vec<_> = collector
         .then(|msg| async move {
             // let _ = msg.reply(http, format!("I repeat: {}", msg.content)).await;
-            if msg.content.contains("<@79515100536385536>") {
-                msg.delete(http).await;
-                ()
-            }
-
-            if msg.content.contains("You have pinged Dabo") {
-                msg.delete(http).await;
+            if msg.content.contains("You have pinged Dabo")
+                || msg.content.contains("<@79515100536385536>")
+            {
+                let _ = msg.delete(http).await;
             }
         })
         .collect()
