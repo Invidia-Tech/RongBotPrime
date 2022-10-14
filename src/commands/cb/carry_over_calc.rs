@@ -660,7 +660,7 @@ async fn cot_calc_dmg(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
     if cot_target > 90 {
         cot_target = 90;
     }
-    let max_num_hits = 3;
+    let max_num_hits = 4;
     let mut out_msg = format!("**Target COT: {}s**", cot_target);
     if args.is_empty() {
         out_msg = required_dmg_target_cot(out_msg, boss_hp_left, cot_target, max_num_hits, true);
