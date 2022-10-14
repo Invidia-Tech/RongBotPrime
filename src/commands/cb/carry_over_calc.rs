@@ -227,7 +227,7 @@ fn process_cot(mut args: Args, new_calc: bool) -> Result<String, CommandError> {
 
     let mut boss_hp_left = boss_hp;
     let mut dmg_inputs: Vec<f64> = Vec::new();
-    let max_num_hits = 3;
+    let max_num_hits = 4;
 
     let mut out_msg = "Rong's recommendations for full 90s COT:".to_string();
     if args.is_empty() {
