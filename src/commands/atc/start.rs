@@ -127,23 +127,26 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             let mut pre_flight_alerts: String = "".to_string();
             // Get passenger or determine solo flight
             let passenger_member_id: Option<i32>;
+            let passenger_user_id;
             let mut ign = "Self Flight".to_string();
             if !args.is_empty() {
                 ign = args.single::<String>().unwrap();
-                let (member_id, passenger_user_id) =
+                let (member_id, p_user_id) =
                     result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
                 // msg.channel_id
                 //    .say(ctx, format!("Passenger_member_id is: {:?}", passenger_member_id))
                 //    .await?;
                 passenger_member_id = Some(member_id);
-                if passenger_user_id == pilot_user_id {
+                if p_user_id == pilot_user_id {
                     pre_flight_alerts.push_str(
                         "Warning! You mentioned yourself! \
                          This flight will start assuming this is not a solo flight. \
                          This may mess up pilot stats.\n",
                     );
                 }
+                passenger_user_id = Some(p_user_id);
             } else {
+                passenger_user_id = None;
                 passenger_member_id = None;
                 pre_flight_alerts.push_str("No passenger! Starting a solo flight.\n");
             }
@@ -169,6 +172,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             }
 
             let conflicting_flights;
+            let passenger_pilot_info;
             // Ensure that the self flight or passenger is not already in the air by ANOTHER pilot.
             if let Some(passenger_clanmember_id) = passenger_member_id {
                 let passenger_pilot_id = match sqlx::query!(
@@ -185,6 +189,18 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                     Ok(row) => row.id,
                     _ => -1,
                 };
+
+                if let Some(p_user_id) = passenger_user_id {
+                    let pilot_info = result_or_say_why!(
+                        get_pilot_info_or_create_new(ctx, &p_user_id, &clan_id),
+                        ctx,
+                        msg
+                    );
+
+                    passenger_pilot_info = Some(pilot_info);
+                } else {
+                    passenger_pilot_info = None;
+                }
 
                 conflicting_flights = match sqlx::query!(
                     "SELECT COUNT(*) as count
@@ -211,6 +227,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                     }
                 };
             } else {
+                passenger_pilot_info = None;
                 let pilot_cm_id = match sqlx::query!(
                     "SELECT id FROM rong_clanmember
                              WHERE clan_id = $1 AND
@@ -261,6 +278,19 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                 )
                 .await?;
                 return Ok(());
+            }
+
+            if let Some(passenger_pilot_info) = passenger_pilot_info {
+                println!("Passenger pilot info found: {:?}", passenger_pilot_info);
+                if let Some(motto) = &passenger_pilot_info.motto {
+                    println!("Motto found: {}", motto);
+                    pre_flight_alerts
+                        .push_str(format!("Your passenger says: \"{}\"\n", motto).as_str());
+                } else {
+                    println!("Motto NOT FOUND");
+                }
+            } else {
+                println!("Passenger pilot info NOT found");
             }
 
             let m = msg
