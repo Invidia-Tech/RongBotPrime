@@ -6,6 +6,7 @@ pub mod crash;
 pub mod end;
 pub mod fc;
 pub mod hounds;
+pub mod motto;
 pub mod start;
 pub mod status;
 pub mod summary;
