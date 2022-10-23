@@ -133,18 +133,17 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                 ign = args.single::<String>().unwrap();
                 let (member_id, p_user_id) =
                     result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
-                // msg.channel_id
-                //    .say(ctx, format!("Passenger_member_id is: {:?}", passenger_member_id))
-                //    .await?;
                 passenger_member_id = Some(member_id);
                 if p_user_id == pilot_user_id {
                     pre_flight_alerts.push_str(
                         "Warning! You mentioned yourself! \
-                         This flight will start assuming this is not a solo flight. \
-                         This may mess up pilot stats.\n",
+                         This flight will be forced to a solo flight! \
+                         Otherwise pilot stats may be messed up.\n",
                     );
+                    passenger_user_id = None;
+                } else {
+                    passenger_user_id = Some(p_user_id);
                 }
-                passenger_user_id = Some(p_user_id);
             } else {
                 passenger_user_id = None;
                 passenger_member_id = None;
@@ -281,16 +280,12 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             }
 
             if let Some(passenger_pilot_info) = passenger_pilot_info {
-                println!("Passenger pilot info found: {:?}", passenger_pilot_info);
+                // println!("Passenger pilot info found: {:?}", passenger_pilot_info);
                 if let Some(motto) = &passenger_pilot_info.motto {
-                    println!("Motto found: {}", motto);
+                    // println!("Motto found: {}", motto);
                     pre_flight_alerts
                         .push_str(format!("Your passenger says: \"{}\"\n", motto).as_str());
-                } else {
-                    println!("Motto NOT FOUND");
                 }
-            } else {
-                println!("Passenger pilot info NOT found");
             }
 
             let m = msg
