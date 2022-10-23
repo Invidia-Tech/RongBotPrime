@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use serenity::{
     client::Context,
     framework::standard::{macros::command, Args, CommandResult},
@@ -44,7 +46,15 @@ async fn set_motto(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
         msg
     );
 
-    let new_motto = args.single_quoted::<String>().unwrap();
+    let new_motto = args.single_quoted::<String>()?;
+    let char_blacklist: HashSet<char> = HashSet::from(['<', '>', '@', '/', '\\']);
+    for c in new_motto.as_str().chars() {
+        if char_blacklist.contains(&c) {
+            msg.reply(ctx, "I can't set that as your motto...").await?;
+            return Ok(());
+        }
+    }
+    println!("Check assed, setting motto as: {}", new_motto);
 
     pilot_info.motto = Some(new_motto);
 
