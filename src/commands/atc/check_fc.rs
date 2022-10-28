@@ -85,7 +85,7 @@ async fn check_fc(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
     let mut search_ids: Vec<i32> = Vec::new();
     if args.is_empty() {
         match sqlx::query!(
-            "SELECT id FROM rong_clanmember WHERE clan_id = $1 AND active = true ORDER BY ign;",
+            "SELECT id FROM rong_clanmember WHERE clan_id = $1 AND active = true AND out_of_clan = false ORDER BY LOWER(ign);",
             clan_id
         )
         .fetch_all(&pool)
