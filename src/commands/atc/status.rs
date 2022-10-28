@@ -171,7 +171,7 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
         .to_string();
         let passenger_out = (match &flight.passenger_id {
             Some(p) => all_clanmember_ign_map.get(p).unwrap_or(&default_no_ign),
-            None => "Solo Flight",
+            None => pilot_output,
         })
         .to_string();
         let duration_readable = match &flight.end_time {
@@ -206,7 +206,7 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
 
         let mut pass_info_out = "".to_string();
         for (pass_name, duration) in pass_info {
-            pass_info_out = format!("{}\n{} - {}", pass_info_out, pass_name, duration);
+            pass_info_out = format!("{}\n**{}** - {}", pass_info_out, pass_name, duration);
         }
 
         if let Some(f) = flight_embeds.last_mut() {
