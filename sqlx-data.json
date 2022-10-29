@@ -86,6 +86,20 @@
     },
     "query": "DELETE FROM rongbot.ping_droptable WHERE server=$1 AND user_id=$2;"
   },
+  "0e919be03d25356f12355a66fe6e835927a7364fc384f2ea81311b5ce59c9ecc": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "DELETE FROM rongbot.force_quit WHERE clanmember_id = $1 AND cb_id = $2 AND day_used = $3"
+  },
   "0ee93b64c7380f7c130391de2bc776e2fd797ca61a7e9f0dff789f32d1a155aa": {
     "describe": {
       "columns": [

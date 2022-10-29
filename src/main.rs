@@ -14,7 +14,7 @@ use commands::{
     admin::help_yon::*,
     atc::{
         alert::*, award::*, call_sign::*, check_fc::*, crash::*, end::*, fc::*, hounds::*,
-        motto::*, start::*, status::*, summary::*,
+        motto::*, start::*, status::*, summary::*, unfc::*,
     },
     cb::{carry_over_calc::*, status::*},
     config::{set_channel::*, superadmin::*},
@@ -60,7 +60,8 @@ use crate::data::*;
     cot_old_calc_time,
     cot_old_calc_dmg,
     kyouka,
-    shadow_ping
+    shadow_ping,
+    undo_force_quit
 )]
 struct General;
 
@@ -89,6 +90,7 @@ struct Admin;
     atc_award,
     check_fc,
     force_quit,
+    undo_force_quit,
     atc_hounds
 )]
 struct ATC;
@@ -205,6 +207,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 .time_span(1800)
                 .limit_for(LimitedFor::User)
                 .delay_action(kyouka_delay)
+        })
+        .await
+        .bucket("atc_hounds", |b| {
+            b.limit(1).time_span(30).limit_for(LimitedFor::Channel)
         })
         .await
         .help(&MY_HELP)

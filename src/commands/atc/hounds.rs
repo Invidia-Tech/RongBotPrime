@@ -12,6 +12,7 @@ use crate::{
 };
 
 #[command("atc_hounds")]
+#[bucket("atc_hounds")]
 #[aliases("hounds")]
 #[description("Calls for all active pilots to release their flights.")]
 async fn atc_hounds(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {

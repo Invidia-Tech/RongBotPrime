@@ -82,12 +82,20 @@ pub async fn dispatch_error(
         DispatchError::TooManyArguments { max, given } => {
             error_response = format!("Max arguments allowed is {}, but got {}.", max, given);
         }
-        DispatchError::Ratelimited(secs) => {
-            error_response = format!(
-                "Please use in moderation! Try again in {}. <:Angry:964436597909127169>",
-                format_duration(Duration::from_secs(secs.as_secs()))
-            );
-        }
+        DispatchError::Ratelimited(secs) => match command_name {
+            "atc_hounds" => {
+                error_response = format!(
+                    "We're temporarily out of hounds. Who let the dogs out? Try again in {}.",
+                    format_duration(Duration::from_secs(secs.as_secs()))
+                );
+            }
+            _ => {
+                error_response = format!(
+                    "Please use in moderation! Try again in {}. <:Angry:964436597909127169>",
+                    format_duration(Duration::from_secs(secs.as_secs()))
+                );
+            }
+        },
         DispatchError::CheckFailed(check, reason) => match reason {
             Reason::User(why) => error_response = format!("User error: {}. {}", check, why),
             _ => {
@@ -114,4 +122,9 @@ pub async fn dispatch_error(
 #[hook]
 pub async fn kyouka_delay(ctx: &Context, msg: &Message) {
     let _ = msg.reply(ctx, "Please use >kyouka in moderation.").await;
+}
+
+#[hook]
+pub async fn hounds_delay(ctx: &Context, msg: &Message) {
+    let _ = msg.reply(ctx, "We're temporarily out of hounds.").await;
 }
