@@ -68,6 +68,53 @@ async fn undo_force_quit(ctx: &Context, msg: &Message, mut args: Args) -> Comman
         msg
     );
 
+    let pool = ctx
+        .data
+        .read()
+        .await
+        .get::<DatabasePool>()
+        .cloned()
+        .unwrap();
+
+    let is_superadmin = match sqlx::query!(
+        "SELECT is_superadmin
+         FROM public.rong_user
+         WHERE platform_id = $1;",
+        msg.author.id.to_string()
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(row) => row.is_superadmin,
+        Err(_) => false,
+    };
+
+    let is_guild_lead = match sqlx::query!(
+        "SELECT is_lead
+         FROM rong_clanmember cm
+         JOIN rong_user u ON cm.user_id = u.id
+         WHERE cm.active = true
+           AND clan_id = $1
+           AND platform_id = $2",
+        clan_id,
+        msg.author.id.to_string()
+    )
+    .fetch_one(&pool)
+    .await
+    {
+        Ok(row) => row.is_lead,
+        Err(_) => false,
+    };
+
+    if !(is_guild_lead || is_superadmin) {
+        msg.reply_ping(
+            ctx,
+            format!("You are neither a lead of {} nor a Superadmin.", clan_name),
+        )
+        .await?;
+        return Ok(());
+    }
+
     let (cb_info, cb_status) =
         result_or_say_why!(get_latest_cb(ctx, &clan_id, &clan_name), ctx, msg);
 
@@ -114,14 +161,6 @@ async fn undo_force_quit(ctx: &Context, msg: &Message, mut args: Args) -> Comman
     let epoch_now = Utc::now().timestamp();
     let cb_day: i32 = ((epoch_now - cb_start_epoch) / 86400 + 1)
         .try_into()
-        .unwrap();
-
-    let pool = ctx
-        .data
-        .read()
-        .await
-        .get::<DatabasePool>()
-        .cloned()
         .unwrap();
 
     let (member_id, _user_id);
