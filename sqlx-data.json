@@ -1178,6 +1178,28 @@
     },
     "query": "SELECT COUNT(*) as count\n                     FROM rongbot.flight\n                     WHERE status = 'in flight' AND\n                           ((pilot_id = $1 AND\n                             passenger_id is NULL) OR\n                            (passenger_id = $2));"
   },
+  "bab7541ed388654183ac3241d08971e1299b7b6a2805ae9b91c9a9e166f1ee43": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT COUNT (*) as count\n         FROM rongbot.force_quit\n         WHERE clanmember_id = $1 AND\n         cb_id = $2 AND\n         day_used = $3;"
+  },
   "c09bd188867961437b6ba87e94e538452cda68350aa65d54712fada8fa24377c": {
     "describe": {
       "columns": [],

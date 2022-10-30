@@ -59,7 +59,10 @@ impl UnFCOptions {
 
 #[command("atc_unfc")]
 #[aliases("unfc", "unreset")]
-#[description("Removes a false forcequit marking.")]
+#[description(
+    "Removes a false forcequit marking.
+     Use with >unfc (your own account) or >unfc name"
+)]
 async fn undo_force_quit(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     // Only allows this command within CB marked channels.
     let (clan_id, clan_name) = result_or_say_why!(
@@ -163,12 +166,12 @@ async fn undo_force_quit(ctx: &Context, msg: &Message, mut args: Args) -> Comman
         .try_into()
         .unwrap();
 
-    let (member_id, _user_id);
+    let member_id;
     match args.len() {
         0 | 1 => {
             if !args.is_empty() {
                 let ign = args.single::<String>().unwrap();
-                (member_id, _user_id) =
+                (member_id, _) =
                     result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
             } else {
                 member_id = match sqlx::query!(
@@ -202,10 +205,11 @@ async fn undo_force_quit(ctx: &Context, msg: &Message, mut args: Args) -> Comman
         }
     }
     let used_fc: i64 = match sqlx::query!(
-        "SELECT COUNT (*) as count FROM rongbot.force_quit
-                     WHERE clanmember_id = $1 AND
-                           cb_id = $2 AND
-                           day_used = $3;",
+        "SELECT COUNT (*) as count
+         FROM rongbot.force_quit
+         WHERE clanmember_id = $1 AND
+         cb_id = $2 AND
+         day_used = $3;",
         &member_id,
         &cb_info.id,
         &cb_day
