@@ -16,3 +16,6 @@ env/
 
 # Macos kinda shit
 .DS_Store
+
+# Dabo's dev env
+.idea

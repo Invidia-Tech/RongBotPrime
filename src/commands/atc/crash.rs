@@ -119,10 +119,7 @@ async fn flight_crash(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
     if !(is_guild_lead || is_superadmin) {
         msg.reply_ping(
             ctx,
-            format!(
-                "You are not a lead of {} or you are not a Superadmin.",
-                clan_name
-            ),
+            format!("You are neither a lead of {} nor a Superadmin.", clan_name),
         )
         .await?;
         return Ok(());
