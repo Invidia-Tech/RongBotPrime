@@ -16,6 +16,7 @@ use crate::{
 #[aliases("note")]
 #[description(
     "Set a note for an active flight. \
+     Lim: 50 characters.\n\
      Use \"self\" for solo flight.\n\
      **This only works on active flights**.\n\
      `\t>atc note Dabo C31 - 5.6M`\n\
@@ -74,32 +75,31 @@ async fn set_note(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
     let note: &str = args.rest();
     // Max 50 length for db.
     if note.len() > 50 {
-        msg.reply(ctx, "This note is too long!").await?;
+        msg.reply(ctx, "This note is too long! Lim: 50 characters.")
+            .await?;
         return Ok(());
     }
     // Double checking note len max.
     let char_blacklist: HashSet<char> = HashSet::from(['<', '>', '@', '/', '\\']);
     for c in note.chars() {
         if char_blacklist.contains(&c) {
-            msg.reply(ctx, "This note contains bad characters!").await?;
+            msg.reply(ctx, "This note contains illegal characters!")
+                .await?;
             return Ok(());
         }
     }
 
-    let (passenger_member_id, passenger_user_id);
+    let passenger_member_id;
     if ign != "self" {
         let (member_id, p_user_id) =
             result_or_say_why!(get_clan_member_id_by_ign(ctx, &clan_id, &ign), ctx, msg);
         if p_user_id == pilot_user_id {
             // User somehow mentioned themselves
-            passenger_user_id = None;
             passenger_member_id = None;
         } else {
             passenger_member_id = Some(member_id);
-            passenger_user_id = Some(p_user_id);
         }
     } else {
-        passenger_user_id = None;
         passenger_member_id = None;
     }
 
