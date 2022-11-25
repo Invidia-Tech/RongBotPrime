@@ -349,6 +349,19 @@
     },
     "query": "SELECT id, user_id FROM rong_clanmember\n         WHERE  clan_id = $1\n            AND ign ilike $2\n            AND active = True"
   },
+  "33c853149dc815b81084d6d61a7e7a1abf7eee0b843f38782e31d62816b62b89": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE rongbot.flight SET note =\n\t        \t    $1 WHERE id = $2"
+  },
   "35a56d83db65ea95f09925a094003c3354d7b46a367a5b140feadec741411101": {
     "describe": {
       "columns": [
@@ -644,6 +657,28 @@
       }
     },
     "query": "GRANT SELECT\n         ON ALL TABLES IN SCHEMA redive_cn\n         TO yon;"
+  },
+  "409683dff11f1a15b726f80da2880d2d421b203bfefb3db55f87b64b56c07b8c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT COUNT(*) as count\n                     FROM rongbot.flight\n                     WHERE cb_id = $1 AND\n                           status = 'in flight' AND\n                           ((pilot_id = $2 AND\n                             passenger_id is NULL) OR\n                            (passenger_id = $3));"
   },
   "441be4d67303d549bf79ba15589eb091019d9b0b241b5d4317062320b6c412ab": {
     "describe": {
@@ -1181,27 +1216,6 @@
     },
     "query": "SELECT is_superadmin\n         FROM public.rong_user\n         WHERE platform_id = $1;"
   },
-  "b001d37d323ac6f009ce7817ace56d88b0271d619f8a72283fa22a5a1af9ad94": {
-    "describe": {
-      "columns": [
-        {
-          "name": "count",
-          "ordinal": 0,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Int4"
-        ]
-      }
-    },
-    "query": "SELECT COUNT(*) as count\n                     FROM rongbot.flight\n                     WHERE status = 'in flight' AND\n                           ((pilot_id = $1 AND\n                             passenger_id is NULL) OR\n                            (passenger_id = $2));"
-  },
   "bab7541ed388654183ac3241d08971e1299b7b6a2805ae9b91c9a9e166f1ee43": {
     "describe": {
       "columns": [
@@ -1245,26 +1259,6 @@
       }
     },
     "query": "UPDATE rong_user\n         SET is_superadmin=True\n         WHERE platform_id=$1;"
-  },
-  "c8c080bef9b25ae8b3f4c94b4d4c9d4b732dcd80dcefe305c87aefd837938da1": {
-    "describe": {
-      "columns": [
-        {
-          "name": "count",
-          "ordinal": 0,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      }
-    },
-    "query": "SELECT COUNT(*) as count\n                     FROM rongbot.flight\n                     WHERE status = 'in flight' AND\n                           passenger_id = $1;"
   },
   "dae289d5a90412c50c97064e044c3096b31984acbdc6e4944ee03c0940cc03a3": {
     "describe": {
@@ -1326,6 +1320,27 @@
       }
     },
     "query": "INSERT INTO rongbot.ping_droptable (server, user_id, rarity_rank, weight)\n         VALUES ($1, $2, $3, $4)\n         ON CONFLICT (server, user_id)\n         DO UPDATE SET rarity_rank = $3, weight = $4;"
+  },
+  "ea25310622b6aa82d09cb5941139bf89e369533d3cdabe0765c3b16a0155cfea": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT COUNT(*) as count\n                     FROM rongbot.flight\n                     WHERE status = 'in flight' AND\n                           passenger_id = $1 AND\n                           cb_id = $2;"
   },
   "eecebc1ebbc269ce60efc074392d96f2da5bb09c50eb3d97af5476be41e96002": {
     "describe": {
