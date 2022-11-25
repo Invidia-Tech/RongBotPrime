@@ -160,6 +160,7 @@ pub struct Flight {
     pub passenger_id: Option<i32>,
     pub status: FlightStatus,
     pub team_id: Option<i32>,
+    pub note: Option<String>,
 }
 
 #[derive(Debug)]

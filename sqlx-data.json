@@ -293,6 +293,11 @@
           "name": "team_id",
           "ordinal": 9,
           "type_info": "Int4"
+        },
+        {
+          "name": "note",
+          "ordinal": 10,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -305,6 +310,7 @@
         false,
         true,
         false,
+        true,
         true
       ],
       "parameters": {
@@ -408,6 +414,11 @@
           "name": "team_id",
           "ordinal": 9,
           "type_info": "Int4"
+        },
+        {
+          "name": "note",
+          "ordinal": 10,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -420,6 +431,7 @@
         false,
         true,
         false,
+        true,
         true
       ],
       "parameters": {
@@ -547,6 +559,11 @@
           "name": "team_id",
           "ordinal": 9,
           "type_info": "Int4"
+        },
+        {
+          "name": "note",
+          "ordinal": 10,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -559,6 +576,7 @@
         false,
         true,
         false,
+        true,
         true
       ],
       "parameters": {
@@ -1087,6 +1105,11 @@
           "name": "team_id",
           "ordinal": 9,
           "type_info": "Int4"
+        },
+        {
+          "name": "note",
+          "ordinal": 10,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
@@ -1099,6 +1122,7 @@
         false,
         true,
         false,
+        true,
         true
       ],
       "parameters": {
