@@ -151,7 +151,6 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
             }
 
             // Ensure that the passenger_member_id is within the same guild as the pilot.
-
             let pilot_ongoing_flights = result_or_say_why!(
                 get_pilot_ongoing_flights(ctx, &pilot_info.id, &clan_id, &cb_info.id),
                 ctx,
@@ -204,10 +203,12 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                 conflicting_flights = match sqlx::query!(
                     "SELECT COUNT(*) as count
                      FROM rongbot.flight
-                     WHERE status = 'in flight' AND
-                           ((pilot_id = $1 AND
+                     WHERE cb_id = $1 AND
+                           status = 'in flight' AND
+                           ((pilot_id = $2 AND
                              passenger_id is NULL) OR
-                            (passenger_id = $2));",
+                            (passenger_id = $3));",
+                    &cb_info.id,
                     &passenger_pilot_id,
                     &passenger_clanmember_id
                 )
@@ -250,8 +251,10 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                     "SELECT COUNT(*) as count
                      FROM rongbot.flight
                      WHERE status = 'in flight' AND
-                           passenger_id = $1;",
-                    &pilot_cm_id
+                           passenger_id = $1 AND
+                           cb_id = $2;",
+                    &pilot_cm_id,
+                    &cb_info.id
                 )
                 .fetch_one(&pool)
                 .await
