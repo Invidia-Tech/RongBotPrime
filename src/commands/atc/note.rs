@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 
-
 use serenity::{
     client::Context,
     framework::standard::{macros::command, Args, CommandResult},
@@ -143,12 +142,10 @@ async fn set_note(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
             .await
             {
                 Ok(_) => {
-                    msg.reply_mention(ctx, "Your note for this flight has been updated.")
-                        .await?
+                    msg.react(ctx, '✅').await?;
                 }
                 Err(e) => {
-                    msg.reply_mention(ctx, format!("Something's wrong! {}", e))
-                        .await?;
+                    msg.reply(ctx, format!("Something's wrong! {}", e)).await?;
                     return Ok(());
                 }
             };
