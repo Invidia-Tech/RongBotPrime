@@ -387,7 +387,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                         };
 
                         if used_fc > 0 {
-                            alert_msg += "\n**WARNING, YOUR PASSENGER DOES NOT HAVE FC**";
+                            alert_msg += "**WARNING, YOUR PASSENGER DOES NOT HAVE FC**\n";
                         }
 
                         match result_or_say_why!(
@@ -478,7 +478,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
 
                         if used_fc > 0 {
                             let out_msg =
-                                format!("{}\n**WARNING!! YOU DO NOT HAVE FC TODAY**", &m.content);
+                                format!("{}**WARNING!! YOU DO NOT HAVE FC TODAY**\n", &m.content);
 
                             let _ = &m.edit(ctx, |nm| nm.content(out_msg)).await?;
                         }
