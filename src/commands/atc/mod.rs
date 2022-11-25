@@ -7,6 +7,7 @@ pub mod end;
 pub mod fc;
 pub mod hounds;
 pub mod motto;
+pub mod note;
 pub mod start;
 pub mod status;
 pub mod summary;

@@ -14,7 +14,7 @@ use commands::{
     admin::help_yon::*,
     atc::{
         alert::*, award::*, call_sign::*, check_fc::*, crash::*, end::*, fc::*, hounds::*,
-        motto::*, start::*, status::*, summary::*, unfc::*,
+        motto::*, note::*, start::*, status::*, summary::*, unfc::*,
     },
     cb::{carry_over_calc::*, status::*},
     config::{set_channel::*, superadmin::*},
@@ -86,6 +86,7 @@ struct Admin;
     flight_start,
     set_alert_channel,
     set_motto,
+    set_note,
     set_call_sign,
     atc_award,
     check_fc,

@@ -247,10 +247,16 @@ async fn flight_summary(ctx: &Context, msg: &Message, _args: Args) -> CommandRes
                 )
                 .to_string(),
             };
+            let note = match &flight.note {
+                Some(note) => note,
+                None => "No Note",
+            }
+            .to_string();
             f.fields(vec![
                 (full_flight_call_sign, pilot_output, false),
                 (passenger_out, current_status, true),
                 ("Duration:".to_string(), duration_readable, true),
+                ("Note:".to_string(), note, true),
             ]);
         }
 
