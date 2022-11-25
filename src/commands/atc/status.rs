@@ -169,7 +169,7 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
             .get(&flight.pilot_id)
             .unwrap_or(&default_no_ign))
         .to_string();
-        let passenger_out = (match &flight.passenger_id {
+        let mut passenger_out = (match &flight.passenger_id {
             Some(p) => all_clanmember_ign_map
                 .get(p)
                 .unwrap_or(&default_no_ign)
@@ -177,6 +177,11 @@ async fn flight_status(ctx: &Context, msg: &Message, _args: Args) -> CommandResu
             None => pilot_output.clone(),
         })
         .to_string();
+        // Add on the note, if exist.
+        match &flight.note {
+            None => {}
+            Some(msg) => passenger_out.push_str(format!(" - \"{}\"", msg).as_str()),
+        }
         let duration_readable = match &flight.end_time {
             Some(t) => format_duration(
                 chrono::Duration::seconds(t.timestamp() - flight.start_time.timestamp())
