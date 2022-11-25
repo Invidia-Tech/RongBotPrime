@@ -140,6 +140,14 @@ async fn flight_crash(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         None => (*msg.author.name).to_string(),
     };
 
+    if all_in_air_flights.is_empty() {
+        msg.reply(
+            ctx,
+            format!("There are no flights to crash for {}", clan_name),
+        )
+        .await?;
+        return Ok(());
+    }
     // Ensure that the passenger_member_id is within the same guild as the pilot.
     let passenger_options =
         PassengerOptions::new(&all_clanmember_ign_map, &all_pilot_ign_map, true);
