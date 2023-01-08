@@ -51,8 +51,24 @@ async fn ping_roll(ctx: &Context, msg: &Message) -> CommandResult {
     .c
     .unwrap_or(0);
 
-    if rolls_today >= 1 {
-        msg.reply(ctx, "You're out of rolls for today!").await?;
+    let booster = match &msg.member {
+        Some(m) => m.premium_since.is_some(),
+        None => false,
+    };
+
+    if booster {
+        msg.reply(ctx, "You are a booster.").await?;
+    }
+
+    if (!booster && rolls_today >= 1) || (booster && rolls_today >= 2) {
+        msg.reply(
+            ctx,
+            format!(
+                "You're out of rolls for today! You've rolled {} times today. Boosters gets 2.",
+                rolls_today
+            ),
+        )
+        .await?;
         return Ok(());
     }
 
