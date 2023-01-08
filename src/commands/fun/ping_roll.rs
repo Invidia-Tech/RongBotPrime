@@ -39,10 +39,12 @@ async fn ping_roll(ctx: &Context, msg: &Message) -> CommandResult {
          FROM rongbot.ping_log
          WHERE
             rolled_by=$1 AND
+            server=$2 AND
             dropped_on > (current_date + interval '13:00') -
             ((interval '24:00') *
             CAST((EXTRACT(HOUR FROM NOW()) < 13) as int));",
-        msg.author.id.to_string()
+        msg.author.id.to_string(),
+        &guild_id.to_string()
     )
     .fetch_one(&pool)
     .await?
