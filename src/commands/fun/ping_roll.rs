@@ -39,18 +39,32 @@ async fn ping_roll(ctx: &Context, msg: &Message) -> CommandResult {
          FROM rongbot.ping_log
          WHERE
             rolled_by=$1 AND
+            server=$2 AND
             dropped_on > (current_date + interval '13:00') -
             ((interval '24:00') *
             CAST((EXTRACT(HOUR FROM NOW()) < 13) as int));",
-        msg.author.id.to_string()
+        msg.author.id.to_string(),
+        &guild_id.to_string()
     )
     .fetch_one(&pool)
     .await?
     .c
     .unwrap_or(0);
 
-    if rolls_today >= 1 {
-        msg.reply(ctx, "You're out of rolls for today!").await?;
+    let booster = match &msg.member {
+        Some(m) => m.premium_since.is_some(),
+        None => false,
+    };
+
+    if (!booster && rolls_today >= 1) || (booster && rolls_today >= 2) {
+        msg.reply(
+            ctx,
+            format!(
+                "You're out of rolls for today! You've rolled {} times today. Boosters gets 2.",
+                rolls_today
+            ),
+        )
+        .await?;
         return Ok(());
     }
 

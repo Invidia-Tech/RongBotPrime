@@ -96,6 +96,29 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
         _ => (),
     };
 
+    let cb_start_epoch = cb_info.start_time.unwrap().timestamp();
+    let epoch_now = Utc::now().timestamp();
+    let cb_day: i32 = ((epoch_now - cb_start_epoch) / 86400 + 1)
+        .try_into()
+        .unwrap();
+    if cb_day > 10 {
+        msg.channel_id
+            .say(
+                ctx,
+                format!(
+                    "**Warning, this CB is too old! Please create a new CB!**\n\
+                        {clan_name} - {name}. \
+                        {name} started <t:{start_epoch}:R> and ended <t:{end_epoch}:R>.",
+                    clan_name = clan_name,
+                    name = cb_info.name,
+                    start_epoch = cb_info.start_time.unwrap().timestamp(),
+                    end_epoch = cb_info.end_time.unwrap().timestamp()
+                ),
+            )
+            .await?;
+        return Ok(());
+    }
+
     let pilot_user_id =
         result_or_say_why!(get_user_id(ctx, msg, &msg.author.id.to_string()), ctx, msg);
 
@@ -106,13 +129,6 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
     );
 
     let all_pilot_ign_map = result_or_say_why!(get_all_pilot_ign_map(ctx, &clan_id), ctx, msg);
-
-    let cb_start_epoch = cb_info.start_time.unwrap().timestamp();
-
-    let epoch_now = Utc::now().timestamp();
-    let cb_day: i32 = ((epoch_now - cb_start_epoch) / 86400 + 1)
-        .try_into()
-        .unwrap();
 
     match args.len() {
         0 | 1 => {
@@ -387,7 +403,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
                         };
 
                         if used_fc > 0 {
-                            alert_msg += "\n**WARNING, YOUR PASSENGER DOES NOT HAVE FC**";
+                            alert_msg += "**WARNING, YOUR PASSENGER DOES NOT HAVE FC**\n";
                         }
 
                         match result_or_say_why!(
@@ -478,7 +494,7 @@ async fn flight_start(ctx: &Context, msg: &Message, mut args: Args) -> CommandRe
 
                         if used_fc > 0 {
                             let out_msg =
-                                format!("{}\n**WARNING!! YOU DO NOT HAVE FC TODAY**", &m.content);
+                                format!("{}**WARNING!! YOU DO NOT HAVE FC TODAY**\n", &m.content);
 
                             let _ = &m.edit(ctx, |nm| nm.content(out_msg)).await?;
                         }
