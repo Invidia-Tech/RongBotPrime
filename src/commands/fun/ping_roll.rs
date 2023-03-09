@@ -56,10 +56,6 @@ async fn ping_roll(ctx: &Context, msg: &Message) -> CommandResult {
         None => false,
     };
 
-    if booster {
-        msg.reply(ctx, "You are a booster.").await?;
-    }
-
     if (!booster && rolls_today >= 1) || (booster && rolls_today >= 2) {
         msg.reply(
             ctx,
