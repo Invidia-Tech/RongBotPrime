@@ -86,6 +86,27 @@
     },
     "query": "DELETE FROM rongbot.ping_droptable WHERE server=$1 AND user_id=$2;"
   },
+  "0c7b294a6c12ebc2d777bafe6f92ef2a21e4f25d5518bede155d7b7fb890fe66": {
+    "describe": {
+      "columns": [
+        {
+          "name": "c",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT COUNT(*) AS c\n         FROM rongbot.ping_log\n         WHERE\n            rolled_by=$1 AND\n            server=$2 AND\n            dropped_on > (current_date + interval '13:00') -\n            ((interval '24:00') *\n            CAST((EXTRACT(HOUR FROM NOW()) < 13) as int));"
+  },
   "0e919be03d25356f12355a66fe6e835927a7364fc384f2ea81311b5ce59c9ecc": {
     "describe": {
       "columns": [],
@@ -757,26 +778,6 @@
       }
     },
     "query": "SELECT\n            user_id, weight, rarity_rank,\n            dm.nickname as disc_nick,\n            dt.nickname as ping_nick\n         FROM rongbot.ping_droptable dt\n         LEFT JOIN rongbot.discord_members dm\n            ON dt.user_id = dm.member_id\n         WHERE server=$1\n         ORDER BY rarity_rank;"
-  },
-  "517efbdaaac45840ada353335825eb28e210b1b7f47e7b07ad51ff25608061c0": {
-    "describe": {
-      "columns": [
-        {
-          "name": "c",
-          "ordinal": 0,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "SELECT COUNT(*) AS c\n         FROM rongbot.ping_log\n         WHERE\n            rolled_by=$1 AND\n            dropped_on > (current_date + interval '13:00') -\n            ((interval '24:00') *\n            CAST((EXTRACT(HOUR FROM NOW()) < 13) as int));"
   },
   "5450e41358ea427571a8820c1d13547e018817c87b2776681d150442c95b0ac0": {
     "describe": {
